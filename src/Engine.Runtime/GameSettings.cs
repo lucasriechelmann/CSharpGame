@@ -28,6 +28,17 @@ public sealed record GameSettings
     /// <summary>The master volume, 0 to 1; default full.</summary>
     public float MasterVolume { get; init; } = 1f;
 
+    /// <summary>
+    /// Rebinds actions: action name to the inputs that trigger it (key names such as <c>Space</c> or <c>Left</c>, or <c>Mouse.Right</c>). The listed inputs
+    /// replace the game's own for that action. Null leaves every default binding.
+    /// </summary>
+    public Dictionary<string, string[]>? Bindings { get; init; }
+
+    /// <summary>
+    /// Rebinds axes: axis name to key pairs written <c>negative:positive</c>, for example <c>["A:D", "Left:Right"]</c>. They replace the game's own pairs for that axis.
+    /// </summary>
+    public Dictionary<string, string[]>? AxisBindings { get; init; }
+
     /// <summary>The settings used when there is no file.</summary>
     public static GameSettings Default => new();
 

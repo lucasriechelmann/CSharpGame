@@ -25,6 +25,30 @@ public sealed class ActionMap(InputState input)
         return this;
     }
 
+    /// <summary>True when something bound the action (so a rebinding can tell a typo from a real action).</summary>
+    public bool HasAction(string action) => _actions.ContainsKey(action);
+
+    /// <summary>True when something bound the axis.</summary>
+    public bool HasAxis(string axis) => _axes.ContainsKey(axis);
+
+    /// <summary>Removes every binding of an action but keeps the action, so code that asks about it keeps working; <see cref="Bind(string, KeyCode)"/> then adds the new ones. Used to rebind from settings.</summary>
+    /// <exception cref="KeyNotFoundException">The action was never bound.</exception>
+    public ActionMap ClearAction(string action)
+    {
+        Get(action).Clear();
+        return this;
+    }
+
+    /// <summary>Removes every key pair of an axis but keeps the axis (it reads 0 until <see cref="BindAxis"/> adds pairs again).</summary>
+    /// <exception cref="KeyNotFoundException">The axis was never bound.</exception>
+    public ActionMap ClearAxis(string axis)
+    {
+        if (!_axes.TryGetValue(axis, out var list)) throw new KeyNotFoundException($"No axis named '{axis}' is bound.");
+
+        list.Clear();
+        return this;
+    }
+
     /// <summary>True while any binding of the action is held.</summary>
     /// <exception cref="KeyNotFoundException">The action was never bound (usually a typo).</exception>
     public bool IsDown(string action)

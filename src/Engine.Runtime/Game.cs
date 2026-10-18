@@ -435,6 +435,7 @@ public abstract class Game : IDisposable
         bool audioReady = OpenAlAudioDevice.TryCreate(out var device, out string reason);
         Audio = audioReady ? device! : new NullAudioDevice(reason);
         Audio.MasterVolume = (Launch.Settings ?? GameSettings.Default).MasterVolume;
+        BindingOverrides.Apply(Actions, Launch.Settings ?? GameSettings.Default);
         if (audioReady) Log.Info("Audio", Audio.Description);
         else Log.Warning("Audio", $"No sound: {reason}");
         Log.Info("Engine", $"Window {_window.Width}x{_window.Height}, fixed step {_timestep.Step * 1000:F2} ms");

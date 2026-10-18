@@ -2,7 +2,6 @@ using System.Numerics;
 using Engine.Core.Components;
 using Engine.Core.Ecs;
 using Engine.Runtime.Editing;
-using Engine.Runtime.Editing;
 using Engine.Scenes;
 using ImGuiNET;
 
