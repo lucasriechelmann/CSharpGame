@@ -3,6 +3,7 @@ using Engine.Core.Components;
 using Engine.Core.Ecs;
 using Engine.Core.Logging;
 using Engine.Rendering;
+using Engine.Runtime.Editor.Undo;
 using Engine.Runtime.Inspector;
 using ImGuiNET;
 
@@ -25,6 +26,7 @@ internal sealed partial class SceneEditor
     private readonly HierarchyPanel _hierarchy;
     private readonly Logger _log;
     private readonly EditorHooks _hooks;
+    private readonly CommandStack _history;
 
     /// <summary>Creates the editor.</summary>
     /// <param name="world">The world being edited.</param>
@@ -37,6 +39,7 @@ internal sealed partial class SceneEditor
         _inspector = inspector;
         _log = log;
         _hooks = hooks;
+        _history = new CommandStack(new EditContext(world));
         _hierarchy = new HierarchyPanel(world, inspector, NewEntity, DuplicateSelected, DeleteSelected);
     }
 
@@ -48,6 +51,10 @@ internal sealed partial class SceneEditor
     {
         Active = !Active;
         _gizmo.End();
+
+        // History only means something against the world it was recorded on. The game runs freely while the editor is off, so start clean each time.
+        _history.Clear();
+        _inspector.History = Active ? _history : null;
         _log.Info("Editor", Active ? "Editor on (simulation frozen)" : "Editor off");
     }
 
@@ -61,6 +68,7 @@ internal sealed partial class SceneEditor
 
         HandleShortcuts();
         HandleViewport();
+        _inspector.CommitPendingEdit();
         DrawSceneOverlay();
     }
 
@@ -80,6 +88,9 @@ internal sealed partial class SceneEditor
 
         if (ImGui.BeginMenu("Edit"))
         {
+            if (ImGui.MenuItem(_history.CanUndo ? $"Undo {_history.UndoDescription}" : "Undo", "Ctrl+Z", false, _history.CanUndo)) Undo();
+            if (ImGui.MenuItem(_history.CanRedo ? $"Redo {_history.RedoDescription}" : "Redo", "Ctrl+Y", false, _history.CanRedo)) Redo();
+            ImGui.Separator();
             if (ImGui.MenuItem("New entity", "Ctrl+N")) NewEntity();
             if (ImGui.MenuItem("Duplicate", "Ctrl+D", false, !_inspector.Selected.IsNull)) DuplicateSelected();
             if (ImGui.MenuItem("Delete", "Del", false, !_inspector.Selected.IsNull)) DeleteSelected();
@@ -96,7 +107,11 @@ internal sealed partial class SceneEditor
         if (io.WantTextInput) return; // typing in a field
 
         bool ctrl = CtrlHeld();
-        if (ctrl && ImGui.IsKeyPressed(ImGuiKey.S, false)) SaveScene();
+        bool shift = ImGui.IsKeyDown(ImGuiKey.LeftShift) || ImGui.IsKeyDown(ImGuiKey.RightShift);
+        bool editing = _gizmo.IsDragging || ImGui.IsAnyItemActive(); // do not pull the world out from under a drag
+        if (ctrl && ImGui.IsKeyPressed(ImGuiKey.Z, false) && !editing) { if (shift) Redo(); else Undo(); }
+        else if (ctrl && ImGui.IsKeyPressed(ImGuiKey.Y, false) && !editing) Redo();
+        else if (ctrl && ImGui.IsKeyPressed(ImGuiKey.S, false)) SaveScene();
         else if (ctrl && ImGui.IsKeyPressed(ImGuiKey.D, false)) DuplicateSelected();
         else if (ctrl && ImGui.IsKeyPressed(ImGuiKey.N, false)) NewEntity();
         else if (ImGui.IsKeyPressed(ImGuiKey.Delete, false)) DeleteSelected();
@@ -115,8 +130,30 @@ internal sealed partial class SceneEditor
         var entity = _world.CreateEntity();
         _world.Add(entity, Name.Of("Entity"));
         _world.Add(entity, Transform.At(centre.X, centre.Y));
+        _history.Push(EntityLifetimeCommand.ForCreated(_history.Context, entity, EntityLabel.Of(_world, entity)));
         _inspector.Selected = entity;
         _log.Info("Editor", $"Created {entity}");
+    }
+
+    /// <summary>Reverts the latest change and selects what it touched.</summary>
+    private void Undo()
+    {
+        _inspector.CommitPendingEdit();
+        var command = _history.Undo();
+        if (command == null) return;
+
+        _inspector.Selected = command.Affected(_history.Context);
+        _log.Info("Editor", $"Undo: {command.Description}");
+    }
+
+    /// <summary>Reapplies the latest undone change and selects what it touched.</summary>
+    private void Redo()
+    {
+        var command = _history.Redo();
+        if (command == null) return;
+
+        _inspector.Selected = command.Affected(_history.Context);
+        _log.Info("Editor", $"Redo: {command.Description}");
     }
 
     /// <summary>Copies the selected entity, a little to the side, and selects the copy.</summary>
@@ -126,7 +163,9 @@ internal sealed partial class SceneEditor
         if (source.IsNull) return;
 
         float step = 16f / (_hooks.Camera()?.Zoom ?? 1f);
-        _inspector.Selected = EntityCloner.Duplicate(_world, source, new Vector2(step, -step));
+        var copy = EntityCloner.Duplicate(_world, source, new Vector2(step, -step));
+        _history.Push(EntityLifetimeCommand.ForCreated(_history.Context, copy, EntityLabel.Of(_world, copy)));
+        _inspector.Selected = copy;
         _log.Info("Editor", $"Duplicated {source}");
     }
 
@@ -135,7 +174,8 @@ internal sealed partial class SceneEditor
         var entity = _inspector.Selected;
         if (entity.IsNull) return;
 
-        _world.DestroyEntity(entity);
+        _inspector.CommitPendingEdit();
+        _history.Execute(EntityLifetimeCommand.ForDeleted(_history.Context, entity, EntityLabel.Of(_world, entity)));
         _inspector.Selected = Entity.Null;
         _log.Info("Editor", $"Deleted {entity}");
     }
@@ -156,6 +196,7 @@ internal sealed partial class SceneEditor
 
         _inspector.Selected = Entity.Null;
         _hooks.Load(path);
+        _history.Clear(); // every entity handle in the history is stale after the world was replaced
         _log.Info("Editor", $"Reloaded {_world.EntityCount} entities from {path}");
     }
 }

@@ -1,6 +1,8 @@
 using System.Numerics;
 using Engine.Core.Components;
 using Engine.Core.Ecs;
+using Engine.Runtime.Editor.Undo;
+using Engine.Runtime.Inspector;
 using ImGuiNET;
 
 namespace Engine.Runtime.Editor;
@@ -12,6 +14,7 @@ internal sealed partial class SceneEditor
     private const float SnapSize = 8f;
 
     private readonly MoveGizmo _gizmo = new();
+    private object? _dragStartTransform;
     private GizmoHandle _hover;
 
     /// <summary>Handles the mouse over the scene (not over an editor window).</summary>
@@ -29,7 +32,7 @@ internal sealed partial class SceneEditor
             if (!selected.IsNull && ImGui.IsMouseDown(ImGuiMouseButton.Left))
                 MoveSelected(selected, _gizmo.Drag(camera.ScreenToWorld(mouse), CtrlHeld() ? SnapSize : 0f));
             else
-                _gizmo.End();
+                EndGizmoDrag(selected);
             return;
         }
 
@@ -51,11 +54,25 @@ internal sealed partial class SceneEditor
         if (_hover != GizmoHandle.None)
         {
             _gizmo.Begin(_hover, camera.ScreenToWorld(mouse), selectedPosition);
+            _dragStartTransform = _world.GetBoxed(selected, typeof(Transform));
             return;
         }
 
         float radius = EntityPicking.FallbackRadiusPixels / camera.Zoom;
         _inspector.Selected = EntityPicking.Pick(_world, camera.ScreenToWorld(mouse), radius);
+    }
+
+    /// <summary>Ends a gizmo drag and records it as one undo step (the world was already updated every frame of the drag).</summary>
+    private void EndGizmoDrag(Entity entity)
+    {
+        _gizmo.End();
+        var before = _dragStartTransform;
+        _dragStartTransform = null;
+        if (before == null || entity.IsNull) return;
+
+        object after = _world.GetBoxed(entity, typeof(Transform));
+        if (!Equals(before, after))
+            _history.Push(new SetComponentCommand(_history.Context, entity, typeof(Transform), before, after, EntityLabel.Of(_world, entity)));
     }
 
     /// <summary>

@@ -1,6 +1,7 @@
 using System.Numerics;
 using Engine.Core.Components;
 using Engine.Core.Ecs;
+using Engine.Runtime.Editor.Undo;
 using Engine.Scenes;
 using ImGuiNET;
 
@@ -21,6 +22,7 @@ internal sealed partial class EntityInspector(World world, ComponentRegistry reg
     private readonly List<Entity> _entities = new();
     private string _filter = string.Empty;
     private Entity _selected = Entity.Null;
+    private PendingEdit? _pendingEdit;
 
     /// <summary>The entity whose components are shown; <see cref="Entity.Null"/> when nothing is selected or it was destroyed.</summary>
     public Entity Selected
@@ -28,6 +30,11 @@ internal sealed partial class EntityInspector(World world, ComponentRegistry reg
         get => world.IsAlive(_selected) ? _selected : Entity.Null;
         set => _selected = value;
     }
+
+    /// <summary>
+    /// Where edits are recorded for undo. Set by the scene editor while it is on; null otherwise, and edits then simply change the live world.
+    /// </summary>
+    public CommandStack? History { get; set; }
 
     /// <summary>Draws the window. Call between ImGui frame begin and render.</summary>
     public void Draw()

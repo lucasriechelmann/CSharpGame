@@ -23,8 +23,9 @@ Small, about one session. Fixes known gaps that affect game feel and that the ed
 - [x] Save and load scenes from the editor (flattens prefab instances; see 12c).
 - [ ] Follow-ups noticed: render the game into a docked "Game" view panel; rotate/scale gizmos; multi-select; transform parents so the hierarchy can be a tree.
 
-### 12b. Undo/redo
-- [ ] Command stack that every inspector and gizmo edit goes through. Decide this early: adding it later means rewriting every edit path.
+### 12b. Undo/redo (done)
+- [x] Command stack that every inspector, gizmo and hierarchy edit goes through (tracked entity ids, gesture-level steps; see architecture).
+- [ ] Follow-ups: a History window listing the steps; make Load/Reload undoable (today they clear the history); undo for edits made while the F1 debug inspector is used outside the editor.
 
 ### 12c. Authoring tools
 - [ ] Tile painting.

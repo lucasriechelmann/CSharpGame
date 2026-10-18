@@ -29,6 +29,12 @@ function Shot($proc, $path) {
     $bmp.Save($path, [System.Drawing.Imaging.ImageFormat]::Png)
 }
 
+# Ctrl + key chord with real scan codes (the Silk/ImGui input needs them to see Ctrl as a modifier).
+function Send-Chord($vk, $scan) {
+    [Win32]::keybd_event(0xA2, 0x1D, 0, [UIntPtr]::Zero); [Win32]::keybd_event($vk, $scan, 0, [UIntPtr]::Zero); Start-Sleep -Milliseconds 100
+    [Win32]::keybd_event($vk, $scan, 2, [UIntPtr]::Zero); [Win32]::keybd_event(0xA2, 0x1D, 2, [UIntPtr]::Zero); Start-Sleep -Milliseconds 400
+}
+
 function Move-Mouse($rect, $x, $y) { [Win32]::SetCursorPos($rect.Left + $x, $rect.Top + $y) | Out-Null; Start-Sleep -Milliseconds 120 }
 
 $proc = Start-Process -FilePath $Exe -PassThru -RedirectStandardError "$OutDir\err.txt" -RedirectStandardOutput "$OutDir\out.txt"
@@ -59,6 +65,12 @@ try {
     [Win32]::mouse_event(0x0004, 0, 0, 0, [UIntPtr]::Zero); Start-Sleep -Milliseconds 400
     Shot $proc "$OutDir\E3_dragged.png"
 
+    # Ctrl+Z puts the hero back, Ctrl+Y moves it again.
+    Send-Chord 0x5A 0x2C
+    Shot $proc "$OutDir\E3u_undone.png"
+    Send-Chord 0x59 0x15
+    Shot $proc "$OutDir\E3r_redone.png"
+
     # Wheel down three ticks zooms out; then middle-drag pans.
     Move-Mouse $rect 518 250
     [Win32]::mouse_event(0x0800, 0, 0, [System.BitConverter]::ToUInt32([System.BitConverter]::GetBytes([int]-360), 0), [UIntPtr]::Zero); Start-Sleep -Milliseconds 400
@@ -69,8 +81,7 @@ try {
 
     # With -Save, Ctrl+S writes the edited scene over the project's Assets/scenes/level.scene.json: revert it with git afterwards.
     if ($Save) {
-        [Win32]::keybd_event(0xA2, 0x1D, 0, [UIntPtr]::Zero); [Win32]::keybd_event(0x53, 0x1F, 0, [UIntPtr]::Zero); Start-Sleep -Milliseconds 100
-        [Win32]::keybd_event(0x53, 0x1F, 2, [UIntPtr]::Zero); [Win32]::keybd_event(0xA2, 0x1D, 2, [UIntPtr]::Zero); Start-Sleep -Milliseconds 500
+        Send-Chord 0x53 0x1F
     }
 }
 finally {
