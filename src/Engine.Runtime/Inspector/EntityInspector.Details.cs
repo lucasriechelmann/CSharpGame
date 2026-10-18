@@ -15,7 +15,7 @@ internal sealed partial class EntityInspector
         var entity = Selected;
         if (entity.IsNull)
         {
-            ImGui.TextDisabled("Select an entity on the left.");
+            ImGui.TextDisabled("Select an entity in the list or by clicking it in the scene.");
             ImGui.EndChild();
             return;
         }

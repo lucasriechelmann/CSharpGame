@@ -7,6 +7,7 @@ using Engine.Core.Ecs;
 using Engine.Core.Input;
 using Engine.Core.Logging;
 using Engine.Platform;
+using Engine.Runtime.Editor;
 using Engine.Runtime.Inspector;
 using Engine.Rendering;
 using Engine.Scenes;
@@ -28,6 +29,7 @@ public abstract class Game : IDisposable
     private readonly EntityInspector _inspector;
     private readonly ProfilerPanel _profilerPanel;
     private readonly LogPanel _logPanel;
+    private readonly SceneEditor _editor;
     private PostEffectsPanel _postEffectsPanel = null!;
     private int _postProcessSection;
     private readonly int _frameSection;
@@ -54,6 +56,7 @@ public abstract class Game : IDisposable
         var logHistory = new MemoryLogSink();
         Log.AddSink(new ConsoleLogSink()).AddSink(logHistory);
         _logPanel = new LogPanel(logHistory, Log);
+        _editor = new SceneEditor(World, _inspector, Log, new EditorHooks(() => SceneCamera, () => ScenePath, path => Scenes.SaveToFile(path), LoadSceneFromEditor));
         FixedSystems.Profile(Profiler, "Fixed");
         FrameSystems.Profile(Profiler, "Frame");
         RenderSystems.Profile(Profiler, "Render");
@@ -130,6 +133,12 @@ public abstract class Game : IDisposable
     /// </summary>
     public bool IsPaused { get; set; }
 
+    /// <summary>
+    /// True while the scene editor (F2) is on. The simulation is frozen exactly as with <see cref="IsPaused"/>, so game code that
+    /// advances its own clocks or reads gameplay input from <see cref="Update"/> should skip itself while this is true.
+    /// </summary>
+    public bool IsEditing => _editor.Active;
+
     /// <summary>Raw keyboard and mouse state. Prefer <see cref="Actions"/> for game logic.</summary>
     public InputState Input => _window.Input;
 
@@ -156,6 +165,22 @@ public abstract class Game : IDisposable
 
     /// <summary>0..1 position between the last two fixed steps, for render interpolation.</summary>
     protected double Alpha => _timestep.Alpha;
+
+    /// <summary>
+    /// The camera that draws the scene. Return it so the editor can pick entities under the mouse, draw the gizmo and pan and zoom
+    /// the view; with the default (null) the editor still has its panels but no scene view. A game that follows something with this
+    /// camera should stop while <see cref="IsEditing"/>.
+    /// </summary>
+    protected virtual Camera2D? SceneCamera => null;
+
+    /// <summary>The scene file the editor saves to and reloads from, as a full path; null disables those menu items.</summary>
+    protected virtual string? ScenePath => null;
+
+    /// <summary>
+    /// Called after the editor replaced the world with a scene file (Reload). Re-find whatever you cached from the old world
+    /// (the hero entity, counts) here, as you do after a quick-load.
+    /// </summary>
+    protected virtual void SceneReloaded() { }
 
     /// <summary>Called once after the window and OpenGL context exist. Create GPU resources here.</summary>
     protected virtual void Load() { }
@@ -197,6 +222,14 @@ public abstract class Game : IDisposable
     public void Dispose() => _window.Dispose();
 
     /// <summary>Frees the game's GPU resources and every loaded asset while the OpenGL context still exists.</summary>
+    /// <summary>The editor's Reload: replaces the world with the scene file, then lets the game re-establish what it cached.</summary>
+    private void LoadSceneFromEditor(string path)
+    {
+        World.Clear();
+        Scenes.LoadFile(path);
+        SceneReloaded();
+    }
+
     private void OnClosing()
     {
         Unload();
@@ -234,14 +267,16 @@ public abstract class Game : IDisposable
         Profiler.BeginFrame();
         _frameStart = Profiler.Begin();
         if (Input.WasPressed(KeyCode.F1)) _overlay.Toggle();
+        if (Input.WasPressed(KeyCode.F2)) _editor.Toggle();
         Audio.Update();
 
-        if (!IsPaused) FrameSystems.Run(World, dt);
+        bool frozen = IsPaused || IsEditing;
+        if (!frozen) FrameSystems.Run(World, dt);
         long start = Profiler.Begin();
         Update(dt);
         Profiler.End(_updateSection, start);
 
-        int steps = IsPaused ? 0 : _timestep.Advance(dt);
+        int steps = frozen ? 0 : _timestep.Advance(dt);
         for (int i = 0; i < steps; i++)
         {
             FixedSystems.Run(World, _timestep.Step);
@@ -257,7 +292,8 @@ public abstract class Game : IDisposable
     private void OnRender(double dt)
     {
         _stats.RecordFrame(dt);
-        RenderClock.Alpha = (float)_timestep.Alpha;
+        // While frozen nothing moves, so draw the simulated state itself: a stale fraction would leave moved or paused entities part-way back.
+        RenderClock.Alpha = IsPaused || IsEditing ? 1f : (float)_timestep.Alpha;
         PostProcess.BeginScene();
         long start = Profiler.Begin();
         Draw(dt);
@@ -275,12 +311,14 @@ public abstract class Game : IDisposable
         if (_overlay.Visible)
         {
             _overlay.Draw();
-            if (_overlay.ShowInspector) _inspector.Draw();
+            if (_overlay.ShowInspector && !IsEditing) _inspector.Draw(); // the editor has its own hierarchy and inspector windows
             if (_overlay.ShowProfiler) _profilerPanel.Draw();
             if (_overlay.ShowPostEffects) _postEffectsPanel.Draw();
             if (_overlay.ShowLog) _logPanel.Draw();
             DebugGui();
         }
+
+        if (IsEditing) _editor.Draw();
 
         Profiler.End(_debugGuiSection, start);
         // The GUI callback is the last thing in a frame, so this closes the whole-frame measurement even when the overlay is hidden.

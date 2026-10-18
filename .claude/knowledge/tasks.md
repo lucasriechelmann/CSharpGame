@@ -15,19 +15,20 @@ Small, about one session. Fixes known gaps that affect game feel and that the ed
 
 ## Phase 12: Editor (largest piece, three sub-phases)
 
-### 12a. Editor foundation
-- [ ] Dockable ImGui layout.
-- [ ] Scene hierarchy panel.
-- [ ] Click-to-select entities in the world.
-- [ ] Move gizmos.
-- [ ] Save and load scenes from the editor.
+### 12a. Editor foundation (done)
+- [x] Dockable ImGui layout (docking on; windows dock by dragging; the game still draws behind them to the whole window).
+- [x] Scene hierarchy panel.
+- [x] Click-to-select entities in the world.
+- [x] Move gizmos.
+- [x] Save and load scenes from the editor (flattens prefab instances; see 12c).
+- [ ] Follow-ups noticed: render the game into a docked "Game" view panel; rotate/scale gizmos; multi-select; transform parents so the hierarchy can be a tree.
 
 ### 12b. Undo/redo
 - [ ] Command stack that every inspector and gizmo edit goes through. Decide this early: adding it later means rewriting every edit path.
 
 ### 12c. Authoring tools
 - [ ] Tile painting.
-- [ ] Prefab-aware editing.
+- [ ] Prefab-aware editing, including saving without flattening prefab instances (today the editor's Save expands them).
 - [ ] Play/stop that snapshots and restores the scene.
 - [ ] Hot-reload of assets.
 

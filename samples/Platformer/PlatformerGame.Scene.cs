@@ -124,13 +124,49 @@ public sealed partial class PlatformerGame
 
         World.Clear();
         Scenes.LoadFile(QuickSavePath);
+        AfterWorldReplaced();
+        ShowStatus($"Loaded {World.EntityCount} entities");
+        Log.Info("Game", $"Quick-loaded {World.EntityCount} entities");
+    }
+
+    /// <summary>
+    /// Re-establishes what the game caches from the world after it was replaced by a saved scene (quick-load, or the editor's
+    /// Reload): the hero, the camera, where the hero respawns, and how many coins are left.
+    /// </summary>
+    private void AfterWorldReplaced()
+    {
         _hero = FindHero();
         SnapCameraToHero();
         _session.SetStart(HeroPosition()); // the loaded spot is where the hero comes back after a hit
         _session.SyncCoinsRemaining(CountCoins()); // the saved world holds only the coins not yet collected
         SetDoorOpen(_session.GoalUnlocked);
-        ShowStatus($"Loaded {World.EntityCount} entities");
-        Log.Info("Game", $"Quick-loaded {World.EntityCount} entities");
+    }
+
+    /// <inheritdoc />
+    protected override Camera2D? SceneCamera => _camera;
+
+    /// <inheritdoc />
+    protected override string? ScenePath => EditableLevelPath;
+
+    /// <inheritdoc />
+    protected override void SceneReloaded() => AfterWorldReplaced();
+
+    /// <summary>
+    /// The level file the editor saves to: the copy in the project's <c>Assets</c> folder when the game was started from a build
+    /// inside the project tree (so a save is a source change you can commit; the next build copies it to the output folder),
+    /// otherwise the copy next to the executable.
+    /// </summary>
+    private static string EditableLevelPath { get; } = FindEditableLevel();
+
+    private static string FindEditableLevel()
+    {
+        for (var folder = new DirectoryInfo(AppContext.BaseDirectory); folder != null; folder = folder.Parent)
+        {
+            if (File.Exists(Path.Combine(folder.FullName, "Platformer.csproj")))
+                return Path.GetFullPath(Path.Combine(folder.FullName, "Assets", LevelScene));
+        }
+
+        return Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "Assets", LevelScene));
     }
 
     private void ShowStatus(string message)

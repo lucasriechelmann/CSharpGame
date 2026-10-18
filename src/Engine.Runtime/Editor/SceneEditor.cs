@@ -1,0 +1,161 @@
+using System.Numerics;
+using Engine.Core.Components;
+using Engine.Core.Ecs;
+using Engine.Core.Logging;
+using Engine.Rendering;
+using Engine.Runtime.Inspector;
+using ImGuiNET;
+
+namespace Engine.Runtime.Editor;
+
+/// <summary>
+/// The scene editor: while it is on (F2) the simulation is frozen and the window gains a dockable layout, a menu bar, the
+/// hierarchy and inspector panels, click-to-select in the scene, a move gizmo, and pan/zoom of the view. This file holds the commands
+/// and the windows; <c>SceneEditor.Viewport.cs</c> handles the mouse in the scene itself.
+/// </summary>
+/// <remarks>
+/// Rendering is untouched: the game still draws to the whole window and the editor's windows float over it (or dock to the
+/// window's edges). The central dock node is pass-through, so clicks on empty space reach the scene.
+/// Edits go straight to the live world for now; undo/redo (phase 12b) will route them through a command stack.
+/// </remarks>
+internal sealed partial class SceneEditor
+{
+    private readonly World _world;
+    private readonly EntityInspector _inspector;
+    private readonly HierarchyPanel _hierarchy;
+    private readonly Logger _log;
+    private readonly EditorHooks _hooks;
+
+    /// <summary>Creates the editor.</summary>
+    /// <param name="world">The world being edited.</param>
+    /// <param name="inspector">Shows and edits the selected entity; also holds the selection.</param>
+    /// <param name="log">Where file operations report to.</param>
+    /// <param name="hooks">What the game provides: camera, scene file, save and load.</param>
+    public SceneEditor(World world, EntityInspector inspector, Logger log, EditorHooks hooks)
+    {
+        _world = world;
+        _inspector = inspector;
+        _log = log;
+        _hooks = hooks;
+        _hierarchy = new HierarchyPanel(world, inspector, NewEntity, DuplicateSelected, DeleteSelected);
+    }
+
+    /// <summary>True while the editor is on: the game's simulation is frozen and the editor's UI is drawn.</summary>
+    public bool Active { get; private set; }
+
+    /// <summary>Turns the editor on or off.</summary>
+    public void Toggle()
+    {
+        Active = !Active;
+        _gizmo.End();
+        _log.Info("Editor", Active ? "Editor on (simulation frozen)" : "Editor off");
+    }
+
+    /// <summary>Draws the editor for one frame. Call between ImGui frame begin and render, only while <see cref="Active"/>.</summary>
+    public void Draw()
+    {
+        DrawMenuBar();
+        ImGui.DockSpaceOverViewport(0, ImGui.GetMainViewport(), ImGuiDockNodeFlags.PassthruCentralNode);
+        _hierarchy.Draw();
+        _inspector.DrawDetailsWindow();
+
+        HandleShortcuts();
+        HandleViewport();
+        DrawSceneOverlay();
+    }
+
+    private void DrawMenuBar()
+    {
+        if (!ImGui.BeginMainMenuBar()) return;
+
+        string? path = _hooks.ScenePath();
+        if (ImGui.BeginMenu("File"))
+        {
+            if (ImGui.MenuItem("Save scene", "Ctrl+S", false, path != null)) SaveScene();
+            if (ImGui.MenuItem("Reload scene from disk", null, false, path != null)) ReloadScene();
+            ImGui.Separator();
+            if (ImGui.MenuItem("Close editor", "F2")) Toggle();
+            ImGui.EndMenu();
+        }
+
+        if (ImGui.BeginMenu("Edit"))
+        {
+            if (ImGui.MenuItem("New entity", "Ctrl+N")) NewEntity();
+            if (ImGui.MenuItem("Duplicate", "Ctrl+D", false, !_inspector.Selected.IsNull)) DuplicateSelected();
+            if (ImGui.MenuItem("Delete", "Del", false, !_inspector.Selected.IsNull)) DeleteSelected();
+            ImGui.EndMenu();
+        }
+
+        ImGui.TextDisabled("  Editor: simulation frozen. Middle-drag pans, wheel zooms, Ctrl snaps the gizmo to 8 units.");
+        ImGui.EndMainMenuBar();
+    }
+
+    private void HandleShortcuts()
+    {
+        var io = ImGui.GetIO();
+        if (io.WantTextInput) return; // typing in a field
+
+        bool ctrl = CtrlHeld();
+        if (ctrl && ImGui.IsKeyPressed(ImGuiKey.S, false)) SaveScene();
+        else if (ctrl && ImGui.IsKeyPressed(ImGuiKey.D, false)) DuplicateSelected();
+        else if (ctrl && ImGui.IsKeyPressed(ImGuiKey.N, false)) NewEntity();
+        else if (ImGui.IsKeyPressed(ImGuiKey.Delete, false)) DeleteSelected();
+    }
+
+    /// <summary>
+    /// Whether a Control key is down. Read from the keys themselves rather than <c>io.KeyCtrl</c>, which ImGui refreshes once per frame
+    /// and can still report false on the frame a quick Ctrl+key chord arrives.
+    /// </summary>
+    private static bool CtrlHeld() => ImGui.IsKeyDown(ImGuiKey.LeftCtrl) || ImGui.IsKeyDown(ImGuiKey.RightCtrl);
+
+    /// <summary>Creates a named entity at the middle of the view and selects it.</summary>
+    private void NewEntity()
+    {
+        var centre = _hooks.Camera()?.Position ?? Vector2.Zero;
+        var entity = _world.CreateEntity();
+        _world.Add(entity, Name.Of("Entity"));
+        _world.Add(entity, Transform.At(centre.X, centre.Y));
+        _inspector.Selected = entity;
+        _log.Info("Editor", $"Created {entity}");
+    }
+
+    /// <summary>Copies the selected entity, a little to the side, and selects the copy.</summary>
+    private void DuplicateSelected()
+    {
+        var source = _inspector.Selected;
+        if (source.IsNull) return;
+
+        float step = 16f / (_hooks.Camera()?.Zoom ?? 1f);
+        _inspector.Selected = EntityCloner.Duplicate(_world, source, new Vector2(step, -step));
+        _log.Info("Editor", $"Duplicated {source}");
+    }
+
+    private void DeleteSelected()
+    {
+        var entity = _inspector.Selected;
+        if (entity.IsNull) return;
+
+        _world.DestroyEntity(entity);
+        _inspector.Selected = Entity.Null;
+        _log.Info("Editor", $"Deleted {entity}");
+    }
+
+    private void SaveScene()
+    {
+        string? path = _hooks.ScenePath();
+        if (path == null) return;
+
+        _hooks.Save(path);
+        _log.Info("Editor", $"Saved {_world.EntityCount} entities to {path} (prefab instances are saved expanded)");
+    }
+
+    private void ReloadScene()
+    {
+        string? path = _hooks.ScenePath();
+        if (path == null) return;
+
+        _inspector.Selected = Entity.Null;
+        _hooks.Load(path);
+        _log.Info("Editor", $"Reloaded {_world.EntityCount} entities from {path}");
+    }
+}

@@ -58,7 +58,7 @@ internal sealed class DebugOverlay(GameWindow window, FixedTimestep timestep, Fr
         bool log = ShowLog;
         if (ImGui.Checkbox("Log", ref log)) ShowLog = log;
 
-        ImGui.Text("F1: toggle debug UI");
+        ImGui.Text("F1: toggle debug UI   F2: scene editor");
         ImGui.End();
     }
 }

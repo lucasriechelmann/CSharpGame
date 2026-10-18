@@ -46,12 +46,19 @@ internal sealed partial class EntityInspector(World world, ComponentRegistry reg
         ImGui.End();
     }
 
-    /// <summary>The label shown for an entity: its <see cref="Name"/> component if it has one, otherwise its id.</summary>
-    private string LabelOf(Entity entity)
+    /// <summary>
+    /// Draws only the selected entity's components in a window of their own, for the editor, where the hierarchy panel
+    /// does the selecting.
+    /// </summary>
+    public void DrawDetailsWindow()
     {
-        if (world.TryGet<Name>(entity, out var name) && !string.IsNullOrEmpty(name.Value))
-            return $"{name.Value}  #{entity.Id}";
-
-        return $"Entity #{entity.Id}";
+        ImGui.SetNextWindowPos(new Vector2(960f, 40f), ImGuiCond.FirstUseEver);
+        ImGui.SetNextWindowSize(new Vector2(310f, 520f), ImGuiCond.FirstUseEver);
+        if (ImGui.Begin("Inspector"))
+            DrawDetails();
+        ImGui.End();
     }
+
+    /// <summary>The label shown for an entity: its <see cref="Name"/> component if it has one, otherwise its id.</summary>
+    private string LabelOf(Entity entity) => EntityLabel.Of(world, entity);
 }

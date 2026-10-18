@@ -88,6 +88,7 @@ public sealed class GameWindow : IDisposable
         Gl = _window.CreateOpenGL();
         _silkInput = _window.CreateInput();
         _imgui = new ImGuiController(Gl, _window, _silkInput);
+        ImGui.GetIO().ConfigFlags |= ImGuiConfigFlags.DockingEnable; // lets any tool window be docked (the editor's layout)
         _ = new SilkInputAdapter(
             _silkInput,
             Input,

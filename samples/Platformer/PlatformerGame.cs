@@ -128,6 +128,8 @@ public sealed partial class PlatformerGame : Game
     /// <inheritdoc />
     protected override void Update(double dt)
     {
+        if (IsEditing) return; // the scene editor (F2) has frozen the game; it owns the camera and the mouse
+
         if (Actions.WasPressed(GameActions.Pause)) TogglePause();
         if (IsPaused)
         {
@@ -168,6 +170,8 @@ public sealed partial class PlatformerGame : Game
     /// </summary>
     private void FollowHero(double dt)
     {
+        if (IsEditing) return; // the editor pans and zooms the camera itself
+
         float follow = 1f - MathF.Exp(-6f * (float)dt);
         _camera.Position = Vector2.Lerp(_camera.Position, HeroDrawPosition(), follow);
     }

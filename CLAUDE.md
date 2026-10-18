@@ -13,7 +13,7 @@ Goal: learn how engines work, so write core systems from scratch and use librari
 - `src/Engine.Animation` `AnimationClip`, data-driven `AnimationStateMachine`, `SpriteAnimator` component, `AnimationSystem`.
 - `src/Engine.Scenes`    JSON scenes and prefabs: `ComponentRegistry`, `SceneSerializer`, `Prefab`, `JsonMerge`. Depends on Core only.
 - `src/Engine.Audio`     `AudioClip`, `WavDecoder`, `IAudioDevice` (`OpenAlAudioDevice`, `NullAudioDevice`), `VoicePool`. Depends on Core and Silk.NET.OpenAL only; no window or GL.
-- `src/Engine.Runtime`   `Game` base class and loop, debug overlay, entity inspector and profiler panel (`Inspector/`), `EngineComponents` (registers every engine component), `Game.Scenes`, `Game.Audio`, `Game.Profiler`. Composition root: the only module allowed to depend on every engine module; it also registers all asset loaders.
+- `src/Engine.Runtime`   `Game` base class and loop, debug overlay, entity inspector and profiler panel (`Inspector/`), scene editor (`Editor/`), `EngineComponents` (registers every engine component), `Game.Scenes`, `Game.Audio`, `Game.Profiler`. Composition root: the only module allowed to depend on every engine module; it also registers all asset loaders.
 - `samples/Platformer`   The first game (playable v1: coins, exit, creatures, lives, HUD), almost entirely data: scene, prefabs, tile layers, tile set and animation graphs are JSON under `Assets/`; rules live in `GameSession` and `InteractionSystem`.
 - `tests/`               xUnit v3 tests (Microsoft.Testing.Platform, see `global.json`), one project per module (`Engine.<Module>.Tests`).
 - `tools/`               PowerShell scripts to run, drive and screenshot the sample (see `tools/README.md`).
@@ -45,6 +45,7 @@ Dependency direction: samples -> Runtime -> (Core, Platform, Rendering, Scenes, 
 - **Shutdown**: free GPU resources in `Unload`/the window `Closing` event, while the GL context still exists (`Game` then disposes `Audio`, the `PostProcess` chain, then `Assets`). Never touch GL from `Dispose` or after `Run()` returns.
 - **Render stats**: call `SpriteBatch.ResetStats()` once per frame (in `Draw`) because a frame has several batch passes.
 - **GPU resources** are `IDisposable`, owned by exactly one object; create in `Load`, dispose in `Unload`; `Game.Assets` disposes loaded assets.
+- **Scene editor**: F2 (`Game.IsEditing`) freezes the game like pause; override `Game.SceneCamera`, `ScenePath` and `SceneReloaded` to give the editor a scene view and Save/Reload, and make the game's own update (and camera follow) stop while `IsEditing`. Anything that moves an entity in a tool must clear its `PreviousTransform`. Editor logic that can be pure (picking, gizmo maths, camera controls, cloning) stays free of ImGui and is unit-tested.
 - **Pause**: `Game.IsPaused` freezes `FrameSystems`, `FixedSystems` and the timestep, while `Update`, drawing and `Hud()` keep running; game code that advances its own clocks (`GameSession.Tick`) must skip itself while paused. `Game.Quit()` closes the window.
 - **Logging**: record events through `Game.Log` (`Logger`: `Info`/`Warning`/`Error`, short category), never `Console.WriteLine`; it also feeds the in-game Log window. Never in per-frame/per-entity paths, and logging does not replace throwing.
 - **Fail loudly** with specific guard-clause exceptions; never swallow exceptions.
