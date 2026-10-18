@@ -44,6 +44,20 @@ public sealed partial class PlatformerGame
         ImGui.End();
     }
 
+    private void DrawHighScores()
+    {
+        ImGui.Separator();
+        ImGui.SetWindowFontScale(1.3f);
+        if (_lastRank >= 0) ImGui.TextColored(new Vector4(1f, 0.85f, 0.3f, 1f), $"New high score! Rank {_lastRank + 1}");
+        ImGui.Text("High scores");
+        for (int i = 0; i < _highScores.Entries.Count; i++)
+        {
+            var entry = _highScores.Entries[i];
+            var color = i == _lastRank ? new Vector4(1f, 0.85f, 0.3f, 1f) : new Vector4(0.85f, 0.85f, 0.85f, 1f);
+            ImGui.TextColored(color, $"{i + 1}. {entry.Score,6}   {TimeSpan.FromSeconds(entry.Seconds):mm\\:ss}   {(entry.Won ? "won" : "lost")}");
+        }
+    }
+
     private void DrawEndMessage()
     {
         bool won = _session.Phase == GamePhase.Won;
@@ -55,6 +69,7 @@ public sealed partial class PlatformerGame
         ImGui.SetWindowFontScale(1.6f);
         ImGui.Text($"Score {_session.Score}   Time {TimeSpan.FromSeconds(_session.Elapsed):mm\\:ss}");
         ImGui.Text("Press Enter to play again");
+        DrawHighScores();
         ImGui.End();
     }
 }

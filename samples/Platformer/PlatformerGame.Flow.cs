@@ -37,6 +37,7 @@ public sealed partial class PlatformerGame
     private void UpdateFlow(double dt)
     {
         _session.Tick(dt);
+        RecordFinishedRun();
 
         if (Actions.WasPressed(GameActions.Restart)) RestartRun();
 
@@ -57,6 +58,7 @@ public sealed partial class PlatformerGame
         Scenes.LoadFile(LevelScene);
         _hero = FindHero();
         _session.Reset(CountCoins());
+        ResetRunRecord();
         SetDoorOpen(false);
         SnapCameraToHero();
         ShowStatus("New run");
