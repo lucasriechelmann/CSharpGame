@@ -134,33 +134,16 @@ public sealed partial class Arena3DGame : Game
     /// <summary>Finds the player and counts the orbs after the world was loaded or replaced, and starts a fresh run.</summary>
     private void BindWorld()
     {
-        _player = Entity.Null;
-        int orbs = 0;
-        var player = Entity.Null;
-        var spawn = Vector3.Zero;
-        World.Query((Entity entity, ref CharacterController3D controller, ref Transform transform) =>
-        {
-            if (!player.IsNull) return;
-
-            player = entity;
-            spawn = transform.Position;
-        });
-        World.Query((Entity entity, ref Orb orb) => orbs++);
-
-        if (player.IsNull) throw new InvalidOperationException("The arena scene has no player (an entity with a CharacterController3D).");
-
-        _player = player;
-        _spawn = spawn;
-        _session.Reset(Math.Max(orbs, 1));
+        _player = World.RequireFirst<CharacterController3D>(); // the scene's walking entity
+        _spawn = World.Get<Transform>(_player).Position;
+        _session.Reset(Math.Max(World.CountWith<Orb>(), 1));
         _lastPhase = OrbPhase.Playing;
     }
 
-    /// <summary>Starts the run over: the arena is loaded afresh so every orb is back.</summary>
+    /// <summary>Starts the run over: the arena is loaded afresh so every orb is back (<see cref="SceneReloaded"/> rebinds the world).</summary>
     private void Restart()
     {
-        World.Clear();
-        Scenes.LoadFile(ArenaScene);
-        BindWorld();
+        ReloadScene(ArenaScene);
         SnapCamera();
     }
 

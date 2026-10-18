@@ -352,7 +352,14 @@ public abstract class Game : IDisposable
 
     /// <summary>Frees the game's GPU resources and every loaded asset while the OpenGL context still exists.</summary>
     /// <summary>The editor's Reload: replaces the world with the scene file, then lets the game re-establish what it cached.</summary>
-    private void LoadSceneFromEditor(string path)
+    private void LoadSceneFromEditor(string path) => ReloadScene(path);
+
+    /// <summary>
+    /// Replaces every entity with the scene file's contents and then calls <see cref="SceneReloaded"/>, so the game re-finds what it cached (the player,
+    /// the orb count). The restart helper for a level: "play again" and the editor's Reload both go through it.
+    /// </summary>
+    /// <param name="path">Scene file relative to the asset root.</param>
+    protected void ReloadScene(string path)
     {
         World.Clear();
         Scenes.LoadFile(path);

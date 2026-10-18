@@ -82,8 +82,8 @@ public sealed class Scene3DGame : Game
         _camera.ViewportSize = new Vector2(ViewportWidth, ViewportHeight);
         ViewportResized += (w, h) => _camera.ViewportSize = new Vector2(w, h);
 
-        _marker = FindByName("Pick marker");
-        _player = FindByName("Player");
+        _marker = World.RequireByName("Pick marker");
+        _player = World.RequireByName("Player");
         FrameSystems.Add(new SpinSystem());
         var poses = new ModelPoses(); // shared: the animation system writes them, the mesh renderer draws with them
         FrameSystems.Add(new ModelAnimationSystem(Assets, poses));
@@ -111,8 +111,8 @@ public sealed class Scene3DGame : Game
     protected override void SceneReloaded()
     {
         // The world was rebuilt (editor Reload or Stop): every entity handle cached from the old one is stale.
-        _marker = FindByName("Pick marker");
-        _player = FindByName("Player");
+        _marker = World.RequireByName("Pick marker");
+        _player = World.RequireByName("Player");
         _crates.Clear();
     }
 
@@ -215,16 +215,6 @@ public sealed class Scene3DGame : Game
         var marker = World.Get<Transform>(_marker);
         marker.Position = hit.Point;
         World.Set(_marker, marker);
-    }
-
-    private Entity FindByName(string name)
-    {
-        Entity found = Entity.Null;
-        World.Query((Entity entity, ref Name label) =>
-        {
-            if (label.Value == name) found = entity;
-        });
-        return found.IsNull ? throw new InvalidOperationException($"The scene has no entity named '{name}'.") : found;
     }
 
     /// <inheritdoc />
