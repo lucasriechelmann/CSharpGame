@@ -1,4 +1,5 @@
 using Engine.Animation;
+using Engine.Audio;
 using Engine.Core.Components;
 using Engine.Physics2D;
 using Engine.Physics3D;
@@ -40,5 +41,7 @@ public static class EngineComponents
         .Register<CapsuleCollider3D>("CapsuleCollider3D")
         .Register("CharacterController3D", CharacterController3D.Create())
         .Register<PlatformerController>("PlatformerController")
-        .Register<PlatformerIntent>("PlatformerIntent");
+        .Register<PlatformerIntent>("PlatformerIntent")
+        .Register("AudioSource", AudioSource.Create(default))
+        .Register<AudioListener>("AudioListener");
 }

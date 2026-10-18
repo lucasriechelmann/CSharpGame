@@ -4,6 +4,7 @@ namespace Engine.Audio.Tests;
 /// Talks to the real OpenAL library. Each test returns quietly when the machine has no output device (a build server, say),
 /// because that is an environment limit and not a bug; <see cref="NullAudioDevice"/> covers that path in its own tests.
 /// </summary>
+[Collection("OpenAL")]
 public class OpenAlAudioDeviceTests
 {
     private static AudioClip OneSecondTone()

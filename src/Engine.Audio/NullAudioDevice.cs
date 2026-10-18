@@ -1,3 +1,5 @@
+using System.Numerics;
+
 namespace Engine.Audio;
 
 /// <summary>
@@ -27,6 +29,42 @@ public sealed class NullAudioDevice(string reason) : IAudioDevice
     {
         ArgumentNullException.ThrowIfNull(clip);
         return VoiceId.None;
+    }
+
+    /// <inheritdoc />
+    public AudioMixer Mixer { get; } = new();
+
+    /// <inheritdoc />
+    public VoiceId PlayIn(AudioClip clip, AudioGroup? group, float volume = 1f, float pitch = 1f, bool loop = false) => Play(clip, volume, pitch, loop);
+
+    /// <inheritdoc />
+    public VoiceId PlayAt(AudioClip clip, Vector3 position, Spatialization spatial, AudioGroup? group = null, float volume = 1f, float pitch = 1f, bool loop = false)
+    {
+        spatial.Validate();
+        return Play(clip, volume, pitch, loop);
+    }
+
+    /// <inheritdoc />
+    public VoiceId PlayStream(IAudioStream stream, AudioGroup? group = null, float volume = 1f, bool loop = false)
+    {
+        ArgumentNullException.ThrowIfNull(stream);
+        stream.Dispose(); // nothing will read it, and the device owns it
+        return VoiceId.None;
+    }
+
+    /// <inheritdoc />
+    public void SetVolume(VoiceId voice, float volume)
+    {
+    }
+
+    /// <inheritdoc />
+    public void SetPosition(VoiceId voice, Vector3 position)
+    {
+    }
+
+    /// <inheritdoc />
+    public void SetListener(Vector3 position, Vector3 forward, Vector3 up)
+    {
     }
 
     /// <inheritdoc />

@@ -22,6 +22,11 @@ public sealed unsafe partial class OpenAlAudioDevice : IAudioDevice
     private readonly Context* _context;
     private readonly uint[] _sources = new uint[VoiceCount];
     private readonly VoicePool _pool = new(VoiceCount);
+    private readonly float[] _baseVolume = new float[VoiceCount];
+    private readonly float[] _appliedGain = new float[VoiceCount];
+    private readonly AudioGroup?[] _group = new AudioGroup?[VoiceCount];
+    private readonly StreamVoice?[] _streams = new StreamVoice?[VoiceCount];
+    private readonly byte[] _streamScratch = new byte[StreamChunkBytes];
     private readonly Dictionary<AudioClip, uint> _buffers = new();
     private float _masterVolume = 1f;
     private bool _disposed;
@@ -39,10 +44,17 @@ public sealed unsafe partial class OpenAlAudioDevice : IAudioDevice
             _sources[i] = _al.GenSource();
             Check("creating a source");
         }
+
+        // Positioned sounds fade with distance the way Spatialization.Attenuation computes.
+        _al.DistanceModel(DistanceModel.InverseDistanceClamped);
+        Check("choosing the distance model");
     }
 
     /// <inheritdoc />
     public string Description { get; }
+
+    /// <inheritdoc />
+    public AudioMixer Mixer { get; } = new();
 
     /// <inheritdoc />
     public bool IsAudible => true;
