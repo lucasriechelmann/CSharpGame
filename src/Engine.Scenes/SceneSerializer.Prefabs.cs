@@ -29,7 +29,8 @@ public sealed partial class SceneSerializer
 
         foreach (var (key, _) in entityJson)
         {
-            if (key != PrefabKey && key != ComponentsKey)
+            // 'parent' is a scene-level link to another entry, so it means something only on the entry itself, not inside a prefab.
+            if (key != PrefabKey && key != ComponentsKey && !(key == ParentKey && depth == 0))
                 throw new InvalidOperationException($"Unknown key '{key}' in an entity (expected '{PrefabKey}' or '{ComponentsKey}').");
         }
 

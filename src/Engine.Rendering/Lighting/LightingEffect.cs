@@ -2,6 +2,7 @@ using System.Numerics;
 using Engine.Core;
 using Engine.Core.Components;
 using Engine.Core.Ecs;
+using Engine.Core.Hierarchy;
 using Silk.NET.OpenGL;
 
 namespace Engine.Rendering;
@@ -125,9 +126,7 @@ public sealed class LightingEffect : IPostEffect
     {
         if (light.Radius <= 0f) return;
 
-        var transform = simulated;
-        if (_clock != null && _world.TryGet<PreviousTransform>(entity, out var previous))
-            transform = PreviousTransform.Interpolate(simulated, previous, _clock.Alpha);
+        var transform = TransformHierarchy.GetRenderTransform(_world, entity, simulated, _clock);
 
         var centre = new Vector2(transform.Position.X, transform.Position.Y);
         if (!LightMath.Overlaps(_visibleMin, _visibleMax, centre, light.Radius)) return;

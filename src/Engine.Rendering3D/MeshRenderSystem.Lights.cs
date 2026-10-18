@@ -1,6 +1,7 @@
 using System.Numerics;
 using Engine.Core.Components;
 using Engine.Core.Ecs;
+using Engine.Core.Hierarchy;
 
 namespace Engine.Rendering3D;
 
@@ -43,7 +44,7 @@ public sealed partial class MeshRenderSystem
         if (_sunColor != Vector3.Zero || light.Intensity <= 0f) return; // only the first usable one counts
 
         _sunColor = new Vector3(light.Color.R, light.Color.G, light.Color.B) * light.Intensity;
-        _sunDirection = Vector3.Transform(-Vector3.UnitZ, transform.Rotation);
+        _sunDirection = Vector3.Transform(-Vector3.UnitZ, TransformHierarchy.GetWorldTransform(_world, entity).Rotation);
     }
 
     private void CollectPoint(Entity entity, ref Transform transform, ref PointLight3D light)
@@ -57,7 +58,7 @@ public sealed partial class MeshRenderSystem
             Array.Resize(ref _pointRadii, _pointCount * 2);
         }
 
-        _pointPositions[_pointCount] = transform.Position;
+        _pointPositions[_pointCount] = TransformHierarchy.GetWorldPosition(_world, entity, transform);
         _pointColors[_pointCount] = new Vector3(light.Color.R, light.Color.G, light.Color.B) * light.Intensity;
         _pointRadii[_pointCount] = light.Radius;
         _pointCount++;

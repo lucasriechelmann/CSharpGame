@@ -182,4 +182,15 @@ public class EntityPickingTests
 
         Assert.Throws<ArgumentException>(() => EntityPicking.TryGetOutline(_world, sprite, new Vector2[3]));
     }
+
+    [Fact]
+    public void A_child_sprite_is_picked_where_its_parent_puts_it()
+    {
+        var parent = AddMarker(200f, 0f);
+        var child = AddSprite(10f, 0f, 0f, 20f, 20f);
+        Engine.Core.Hierarchy.TransformHierarchy.SetParent(_world, child, parent, keepWorld: false);
+
+        Assert.Equal(child, EntityPicking.Pick(_world, new Vector2(210f, 0f), 2f));
+        Assert.Equal(Entity.Null, EntityPicking.Pick(_world, new Vector2(10f, 0f), 2f)); // its local position is not where it is drawn
+    }
 }

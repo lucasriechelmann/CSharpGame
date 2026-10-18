@@ -3,6 +3,7 @@ using Engine.Core;
 using Engine.Core.Assets;
 using Engine.Core.Components;
 using Engine.Core.Ecs;
+using Engine.Core.Hierarchy;
 
 namespace Engine.Rendering;
 
@@ -68,9 +69,7 @@ public sealed class SpriteRenderSystem : ISystem
     {
         if (!sprite.Texture.IsValid) return;
 
-        var transform = simulated;
-        if (_clock != null && _world.TryGet<PreviousTransform>(entity, out var previous))
-            transform = PreviousTransform.Interpolate(simulated, previous, _clock.Alpha);
+        var transform = TransformHierarchy.GetRenderTransform(_world, entity, simulated, _clock);
 
         if (sprite.Texture != _lastHandle)
         {

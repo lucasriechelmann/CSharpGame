@@ -28,14 +28,14 @@ public sealed class EntityLifetimeCommand : IEditCommand
     /// <param name="entity">The new entity, with its components already added.</param>
     /// <param name="label">What to call it in the description.</param>
     public static EntityLifetimeCommand ForCreated(EditContext context, Entity entity, string label) =>
-        new(context.Entities.IdOf(entity), creates: true, EntitySnapshot.Capture(context.World, entity), $"Create {label}");
+        new(context.Entities.IdOf(entity), creates: true, EntitySnapshot.Capture(context.World, entity, context.Entities), $"Create {label}");
 
     /// <summary>Describes deleting <paramref name="entity"/>: run it with <see cref="CommandStack.Execute"/>.</summary>
     /// <param name="context">The world and tracker.</param>
     /// <param name="entity">The entity to delete.</param>
     /// <param name="label">What to call it in the description.</param>
     public static EntityLifetimeCommand ForDeleted(EditContext context, Entity entity, string label) =>
-        new(context.Entities.IdOf(entity), creates: false, EntitySnapshot.Capture(context.World, entity), $"Delete {label}");
+        new(context.Entities.IdOf(entity), creates: false, EntitySnapshot.Capture(context.World, entity, context.Entities), $"Delete {label}");
 
     /// <inheritdoc />
     public string Description { get; }
@@ -57,12 +57,12 @@ public sealed class EntityLifetimeCommand : IEditCommand
     /// <inheritdoc />
     public Entity Affected(EditContext context) => context.ResolveOrNull(_entityId);
 
-    private void Spawn(EditContext context) => context.Entities.Bind(_entityId, _snapshot.Restore(context.World));
+    private void Spawn(EditContext context) => context.Entities.Bind(_entityId, _snapshot.Restore(context.World, context.Entities));
 
     private void Destroy(EditContext context)
     {
         var entity = context.Resolve(_entityId);
-        _snapshot = EntitySnapshot.Capture(context.World, entity); // keep the latest state, so the entity comes back as it was
+        _snapshot = EntitySnapshot.Capture(context.World, entity, context.Entities); // keep the latest state, so the entity comes back as it was
         context.World.DestroyEntity(entity);
         context.Entities.Unbind(_entityId);
     }

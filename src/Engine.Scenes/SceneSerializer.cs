@@ -9,7 +9,7 @@ namespace Engine.Scenes;
 /// <see cref="ComponentRegistry"/>, assets by name, and prefab overrides by JSON merge.
 /// </summary>
 /// <remarks>
-/// <para>Scene file shape: <c>{ "version": 1, "entities": [ { "prefab": "optional/path.prefab.json", "components": { "Transform": { ... } } } ] }</c>.</para>
+/// <para>Scene file shape: <c>{ "version": 1, "entities": [ { "prefab": "optional/path.prefab.json", "parent": 0, "components": { "Transform": { ... } } } ] }</c>. <c>parent</c> is the index of another entry in the same array (the entity is then its child and its Transform is local); it is entity-level data, not a component, so no Entity handle is ever written.</para>
 /// <para>Split by topic: this file (setup), <c>SceneSerializer.Save.cs</c>, <c>SceneSerializer.Load.cs</c> and <c>SceneSerializer.Prefabs.cs</c>.</para>
 /// <para>Limitation: components that store an <see cref="Entity"/> reference are not remapped on load; avoid them in saved components for now.</para>
 /// </remarks>
@@ -22,6 +22,7 @@ public sealed partial class SceneSerializer
     private const string EntitiesKey = "entities";
     private const string PrefabKey = "prefab";
     private const string ComponentsKey = "components";
+    private const string ParentKey = "parent";
 
     private readonly World _world;
     private readonly AssetManager _assets;

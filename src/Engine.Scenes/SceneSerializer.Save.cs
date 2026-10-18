@@ -1,5 +1,6 @@
 using System.Text.Json.Nodes;
 using Engine.Core.Ecs;
+using Engine.Core.Hierarchy;
 
 namespace Engine.Scenes;
 
@@ -16,8 +17,18 @@ public sealed partial class SceneSerializer
     {
         var prefabBases = new Dictionary<string, JsonObject>();
         var entities = new JsonArray();
+        var indices = new Dictionary<Entity, int>();
+        foreach (var entity in _world.Entities) indices[entity] = indices.Count;
+
         foreach (var entity in _world.Entities)
-            entities.Add(SerializeForScene(entity, prefabBases));
+        {
+            var entry = SerializeForScene(entity, prefabBases);
+
+            // The link is written as the parent's position in this file, because a handle means nothing after a reload.
+            var parent = TransformHierarchy.GetParent(_world, entity);
+            if (!parent.IsNull) entry[ParentKey] = indices[parent];
+            entities.Add(entry);
+        }
 
         var root = new JsonObject
         {

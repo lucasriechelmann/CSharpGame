@@ -42,11 +42,15 @@ public sealed class Model : IDisposable
         for (int i = 0; i < parts.Length; i++)
         {
             var part = data.Parts[i];
-            parts[i] = new ModelPart(new Mesh(gl, part.Mesh), materials[part.MaterialIndex], part.Local);
+            parts[i] = new ModelPart(new Mesh(gl, part.Mesh), materials[part.MaterialIndex], part.Local, part.Node);
         }
 
         Parts = parts;
+        Nodes = data.Nodes;
     }
+
+    /// <summary>The node tree the pieces came from (parents before children), for posing and animation; empty for a hand-built model.</summary>
+    public IReadOnlyList<ModelNodeData> Nodes { get; }
 
     /// <summary>The pieces to draw.</summary>
     public IReadOnlyList<ModelPart> Parts { get; }

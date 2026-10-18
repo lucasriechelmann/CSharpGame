@@ -94,6 +94,30 @@
         "MeshRenderer": { "mesh": "meshes/sphere", "material": "materials/glow.material.json" },
         "PointLight3D": { "color": { "r": 0.25, "g": 0.8, "b": 1, "a": 1 }, "intensity": 2.5, "radius": 9 }
       }
+    },
+    {
+      "components": {
+        "Name": { "value": "Orbit pivot" },
+        "Transform": { "position": { "x": 0, "y": 3.2, "z": 3.5 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 1, "y": 1, "z": 1 } },
+        "Spin": { "axis": { "x": 0, "y": 1, "z": 0 }, "speed": 1 }
+      }
+    },
+    {
+      "parent": 12,
+      "components": {
+        "Name": { "value": "Orbiting cube" },
+        "Transform": { "position": { "x": 2.5, "y": 0, "z": 0 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.7, "y": 0.7, "z": 0.7 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/gold.material.json" }
+      }
+    },
+    {
+      "parent": 12,
+      "components": {
+        "Name": { "value": "Orbiting lamp" },
+        "Transform": { "position": { "x": -2.5, "y": 0, "z": 0 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.3, "y": 0.3, "z": 0.3 } },
+        "MeshRenderer": { "mesh": "meshes/sphere", "material": "materials/glow.material.json" },
+        "PointLight3D": { "color": { "r": 0.9, "g": 0.3, "b": 1, "a": 1 }, "intensity": 2.5, "radius": 7 }
+      }
     }
   ]
 }

@@ -1,6 +1,8 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using Engine.Core.Components;
 using Engine.Core.Ecs;
+using Engine.Core.Hierarchy;
 
 namespace Engine.Scenes;
 
@@ -41,8 +43,38 @@ public sealed partial class SceneSerializer
             prepared.Add(PrepareEntity(entityJson));
         }
 
-        // Phase 2: create the entities.
-        return prepared.Select(Create).ToList();
+        ValidateParents(prepared);
+
+        // Phase 2: create the entities, then link children to parents (a parent may appear after its child in the file).
+        var created = prepared.Select(Create).ToList();
+        for (int i = 0; i < created.Count; i++)
+        {
+            if (prepared[i].ParentIndex != NoParent) _world.Add(created[i], new Parent { Value = created[prepared[i].ParentIndex] });
+        }
+
+        return created;
+    }
+
+    /// <summary>Checks every <c>parent</c> index before anything is created: in range, not the entity itself, and no loop.</summary>
+    private static void ValidateParents(List<PreparedEntity> prepared)
+    {
+        for (int i = 0; i < prepared.Count; i++)
+        {
+            if (prepared[i].ParentIndex == NoParent) continue;
+            if (prepared[i].ParentIndex < 0 || prepared[i].ParentIndex >= prepared.Count)
+                throw new InvalidOperationException($"Entity {i} names parent {prepared[i].ParentIndex}, but the scene has {prepared.Count} entities.");
+        }
+
+        // With every index in range, a chain longer than the entity count must revisit someone, which is a loop.
+        for (int i = 0; i < prepared.Count; i++)
+        {
+            int current = i;
+            for (int steps = 0; current != NoParent; steps++)
+            {
+                if (steps > prepared.Count) throw new InvalidOperationException($"Entity {i} is its own ancestor (parent loop in the scene).");
+                current = prepared[current].ParentIndex;
+            }
+        }
     }
 
     /// <summary>Loads a scene file. Relative paths are resolved against the asset root.</summary>
@@ -55,7 +87,9 @@ public sealed partial class SceneSerializer
     }
 
     /// <summary>An entity entry parsed and ready to create: what to add, and which prefab (if any) it was made from.</summary>
-    private readonly record struct PreparedEntity(List<Action<World, Entity>> Appliers, string? Prefab);
+    private readonly record struct PreparedEntity(List<Action<World, Entity>> Appliers, string? Prefab, int ParentIndex = NoParent);
+
+    private const int NoParent = -1;
 
     private Entity Create(PreparedEntity prepared)
     {
@@ -77,6 +111,7 @@ public sealed partial class SceneSerializer
             appliers.Add(_registry.Get(name).Prepare(node!, _options));
 
         string? prefab = entityJson[PrefabKey]?.GetValue<string>();
-        return new PreparedEntity(appliers, prefab);
+        int parentIndex = entityJson[ParentKey]?.GetValue<int>() ?? NoParent;
+        return new PreparedEntity(appliers, prefab, parentIndex);
     }
 }

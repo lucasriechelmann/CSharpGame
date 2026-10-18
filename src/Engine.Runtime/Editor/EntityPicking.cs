@@ -1,6 +1,7 @@
 using System.Numerics;
 using Engine.Core.Components;
 using Engine.Core.Ecs;
+using Engine.Core.Hierarchy;
 using Engine.Rendering;
 using Engine.Tilemaps;
 
@@ -36,7 +37,8 @@ public static class EntityPicking
 
         foreach (var entity in world.Entities)
         {
-            if (!world.TryGet<Transform>(entity, out var transform) || world.Has<TileLayerRenderer>(entity)) continue;
+            if (!world.Has<Transform>(entity) || world.Has<TileLayerRenderer>(entity)) continue;
+            var transform = TransformHierarchy.GetWorldTransform(world, entity); // a child is picked where its parent puts it
 
             float area;
             if (world.TryGet<Sprite>(entity, out var sprite))
@@ -75,9 +77,10 @@ public static class EntityPicking
     public static bool TryGetOutline(World world, Entity entity, Span<Vector2> corners)
     {
         if (corners.Length < 4) throw new ArgumentException("Four corners are needed.", nameof(corners));
-        if (!world.IsAlive(entity) || !world.TryGet<Transform>(entity, out var transform) || !world.TryGet<Sprite>(entity, out var sprite))
+        if (!world.IsAlive(entity) || !world.Has<Transform>(entity) || !world.TryGet<Sprite>(entity, out var sprite))
             return false;
 
+        var transform = TransformHierarchy.GetWorldTransform(world, entity);
         var size = new Vector2(sprite.Size.X * transform.Scale.X, sprite.Size.Y * transform.Scale.Y);
         var (min, max) = LocalRect(size, sprite.Pivot);
         float cos = MathF.Cos(transform.RotationZ);

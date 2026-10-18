@@ -35,10 +35,11 @@ public static class GltfImporter
         int defaultMaterial = -1; // added lazily: only when some primitive has no material
 
         var parts = new List<ModelPartData>();
+        var nodes = new List<ModelNodeData>();
         foreach (int root in RootNodes(file))
-            Visit(file, buffers, root, Matrix4x4.Identity, 0, parts, materials, ref defaultMaterial);
+            Visit(file, buffers, root, Matrix4x4.Identity, -1, 0, parts, nodes, materials, ref defaultMaterial);
 
-        return new ModelData(parts, materials);
+        return new ModelData(parts, materials, nodes);
     }
 
     private static IEnumerable<int> RootNodes(GltfFile file)
@@ -56,7 +57,7 @@ public static class GltfImporter
         return Enumerable.Range(0, file.Nodes.Count).Where(i => !children.Contains(i));
     }
 
-    private static void Visit(GltfFile file, byte[][] buffers, int nodeIndex, Matrix4x4 parent, int depth, List<ModelPartData> parts, List<ModelMaterialData> materials, ref int defaultMaterial)
+    private static void Visit(GltfFile file, byte[][] buffers, int nodeIndex, Matrix4x4 parent, int parentNode, int depth, List<ModelPartData> parts, List<ModelNodeData> nodes, List<ModelMaterialData> materials, ref int defaultMaterial)
     {
         if (nodeIndex < 0 || nodeIndex >= file.Nodes.Count)
             throw new InvalidOperationException($"glTF node {nodeIndex} does not exist (the file has {file.Nodes.Count}).");
@@ -64,7 +65,10 @@ public static class GltfImporter
 
         var node = file.Nodes[nodeIndex];
         // Row-vector convention: the child's own matrix applies first, then its parent's.
-        var world = LocalMatrix(node, nodeIndex) * parent;
+        var local = LocalMatrix(node, nodeIndex);
+        var world = local * parent;
+        int modelNode = nodes.Count; // parents are visited before their children, so a node always comes after its parent
+        nodes.Add(new ModelNodeData(node.Name ?? string.Empty, parentNode, local));
 
         if (node.Mesh is int meshIndex)
         {
@@ -86,12 +90,12 @@ public static class GltfImporter
                     material = defaultMaterial;
                 }
 
-                parts.Add(new ModelPartData(ImportPrimitive(file, buffers, primitive, meshIndex), material, world));
+                parts.Add(new ModelPartData(ImportPrimitive(file, buffers, primitive, meshIndex), material, world, modelNode));
             }
         }
 
         foreach (int child in node.Children)
-            Visit(file, buffers, child, world, depth + 1, parts, materials, ref defaultMaterial);
+            Visit(file, buffers, child, world, modelNode, depth + 1, parts, nodes, materials, ref defaultMaterial);
     }
 
     private static Matrix4x4 LocalMatrix(GltfFile.NodeInfo node, int index)

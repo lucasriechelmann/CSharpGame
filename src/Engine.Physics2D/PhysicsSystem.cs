@@ -1,6 +1,7 @@
 using System.Numerics;
 using Engine.Core.Components;
 using Engine.Core.Ecs;
+using Engine.Core.Hierarchy;
 
 namespace Engine.Physics2D;
 
@@ -19,6 +20,7 @@ public sealed class PhysicsSystem : ISystem
     private readonly EntityAction<Transform, BoxCollider, StaticSolid> _collectSolid;
     private readonly EntityAction<Transform, PhysicsBody, BoxCollider> _moveBody;
     private float _dt;
+    private World _world = null!;
 
     /// <summary>Creates the system.</summary>
     /// <param name="grid">Tile collision for the level, or null for none.</param>
@@ -42,6 +44,7 @@ public sealed class PhysicsSystem : ISystem
     public void Update(World world, double dt)
     {
         _dt = (float)dt;
+        _world = world;
 
         _solver.StaticBoxes.Clear();
         world.Query(_collectSolid);
@@ -49,10 +52,14 @@ public sealed class PhysicsSystem : ISystem
     }
 
     private void CollectSolid(Entity entity, ref Transform transform, ref BoxCollider collider, ref StaticSolid solid) =>
-        _solver.StaticBoxes.Add(collider.GetBounds(transform.Position));
+        _solver.StaticBoxes.Add(collider.GetBounds(TransformHierarchy.GetWorldPosition(_world, entity, transform)));
 
     private void MoveBody(Entity entity, ref Transform transform, ref PhysicsBody body, ref BoxCollider collider)
     {
+        // A body's transform is moved as world space; under a parent it would be local and the box would be in the wrong place.
+        if (TransformHierarchy.HasParent(_world, entity))
+            throw new InvalidOperationException($"{entity} has a PhysicsBody and a Parent; moving bodies must be roots (static solids may be children).");
+
         // Gravity first (semi-implicit Euler), clamped to the terminal fall speed.
         body.Velocity.Y += _settings.Gravity * body.GravityScale * _dt;
         body.Velocity.Y = MathF.Max(body.Velocity.Y, -_settings.MaxFallSpeed);

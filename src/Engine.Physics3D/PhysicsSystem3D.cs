@@ -2,6 +2,7 @@ using System.Numerics;
 using Engine.Core;
 using Engine.Core.Components;
 using Engine.Core.Ecs;
+using Engine.Core.Hierarchy;
 
 namespace Engine.Physics3D;
 
@@ -22,6 +23,7 @@ public sealed class PhysicsSystem3D : ISystem
     private readonly EntityAction<Transform, BoxCollider3D, StaticSolid3D> _collectSolid;
     private readonly EntityAction<Transform, PhysicsBody3D, BoxCollider3D> _moveBody;
     private float _dt;
+    private World _world = null!;
 
     /// <summary>Creates the system.</summary>
     /// <param name="settings">Gravity and fall-speed limits; defaults are used when null.</param>
@@ -53,6 +55,7 @@ public sealed class PhysicsSystem3D : ISystem
     public void Update(World world, double dt)
     {
         _dt = (float)dt;
+        _world = world;
 
         _solver.StaticBoxes.Clear();
         _solidEntities.Clear();
@@ -62,12 +65,16 @@ public sealed class PhysicsSystem3D : ISystem
 
     private void CollectSolid(Entity entity, ref Transform transform, ref BoxCollider3D collider, ref StaticSolid3D solid)
     {
-        _solver.StaticBoxes.Add(collider.GetBounds(transform.Position));
+        _solver.StaticBoxes.Add(collider.GetBounds(TransformHierarchy.GetWorldPosition(_world, entity, transform)));
         _solidEntities.Add(entity);
     }
 
     private void MoveBody(Entity entity, ref Transform transform, ref PhysicsBody3D body, ref BoxCollider3D collider)
     {
+        // A body's transform is moved as world space; under a parent it would be local and the box would be in the wrong place.
+        if (TransformHierarchy.HasParent(_world, entity))
+            throw new InvalidOperationException($"{entity} has a PhysicsBody3D and a Parent; moving bodies must be roots (static solids may be children).");
+
         // Gravity first (semi-implicit Euler: update the velocity, then move with it), clamped to the terminal fall speed.
         body.Velocity.Y += _settings.Gravity * body.GravityScale * _dt;
         body.Velocity.Y = MathF.Max(body.Velocity.Y, -_settings.MaxFallSpeed);

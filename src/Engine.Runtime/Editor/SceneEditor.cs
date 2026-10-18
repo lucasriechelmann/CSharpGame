@@ -2,6 +2,7 @@ using System.Numerics;
 using Engine.Core.Assets;
 using Engine.Core.Components;
 using Engine.Core.Ecs;
+using Engine.Core.Hierarchy;
 using Engine.Core.Logging;
 using Engine.Rendering;
 using Engine.Runtime.Editor.Tiles;
@@ -49,7 +50,7 @@ internal sealed partial class SceneEditor
         _hooks = hooks;
         _history = new CommandStack(new EditContext(world));
         _tiles = new TilePainter(world, assets, inspector, _history);
-        _hierarchy = new HierarchyPanel(world, inspector, () => !Playing, NewEntity, DuplicateSelected, DeleteSelected);
+        _hierarchy = new HierarchyPanel(world, inspector, () => !Playing, NewEntity, NewChild, DuplicateSelected, DeleteSelected, Reparent);
     }
 
     /// <summary>True while the editor is on (editing or playing): the editor's UI is drawn.</summary>
@@ -227,29 +228,73 @@ internal sealed partial class SceneEditor
         _log.Info("Editor", $"Redo: {command.Description}");
     }
 
-    /// <summary>Copies the selected entity, a little to the side, and selects the copy.</summary>
+    /// <summary>Creates a named entity at the origin of the selected one (a child of it) and selects it.</summary>
+    private void NewChild()
+    {
+        var parent = _inspector.Selected;
+        if (parent.IsNull) return;
+
+        var entity = _world.CreateEntity();
+        _world.Add(entity, Name.Of("Child"));
+        _world.Add(entity, Transform.Identity);
+        _world.Add(entity, new Parent { Value = parent });
+        _history.Push(EntityLifetimeCommand.ForCreated(_history.Context, entity, EntityLabel.Of(_world, entity)));
+        _inspector.Selected = entity;
+        _log.Info("Editor", $"Created {entity} under {parent}");
+    }
+
+    /// <summary>Copies the selected entity and everything below it, a little to the side, and selects the copy.</summary>
     private void DuplicateSelected()
     {
         var source = _inspector.Selected;
         if (source.IsNull) return;
 
         float step = 16f / (_hooks.Camera()?.Zoom ?? 1f);
-        var copy = EntityCloner.Duplicate(_world, source, new Vector2(step, -step));
-        _history.Push(EntityLifetimeCommand.ForCreated(_history.Context, copy, EntityLabel.Of(_world, copy)));
-        _inspector.Selected = copy;
-        _log.Info("Editor", $"Duplicated {source}");
+        var copies = EntityCloner.DuplicateSubtree(_world, source, new Vector2(step, -step));
+        var commands = new List<IEditCommand>(copies.Count);
+        foreach (var copy in copies) commands.Add(EntityLifetimeCommand.ForCreated(_history.Context, copy, EntityLabel.Of(_world, copy)));
+
+        _history.Push(Group($"Create {EntityLabel.Of(_world, copies[0])}", commands, affectedIndex: 0));
+        _inspector.Selected = copies[0];
+        _log.Info("Editor", $"Duplicated {source} ({copies.Count} entities)");
     }
 
+    /// <summary>Deletes the selected entity and everything below it as one undo step.</summary>
     private void DeleteSelected()
     {
         var entity = _inspector.Selected;
         if (entity.IsNull) return;
 
         _inspector.CommitPendingEdit();
-        _history.Execute(EntityLifetimeCommand.ForDeleted(_history.Context, entity, EntityLabel.Of(_world, entity)));
+
+        // Children go before their parent, so undo (which runs in reverse) brings the parent back first and each child can re-link to it.
+        var subtree = new List<Entity>();
+        TransformHierarchy.GetSubtree(_world, entity, subtree);
+        var commands = new List<IEditCommand>(subtree.Count);
+        for (int i = subtree.Count - 1; i >= 0; i--)
+            commands.Add(EntityLifetimeCommand.ForDeleted(_history.Context, subtree[i], EntityLabel.Of(_world, subtree[i])));
+
+        string label = EntityLabel.Of(_world, entity);
+        _history.Execute(Group($"Delete {label}", commands, affectedIndex: commands.Count - 1));
         _inspector.Selected = Entity.Null;
-        _log.Info("Editor", $"Deleted {entity}");
+        _log.Info("Editor", $"Deleted {entity} ({subtree.Count} entities)");
     }
+
+    /// <summary>Makes <paramref name="child"/> a child of <paramref name="parent"/> (or a root when null), keeping its place in the world.</summary>
+    private void Reparent(Entity child, Entity parent)
+    {
+        _inspector.CommitPendingEdit();
+        var command = ReparentCommand.Create(_history.Context, child, parent, EntityLabel.Of(_world, child));
+        if (command == null) return;
+
+        _history.Execute(command);
+        _inspector.Selected = child;
+        _log.Info("Editor", $"{command.Description}");
+    }
+
+    /// <summary>One step when there is one command, a <see cref="CompositeCommand"/> otherwise.</summary>
+    private static IEditCommand Group(string description, List<IEditCommand> commands, int affectedIndex) =>
+        commands.Count == 1 ? commands[0] : new CompositeCommand(description, commands, affectedIndex);
 
     private void SaveScene()
     {

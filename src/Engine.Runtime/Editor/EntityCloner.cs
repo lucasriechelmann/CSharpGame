@@ -1,6 +1,7 @@
 using System.Numerics;
 using Engine.Core.Components;
 using Engine.Core.Ecs;
+using Engine.Core.Hierarchy;
 
 namespace Engine.Runtime.Editor;
 
@@ -35,5 +36,38 @@ public static class EntityCloner
             world.Get<PreviousTransform>(copy) = default; // draw the copy where it is, not swept from the original's history
 
         return copy;
+    }
+
+    /// <summary>
+    /// Copies <paramref name="source"/> and everything below it. The copy of the root becomes a sibling of the original (same parent) and
+    /// is nudged by <paramref name="offset"/>; the copies of the descendants hang below the new root with the same local transforms and
+    /// keep their names.
+    /// </summary>
+    /// <param name="world">The world holding the entities.</param>
+    /// <param name="source">The root of the subtree to copy; must be alive.</param>
+    /// <param name="offset">Added to the new root's position.</param>
+    /// <returns>The copies, parents before children; the first is the copy of <paramref name="source"/>.</returns>
+    public static List<Entity> DuplicateSubtree(World world, Entity source, Vector2 offset)
+    {
+        var originals = new List<Entity>();
+        TransformHierarchy.GetSubtree(world, source, originals);
+
+        var copies = new List<Entity>(originals.Count);
+        var copyOf = new Dictionary<Entity, Entity>(originals.Count);
+        for (int i = 0; i < originals.Count; i++)
+        {
+            var original = originals[i];
+            var copy = Duplicate(world, original, i == 0 ? offset : Vector2.Zero);
+            if (i > 0)
+            {
+                if (world.TryGet<Name>(original, out var name)) world.Get<Name>(copy) = name; // only the root is labelled "(copy)"
+                world.Set(copy, new Parent { Value = copyOf[TransformHierarchy.GetParent(world, original)] });
+            }
+
+            copyOf[original] = copy;
+            copies.Add(copy);
+        }
+
+        return copies;
     }
 }

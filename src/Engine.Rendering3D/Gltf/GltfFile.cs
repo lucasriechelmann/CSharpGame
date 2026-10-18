@@ -89,6 +89,9 @@ public sealed class GltfFile
     /// <summary>A node: a transform, optionally a mesh, and children.</summary>
     public sealed class NodeInfo
     {
+        /// <summary>Optional human-readable node name (animation channels and tools refer to nodes by it).</summary>
+        public string? Name { get; set; }
+
         /// <summary>Index of the mesh drawn at this node.</summary>
         public int? Mesh { get; set; }
 

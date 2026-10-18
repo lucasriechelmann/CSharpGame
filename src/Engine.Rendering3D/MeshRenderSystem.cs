@@ -3,6 +3,7 @@ using Engine.Core;
 using Engine.Core.Assets;
 using Engine.Core.Components;
 using Engine.Core.Ecs;
+using Engine.Core.Hierarchy;
 using Engine.Rendering;
 using Silk.NET.OpenGL;
 using Shader = Engine.Rendering.Shader;
@@ -129,6 +130,8 @@ public sealed partial class MeshRenderSystem : ISystem, IDisposable
     /// <summary>The entity's local-to-world matrix, drawn between its last two fixed steps when it has a <see cref="PreviousTransform"/>.</summary>
     private Matrix4x4 EntityMatrix(Entity entity, in Transform simulated)
     {
+        if (TransformHierarchy.HasParent(_world, entity)) return TransformHierarchy.GetRenderMatrix(_world, entity, _clock);
+
         var transform = simulated;
         if (_clock != null && _world.TryGet<PreviousTransform>(entity, out var previous))
             transform = PreviousTransform.Interpolate(simulated, previous, _clock.Alpha);

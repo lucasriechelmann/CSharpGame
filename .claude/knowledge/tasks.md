@@ -1,6 +1,6 @@
 # Task backlog
 
-Work items after the 10-phase roadmap (see `features.md`). Status: `[ ]` todo, `[~]` in progress, `[x]` done. Update this file when a task lands or the plan changes. Order matters: the recommended path is Phase 11, then Phase 12, then Phase 13.
+Work items after the 10-phase roadmap (see `features.md`). Status: `[ ]` todo, `[~]` in progress, `[x]` done. Update this file when a task lands or the plan changes. Order matters: phases 14 to 19 are listed below in the recommended order.
 
 ## Phase 11: Game polish and engine hardening (done)
 
@@ -21,7 +21,7 @@ Small, about one session. Fixes known gaps that affect game feel and that the ed
 - [x] Click-to-select entities in the world.
 - [x] Move gizmos.
 - [x] Save and load scenes from the editor (flattens prefab instances; see 12c).
-- [ ] Follow-ups noticed: render the game into a docked "Game" view panel; rotate/scale gizmos; multi-select; transform parents so the hierarchy can be a tree.
+- [ ] Follow-ups noticed: render the game into a docked "Game" view panel; rotate/scale gizmos; multi-select (transform parents landed in phase 14).
 
 ### 12b. Undo/redo (done)
 - [x] Command stack that every inspector, gizmo and hierarchy edit goes through (tracked entity ids, gesture-level steps; see architecture).
@@ -40,17 +40,53 @@ Small, about one session. Fixes known gaps that affect game feel and that the ed
 - [x] Model loading (glTF, 13c): `.gltf`/`.glb` import with node hierarchy, materials and embedded textures; follow-ups: skins and animation, sparse accessors, KHR extensions, normal/metallic-roughness maps, instancing identical models, a model hot-reload check.
 - [x] 3D physics decision (13d): write our own, as `Engine.Physics3D`, in stages (reasons in `architecture.md`). Stage 1 built: boxes against static boxes, friction, raycasts. Next stages: body-vs-body, capsule and sphere colliders, oriented boxes, mesh colliders, rigid-body rotation.
 
-### What to do after phase 13 (pick by what the next game needs)
+## Phase 14: Transform parents and hierarchy (done)
 
-- [ ] **3D editor view**: render the scene in a docked viewport with an orbit camera, 3D picking (`Camera3D.ScreenPointToRay` + `Raycast` or mesh bounds), and move/rotate/scale gizmos. Needs transform parents for a useful hierarchy.
-- [ ] **3D rendering depth**: shadow maps for the sun, normal maps, transparency with sorted draws, instancing, skinned animation and glTF animation, PBR shading.
-- [ ] **3D physics stage 2**: dynamic-vs-dynamic boxes, then a capsule character controller.
+- [x] `Parent` component, `TransformHierarchy` (world matrices from the chain, `SetParent` with loop check and `keepWorld`, subtree destroy), no cached matrices (reasons in `architecture.md`).
+- [x] Render systems (sprites, 2D lights, meshes, models, 3D lights) and static physics solids honour parents; interpolation blends every level.
+- [x] Scenes: `"parent"` index per entry, validated before load.
+- [x] Editor: hierarchy tree, drag-to-reparent, "+ Child", subtree delete/duplicate, `ReparentCommand`, world-space gizmo and picking for children.
+- [x] glTF keeps its node tree (`ModelData.Nodes`, `ModelPose`) for animation; drawing is still flattened.
+- [ ] Follow-ups: a cached world matrix if deep trees show up in the profiler; moving physics bodies as children; rotate/scale gizmos use the same world/local conversion; `ModelRenderer` instances that expose per-node entities.
 
-## Alternatives (pick when they pay off sooner than the main path)
+## Phase 15: 3D editor view (next)
 
-- [ ] **Rendering depth.** Light shadows and occluders, HDR targets (fixes the 8-bit light map clamp), pixel-perfect low-resolution mode. Pays off in the platformer's look and prepares 3D.
-- [ ] **Tiled import and animated tiles.** Fastest way to build real levels before the editor exists. Also: tile flip flags, parallax, cached chunk meshes.
-- [ ] **Audio streaming and positional audio.** Only worth it if music is wanted soon. Also: audio component, mixer groups.
+Depends on 14 (done). Order: viewport and orbit camera, picking, gizmos, multi-select, game view.
+
+- [ ] Docked viewport panel that renders the scene into a `RenderTarget` for a `Camera3D` (orbit/pan/zoom), keeping the 2D editor as it is.
+- [ ] 3D picking: `Camera3D.ScreenPointToRay` against mesh bounds (and physics boxes).
+- [ ] Move/rotate/scale gizmos (also for 2D), local/world toggle.
+- [ ] Multi-select.
+- [ ] Game view panel (render the game into a docked window).
+
+## Phase 16: 3D physics stage 2
+
+Independent of 14-15.
+
+- [ ] Body-vs-body boxes (push, stack).
+- [ ] Sphere and capsule colliders, capsule character controller.
+- [ ] Oriented boxes (SAT).
+
+## Phase 17: 3D rendering depth
+
+- [ ] Sun shadow maps.
+- [ ] Normal maps.
+- [ ] Transparency with sorted draws.
+- [ ] Instancing.
+- [ ] glTF animation and skins (uses `ModelData.Nodes` from phase 14).
+- [ ] PBR shading.
+
+## Phase 18: Level and content pipeline
+
+- [ ] Tiled import, animated tiles, flip flags, parallax, cached chunk meshes.
+- [ ] Editor extras: History window, save-entity-as-prefab, revert-to-prefab, fill/rectangle tile brushes.
+
+## Phase 19: 2D rendering and audio depth
+
+- [ ] Light shadows/occluders, HDR targets, pixel-perfect mode, per-camera effects, MSAA.
+- [ ] Audio streaming, positional audio, audio component, mixer groups.
+
+Fast path to a playable game instead: phase 16 then a small 3D game; or phase 18 for more platformer levels.
 
 ## Smaller known gaps (from `features.md`, no owner yet)
 

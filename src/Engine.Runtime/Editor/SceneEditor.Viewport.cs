@@ -1,6 +1,7 @@
 using System.Numerics;
 using Engine.Core.Components;
 using Engine.Core.Ecs;
+using Engine.Core.Hierarchy;
 using Engine.Rendering;
 using Engine.Runtime.Editor.Undo;
 using Engine.Runtime.Inspector;
@@ -55,7 +56,8 @@ internal sealed partial class SceneEditor
         var selectedPosition = Vector2.Zero;
         if (!selected.IsNull && _world.TryGet<Transform>(selected, out var transform))
         {
-            selectedPosition = new Vector2(transform.Position.X, transform.Position.Y);
+            var worldPosition = TransformHierarchy.GetWorldPosition(_world, selected, transform); // a child sits where its parent puts it
+            selectedPosition = new Vector2(worldPosition.X, worldPosition.Y);
             _hover = MoveGizmo.HitTest(mouse, camera.WorldToScreen(selectedPosition));
         }
 
@@ -101,7 +103,19 @@ internal sealed partial class SceneEditor
     private void MoveSelected(Entity entity, Vector2 position)
     {
         ref var transform = ref _world.Get<Transform>(entity);
-        transform.Position = new Vector3(position, transform.Position.Z);
+        var parent = TransformHierarchy.GetParent(_world, entity);
+        if (parent.IsNull)
+        {
+            transform.Position = new Vector3(position, transform.Position.Z);
+        }
+        else
+        {
+            // The gizmo works in world space; a child stores its position relative to the parent, so convert before writing.
+            var placement = TransformHierarchy.GetWorldTransform(_world, entity);
+            placement.Position = new Vector3(position, placement.Position.Z);
+            transform.Position = TransformHierarchy.ToLocal(_world, parent, placement).Position;
+        }
+
         if (_world.Has<PreviousTransform>(entity)) _world.Get<PreviousTransform>(entity) = default;
     }
 
@@ -123,7 +137,8 @@ internal sealed partial class SceneEditor
                 ImGui.GetColorU32(new Vector4(1f, 0.85f, 0.2f, 1f)), 2f);
         }
 
-        var origin = camera.WorldToScreen(new Vector2(transform.Position.X, transform.Position.Y));
+        var worldOrigin = TransformHierarchy.GetWorldPosition(_world, selected, transform);
+        var origin = camera.WorldToScreen(new Vector2(worldOrigin.X, worldOrigin.Y));
         var active = _gizmo.IsDragging ? _gizmo.Active : _hover;
         DrawArrow(draw, origin, new Vector2(MoveGizmo.ArrowLength, 0f), HandleColor(active == GizmoHandle.AxisX, 0.95f, 0.3f, 0.3f));
         DrawArrow(draw, origin, new Vector2(0f, -MoveGizmo.ArrowLength), HandleColor(active == GizmoHandle.AxisY, 0.35f, 0.9f, 0.35f));

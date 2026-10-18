@@ -3,7 +3,7 @@ using System.Numerics;
 namespace Engine.Core.Components;
 
 /// <summary>
-/// Position, rotation and scale of an entity in world space. Fully 3D (Vector3/Quaternion) so the same
+/// Position, rotation and scale of an entity in world space (or relative to its <see cref="Parent"/> when it has one). Fully 3D (Vector3/Quaternion) so the same
 /// component works for a future 3D renderer; 2D code uses X/Y for placement, Z for draw order, and
 /// <see cref="RotationZ"/> for rotation.
 /// </summary>
@@ -13,10 +13,10 @@ namespace Engine.Core.Components;
 /// </remarks>
 public struct Transform
 {
-    /// <summary>World-space position. In 2D, a larger Z draws in front.</summary>
+    /// <summary>Position (world space, or parent space for a child). In 2D, a larger Z draws in front.</summary>
     public Vector3 Position;
 
-    /// <summary>World-space orientation.</summary>
+    /// <summary>Orientation (world space, or parent space for a child).</summary>
     public Quaternion Rotation;
 
     /// <summary>Per-axis scale multiplier.</summary>
@@ -36,6 +36,25 @@ public struct Transform
         MathF.Atan2(
             2f * (Rotation.W * Rotation.Z + Rotation.X * Rotation.Y),
             1f - 2f * (Rotation.Y * Rotation.Y + Rotation.Z * Rotation.Z));
+
+    /// <summary>
+    /// The local-to-parent matrix: scale first, then rotate, then translate (row-vector order, so left to right is the order applied).
+    /// </summary>
+    public readonly Matrix4x4 ToMatrix() =>
+        Matrix4x4.CreateScale(Scale) * Matrix4x4.CreateFromQuaternion(Rotation) * Matrix4x4.CreateTranslation(Position);
+
+    /// <summary>
+    /// Splits a matrix back into position, rotation and scale. A matrix with shear (a rotated parent with a non-uniform scale) has no
+    /// exact answer; the closest translation-rotation-scale is returned.
+    /// </summary>
+    /// <param name="matrix">A row-vector local-to-world matrix.</param>
+    /// <exception cref="InvalidOperationException">The matrix is singular (a zero scale), so it has no rotation.</exception>
+    public static Transform FromMatrix(in Matrix4x4 matrix)
+    {
+        if (!Matrix4x4.Decompose(matrix, out var scale, out var rotation, out var position))
+            throw new InvalidOperationException("The matrix cannot be split into position, rotation and scale (does it have a zero scale?).");
+        return new Transform { Position = position, Rotation = rotation, Scale = scale };
+    }
 
     /// <summary>Sets the rotation to a pure rotation around the Z axis.</summary>
     /// <param name="radians">Counter-clockwise angle in radians.</param>
