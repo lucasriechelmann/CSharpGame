@@ -6,7 +6,7 @@ PowerShell helpers for verifying the engine visually. Unit tests cover the maths
 |---|---|
 | `capture-window.ps1 -Exe <path> -Out <png> [-WaitSeconds 4]` | Launches the exe, waits, screenshots just its window, then kills it. Prints `EXITED code=...` and stderr if the game crashed on startup. |
 | `drive-sample.ps1 -Exe <path> -OutDir <dir>` | Launches the sample, then captures `A_baseline.png`, clicks in the level (`B_clicked.png`), holds `D` for 1 s (`C_holdD.png`) and presses `Space` while running (`D_jumping.png`). Coordinates and keys are hard-coded for the Platformer sample; edit them for other scenarios. |
-| `make-creature-sheet.ps1 -Out <png>` | Regenerates `samples/Platformer/Assets/creatures.png` (8 creatures, 16x16 cells, hero with crown at cell 0). |
+| `make-sprite-sheets.ps1 -OutDir <dir>` | Regenerates the Platformer sample's art in `samples/Platformer/Assets`: `tiles.png` (5 tiles), `hero.png` (8 animation frames) and `creatures.png` (8 types x 2 walk frames). |
 
 Example (after `dotnet build`):
 

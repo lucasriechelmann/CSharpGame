@@ -8,11 +8,11 @@ Learning-oriented 2D game engine in C# (.NET 10, Windows), designed so 3D can be
 samples/Platformer ──► Engine.Runtime ──► Engine.Rendering ──► Engine.Core
         │                   │                                     ▲
         │                   └──────────► Engine.Platform ─────────┤
-        ├──► Engine.Physics2D ────────────────────────────────────┘
+        ├──► Engine.Physics2D ────────────────────────────────────┤
+        ├──► Engine.Tilemaps ──► Engine.Rendering, Engine.Physics2D, Engine.Core
+        ├──► Engine.Animation ──► Engine.Rendering, Engine.Core
         └──► Engine.Rendering, Engine.Core (direct, for components/types)
-tests/Engine.Core.Tests ──► Engine.Core
-tests/Engine.Rendering.Tests ──► Engine.Rendering
-tests/Engine.Physics2D.Tests ──► Engine.Physics2D, Engine.Core
+tests/<Module>.Tests ──► <Module> (+ the modules it needs): one test project per module
 ```
 
 | Project | Role | Key packages |
@@ -21,6 +21,8 @@ tests/Engine.Physics2D.Tests ──► Engine.Physics2D, Engine.Core
 | `src/Engine.Platform` | Silk.NET window, GL context, input adapter, ImGui controller. The only place that touches Silk windowing/input. | Silk.NET.Windowing/Input/OpenGL, Silk.NET.OpenGL.Extensions.ImGui |
 | `src/Engine.Rendering` | GL wrappers and 2D rendering: `Shader`, `Texture2D`, `SpriteBatch`, `Camera2D`, `Sprite` component, `SpriteRenderSystem`, `TextureLoader`. Unsafe blocks allowed (GL pointer APIs only). | Silk.NET.OpenGL, StbImageSharp |
 | `src/Engine.Physics2D` | Own 2D physics, no GPU: `Aabb`, `TileGrid`, `CollisionSolver` (swept per-axis), `PhysicsSystem`, `PlatformerController`/`PlatformerControllerSystem`. Decision: physics is a separate module (not in Core) so Core stays tiny and a future 3D physics can sit beside it; it never references Rendering. | none |
+| `src/Engine.Tilemaps` | Sparse chunked tile layers, tile sets (atlas layout + per-tile solidity), layer-to-`TileGrid` builder, tile render system. Decision: separate from Rendering (which stays GL-focused) and from Physics2D (which must not know about tilemaps; the builder lives here and depends on Physics2D). | none |
+| `src/Engine.Animation` | Clips, state machine, animator component and system. Drives `Sprite.Source`, so it depends on Rendering but not on GL. | none |
 | `src/Engine.Runtime` | `Game` base class (the loop), `DebugOverlay`, `FrameStats`. **Composition root: the one module allowed to depend on every engine module** (decision: it auto-registers `TextureLoader` so games need no boilerplate; later Physics/Audio follow the same rule). | ImGui.NET via Silk ImGui extension |
 | `samples/Platformer` | The first game; consumes the engine like any game project. | none beyond engine |
 
@@ -36,7 +38,7 @@ Per display frame (`Game.OnUpdate` then `Game.OnRender`, driven by Silk's window
 2. `FrameSystems` run, then `Game.Update` (read input here, latch intent into components, e.g. `PlayerInputSystem` writes `PlatformerIntent`).
 3. `FixedTimestep.Advance(dt)` returns N steps; for each: `FixedSystems`, then `Game.FixedUpdate`.
 4. `Input.EndFrame()` clears pressed/released edges and scroll.
-5. Render: `Game.Draw` (clear/prepare), `RenderSystems` (`SpriteRenderSystem` gathers `Transform`+`Sprite`, sorts back-to-front by Z then texture, feeds `SpriteBatch`), then the ImGui overlay (`DebugOverlay` + `Game.DebugGui`).
+5. Render: `Game.Draw` (resets batch stats, clears), `RenderSystems` in registration order (sample: background/ground `TileLayerRenderSystem`, `SpriteRenderSystem` which gathers `Transform`+`Sprite` and sorts back-to-front by Z then texture, foreground `TileLayerRenderSystem`; each pass is its own `SpriteBatch.Begin/End`), then the ImGui overlay (`DebugOverlay` + `Game.DebugGui`).
 
 Shutdown: `Game.Dispose` runs `Unload()`, then `Assets.Dispose()` (disposes every loaded texture), then the window (GL context last).
 
@@ -56,6 +58,20 @@ Shutdown: `Game.Dispose` runs `Unload()`, then `Assets.Dispose()` (disposes ever
 - **Platformer controller**: input layer writes `PlatformerIntent` per frame (`MoveX`, `JumpHeld`, sticky `JumpPressedPending`); fixed-step `PlatformerControllerSystem` (before `PhysicsSystem`) converts the pending flag to a jump buffer, tracks coyote time from last step's `Below` contact, accelerates toward target speed (ground/air), jumps when buffer and coyote are both positive, cuts the jump when released early, and raises gravity scale while falling. Tuning (`PlatformerTuning`) and timers live in one `PlatformerController` component (the ECS supports queries of up to 3 components).
 - **Not yet**: one-way platforms, slopes, moving platforms/carrying, body-vs-body collision, depenetration.
 
+## Tilemaps (`src/Engine.Tilemaps`)
+
+- `TileLayer` stores tile ids in a `Dictionary<long, TileChunk>` of 16x16 chunks keyed by packed chunk coordinates; chunks appear when a tile is placed and vanish when empty. Cell (0,0) is bottom-left, Y up, negatives allowed (`cell >> 4` and `& 15` floor correctly). The renderer reads chunks through `TryGetChunkTiles` (a `ReadOnlySpan<int>`, no copies).
+- `TileSet` = atlas texture handle + tile size/columns/rows/spacing/margin; ids are 1-based, row-major; per-tile `IsSolid`.
+- Layers and tile sets are **assets** (`Assets.Add("layer/ground", layer)`), referenced from the `TileLayerRenderer` component by handle. The layer entity's `Transform` position is the world position of cell (0,0); its Z is draw depth. `TileLayer.TileSize` is world units per tile (art is 16 px drawn at 32).
+- `TileLayerRenderSystem` collects layers for its pass (`foreground` flag), sorts by Z, asks `Camera2D.GetVisibleBounds` for the visible world box, converts to a chunk range, and submits one `SpriteDraw` per visible tile to the shared `SpriteBatch` (UV rect inset by 0.02 px to stop atlas bleeding). Cached per-chunk GPU meshes are a later optimisation.
+- `TileGridBuilder.FromLayer(layer, tileSet, layerOrigin)` makes the physics `TileGrid` from the layer's used bounds and the tile set's solid flags.
+
+## Animation (`src/Engine.Animation`)
+
+- `AnimationClip` = pixel rects + fps + `AnimationLoopMode` (Loop/Once/PingPong); `GetFrameIndex(time, out finished)` is pure.
+- `AnimationStateMachine` (shared asset): float parameters (booleans are 0/1), states (each a clip), and ordered transitions (`From` a state or any, `To`, conditions on parameters, optional `RequiresFinished`). First matching transition wins; any-state transitions never target the current state. One transition per update.
+- `SpriteAnimator` component = machine handle, current state, state time, speed, finished flag, parameter array (create with `SpriteAnimator.Create`). `AnimationSystem` (frame group) advances time, evaluates transitions, writes `Sprite.Source`. Game systems write parameters first (sample: `HeroAnimationSystem` from `PhysicsBody`).
+
 ## Components (data)
 
 | Component | Defined in | Notes |
@@ -64,6 +80,8 @@ Shutdown: `Game.Dispose` runs `Unload()`, then `Assets.Dispose()` (disposes ever
 | `Sprite` | `src/Engine.Rendering/Sprite.cs` | `AssetHandle<Texture2D>`, size, pixel-space `Source` rect (empty = whole texture), tint, pivot, flip. |
 | `BoxCollider`, `PhysicsBody`, `StaticSolid` (tag) | `src/Engine.Physics2D/` | Collider size/offset; velocity, gravity scale and contact flags; immovable solid marker. |
 | `PlatformerController`, `PlatformerIntent` | `src/Engine.Physics2D/` | Tuning + runtime timers; player intent written by an input system. |
+| `TileLayerRenderer` | `src/Engine.Tilemaps/` | Layer + tile set handles, tint, foreground flag. |
+| `SpriteAnimator` | `src/Engine.Animation/` | Machine handle, state, time, speed, parameters. |
 | `Patrol` | `samples/Platformer/` | Game-specific walking AI. |
 
 ## Assets
@@ -82,4 +100,4 @@ None (no network, database or config files).
 
 ## Planned (from the roadmap, not built yet)
 
-Tilemaps and sprite animation, JSON scenes (System.Text.Json) with components as plain serializable data, ImGui inspector, OpenAL audio, post-processing/2D lights, an editor, and a 3D renderer beside `Engine.Rendering`.
+JSON scenes (System.Text.Json) with components as plain serializable data (handles saved by asset name; tile layers, tile sets and animation machines will need loaders), ImGui inspector, OpenAL audio, post-processing/2D lights, an editor, and a 3D renderer beside `Engine.Rendering`.

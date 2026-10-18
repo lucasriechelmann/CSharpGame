@@ -3,15 +3,19 @@
     <Project Path="samples/Platformer/Platformer.csproj" />
   </Folder>
   <Folder Name="/src/">
+    <Project Path="src/Engine.Animation/Engine.Animation.csproj" />
     <Project Path="src/Engine.Core/Engine.Core.csproj" />
     <Project Path="src/Engine.Physics2D/Engine.Physics2D.csproj" />
     <Project Path="src/Engine.Platform/Engine.Platform.csproj" />
     <Project Path="src/Engine.Rendering/Engine.Rendering.csproj" />
     <Project Path="src/Engine.Runtime/Engine.Runtime.csproj" />
+    <Project Path="src/Engine.Tilemaps/Engine.Tilemaps.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/Engine.Animation.Tests/Engine.Animation.Tests.csproj" />
     <Project Path="tests/Engine.Core.Tests/Engine.Core.Tests.csproj" />
     <Project Path="tests/Engine.Physics2D.Tests/Engine.Physics2D.Tests.csproj" />
     <Project Path="tests/Engine.Rendering.Tests/Engine.Rendering.Tests.csproj" />
+    <Project Path="tests/Engine.Tilemaps.Tests/Engine.Tilemaps.Tests.csproj" />
   </Folder>
 </Solution>

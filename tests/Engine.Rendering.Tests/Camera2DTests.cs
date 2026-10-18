@@ -60,6 +60,42 @@ public class Camera2DTests
     }
 
     [Fact]
+    public void Visible_bounds_cover_the_viewport_at_default_zoom()
+    {
+        var camera = NewCamera();
+        camera.Position = new Vector2(100, 50);
+
+        camera.GetVisibleBounds(out var min, out var max);
+
+        AssertVector(-300, -250, min);
+        AssertVector(500, 350, max);
+    }
+
+    [Fact]
+    public void Zooming_in_shrinks_the_visible_bounds()
+    {
+        var camera = NewCamera();
+        camera.Zoom = 2f;
+
+        camera.GetVisibleBounds(out var min, out var max);
+
+        AssertVector(-200, -150, min);
+        AssertVector(200, 150, max);
+    }
+
+    [Fact]
+    public void Rotation_swaps_the_visible_extents()
+    {
+        var camera = NewCamera();
+        camera.Rotation = MathF.PI / 2f; // an 800x600 view turned a quarter turn covers 600 wide by 800 tall
+
+        camera.GetVisibleBounds(out var min, out var max);
+
+        AssertVector(-300, -400, min);
+        AssertVector(300, 400, max);
+    }
+
+    [Fact]
     public void Non_positive_zoom_is_rejected()
     {
         var camera = NewCamera();

@@ -5,6 +5,8 @@
     <ProjectReference Include="..\..\src\Engine.Rendering\Engine.Rendering.csproj" />
     <ProjectReference Include="..\..\src\Engine.Core\Engine.Core.csproj" />
     <ProjectReference Include="..\..\src\Engine.Physics2D\Engine.Physics2D.csproj" />
+    <ProjectReference Include="..\..\src\Engine.Tilemaps\Engine.Tilemaps.csproj" />
+    <ProjectReference Include="..\..\src\Engine.Animation\Engine.Animation.csproj" />
   </ItemGroup>
 
   <ItemGroup>

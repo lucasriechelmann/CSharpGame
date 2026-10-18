@@ -1,7 +1,7 @@
 # CSharpGame: a learning-oriented 2D game engine in C# (3D-ready)
 
 Windows, .NET 10, Silk.NET (OpenGL 3.3 core), custom sparse-set ECS, Dear ImGui debug UI.
-Goal: learn how engines work, so write core systems from scratch and use libraries only for plumbing. First game: a platformer. Status: phases 1-5 of 10 done (see `.claude/knowledge/features.md`).
+Goal: learn how engines work, so write core systems from scratch and use libraries only for plumbing. First game: a platformer. Status: phases 1-6 of 10 done (see `.claude/knowledge/features.md`).
 
 ## Projects
 
@@ -9,12 +9,14 @@ Goal: learn how engines work, so write core systems from scratch and use librari
 - `src/Engine.Platform`  Silk.NET window, GL context, input adapter, ImGui controller.
 - `src/Engine.Rendering` Shader, Texture2D, SpriteBatch, Camera2D, `Sprite` component, `SpriteRenderSystem`, `TextureLoader`.
 - `src/Engine.Physics2D` AABB, tile grid, swept collision solver, `PhysicsSystem`, platformer controller (coyote time, jump buffering, variable jump). No GPU or window dependencies.
+- `src/Engine.Tilemaps`  Chunked `TileLayer`, `TileSet` atlas, `TileGridBuilder` (layer -> physics grid), `TileLayerRenderSystem`.
+- `src/Engine.Animation` `AnimationClip`, data-driven `AnimationStateMachine`, `SpriteAnimator` component, `AnimationSystem`.
 - `src/Engine.Runtime`   `Game` base class and loop, debug overlay. Composition root: the only module allowed to depend on every engine module.
-- `samples/Platformer`   The first game (tile level, hero, patrolling creatures); references the engine like any game project.
-- `tests/`               xUnit tests (`Engine.Core.Tests`, `Engine.Rendering.Tests`, `Engine.Physics2D.Tests`).
+- `samples/Platformer`   The first game (tilemap level, animated hero, patrolling creatures); references the engine like any game project.
+- `tests/`               xUnit tests, one project per module (`Engine.Core.Tests`, `.Rendering.Tests`, `.Physics2D.Tests`, `.Tilemaps.Tests`, `.Animation.Tests`).
 - `tools/`               PowerShell scripts to run, drive and screenshot the sample (see `tools/README.md`).
 
-Dependency direction: samples -> Runtime -> (Core, Platform, Rendering); samples -> Physics2D; Rendering, Platform and Physics2D -> Core. Core never references Platform, Rendering, Physics2D or Silk.NET; Physics2D never references Rendering.
+Dependency direction: samples -> Runtime -> (Core, Platform, Rendering); samples -> Physics2D, Tilemaps, Animation; Tilemaps -> (Core, Rendering, Physics2D); Animation -> (Core, Rendering); Rendering, Platform and Physics2D -> Core. Core never references any other module or Silk.NET; Physics2D never references Rendering or Tilemaps.
 
 ## Standing rules
 
@@ -29,6 +31,9 @@ Dependency direction: samples -> Runtime -> (Core, Platform, Rendering); samples
 - **Structural ECS changes during a query** go through `CommandBuffer`.
 - **Input**: ask `ActionMap` for intent, never a physical key. Read edges (pressed/released) in per-frame code and latch into components; never in fixed-step systems.
 - **Physics**: order fixed systems as "decide velocities" (patrol, `PlatformerControllerSystem`) then `PhysicsSystem`. Gameplay reads `PhysicsBody.Contacts`/`IsGrounded`. Touching edges never count as overlap (epsilon); a body spawned *inside* a solid passes through it, so spawn clear of solids.
+- **Tilemaps**: tile id 0 = empty, 1+ index a `TileSet` (row-major, 1-based); solidity lives on the tile set and collision is derived with `TileGridBuilder`, never hand-built twice. Draw order: background `TileLayerRenderSystem` -> `SpriteRenderSystem` -> foreground `TileLayerRenderSystem`.
+- **Animation**: gameplay writes animator *parameters* (`SpriteAnimator.SetParameter`); the state machine picks the clip. Run the parameter-writing system before `AnimationSystem`, both per frame. Create animators with `SpriteAnimator.Create`.
+- **Render stats**: call `SpriteBatch.ResetStats()` once per frame (in `Draw`) because a frame has several batch passes.
 - **GPU resources** are `IDisposable`, owned by exactly one object; create in `Load`, dispose in `Unload`; `Game.Assets` disposes loaded assets.
 - **Fail loudly** with specific guard-clause exceptions; never swallow exceptions.
 - **Gotchas**: `Matrix4x4` is row-vector/row-major, upload to GL **without transposing**; `default(Transform)` is invalid, use `Transform.Identity`/`At`; use binary-exact floats in timing tests.

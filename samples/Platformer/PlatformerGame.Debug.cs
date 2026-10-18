@@ -1,4 +1,5 @@
 using System.Numerics;
+using Engine.Animation;
 using Engine.Core.Components;
 using Engine.Physics2D;
 using ImGuiNET;
@@ -38,7 +39,9 @@ public sealed partial class PlatformerGame
         ImGui.SetNextWindowPos(new Vector2(10f, 375f), ImGuiCond.FirstUseEver);
         ImGui.Begin("Hero feel");
         ImGui.Text($"Pos: {transform.Position.X:F0}, {transform.Position.Y:F0}   Vel: {body.Velocity.X:F0}, {body.Velocity.Y:F0}");
+        var animator = World.Get<SpriteAnimator>(_hero);
         ImGui.Text($"Contacts: {body.Contacts}   Jumping: {controller.IsJumping}");
+        ImGui.Text($"Animation: {Assets.Get(animator.Machine).GetStateName(animator.CurrentState)}");
         ImGui.Text($"Coyote: {controller.CoyoteTimer:F3}s   Buffer: {controller.JumpBufferTimer:F3}s");
         ImGui.Separator();
 

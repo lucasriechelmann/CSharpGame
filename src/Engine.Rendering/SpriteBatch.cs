@@ -25,8 +25,19 @@ public sealed partial class SpriteBatch : IDisposable
     private int _frameDrawCalls;
     private int _frameSprites;
 
-    /// <summary>Counters from the most recently completed <see cref="Begin"/>/<see cref="End"/> pair.</summary>
-    public RenderStats Stats { get; private set; }
+    /// <summary>
+    /// Totals across every <see cref="Begin"/>/<see cref="End"/> pass since <see cref="ResetStats"/> was last called. A frame
+    /// usually has several passes (background tiles, sprites, foreground tiles), so call <see cref="ResetStats"/> once at the
+    /// start of each frame and read this when drawing the debug UI.
+    /// </summary>
+    public RenderStats Stats => new(_frameDrawCalls, _frameSprites);
+
+    /// <summary>Zeroes <see cref="Stats"/>. Call once per frame, before the first pass.</summary>
+    public void ResetStats()
+    {
+        _frameDrawCalls = 0;
+        _frameSprites = 0;
+    }
 
     /// <summary>Starts a batch. Sets alpha blending and disables depth testing (2D sprites are ordered by submission).</summary>
     /// <param name="viewProjection">World-to-clip matrix, normally <see cref="Camera2D.GetViewProjection"/>.</param>
@@ -37,8 +48,6 @@ public sealed partial class SpriteBatch : IDisposable
 
         _begun = true;
         _viewProjection = viewProjection;
-        _frameDrawCalls = 0;
-        _frameSprites = 0;
         PrepareState();
     }
 
@@ -61,7 +70,7 @@ public sealed partial class SpriteBatch : IDisposable
         _frameSprites++;
     }
 
-    /// <summary>Draws anything still queued and publishes <see cref="Stats"/>.</summary>
+    /// <summary>Draws anything still queued and adds this pass to <see cref="Stats"/>.</summary>
     /// <exception cref="InvalidOperationException"><see cref="Begin"/> has not been called.</exception>
     public void End()
     {
@@ -70,6 +79,5 @@ public sealed partial class SpriteBatch : IDisposable
         Flush();
         _currentTexture = null;
         _begun = false;
-        Stats = new RenderStats(_frameDrawCalls, _frameSprites);
     }
 }

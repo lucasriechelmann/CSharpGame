@@ -46,6 +46,29 @@ public sealed class Camera2D
         return view * projection;
     }
 
+    /// <summary>
+    /// The smallest axis-aligned world-space box that contains everything the camera can see (accounts for zoom and
+    /// rotation). Use it to cull: skip anything that lies outside.
+    /// </summary>
+    /// <param name="min">Bottom-left corner of the box.</param>
+    /// <param name="max">Top-right corner of the box.</param>
+    public void GetVisibleBounds(out Vector2 min, out Vector2 max)
+    {
+        if (!Matrix4x4.Invert(GetViewProjection(), out var inverse))
+            throw new InvalidOperationException("Camera matrix is not invertible (is the viewport empty?).");
+
+        min = new Vector2(float.MaxValue);
+        max = new Vector2(float.MinValue);
+        for (int corner = 0; corner < 4; corner++)
+        {
+            // The four clip-space corners (+-1, +-1) mapped back into the world.
+            var clip = new Vector3((corner & 1) == 0 ? -1f : 1f, (corner & 2) == 0 ? -1f : 1f, 0f);
+            var world = Vector3.Transform(clip, inverse);
+            min = Vector2.Min(min, new Vector2(world.X, world.Y));
+            max = Vector2.Max(max, new Vector2(world.X, world.Y));
+        }
+    }
+
     /// <summary>Converts a screen pixel (top-left origin) to a world-space point.</summary>
     public Vector2 ScreenToWorld(Vector2 screen)
     {
