@@ -96,19 +96,22 @@ Small, about one session. Fixes known gaps that affect game feel and that the ed
 - [ ] Cached chunk meshes for tile layers (one buffer per chunk, rebuilt when the chunk changes).
 - [ ] Per-camera effects (a camera with its own effect list and viewport).
 
-## Phase 21: Editor as a real tool (design in `architecture.md` once started)
+## Phase 21: A standalone editor (design in `architecture.md` once started)
 
-Problem: the editor and all debug panels draw over the game window, so the game is hard to see. Decision to record: keep **one process** (the editor is a mode of the same `Game`, so Play uses the real game code with no serialization gap), but dock everything into a layout and render the game into a **scene/game view panel** instead of the full window. A separate editor executable is a later option, not the first step.
-- [ ] Render the scene into a `RenderTarget` shown as an ImGui image in a docked Scene view panel (and a Game view while playing); mouse picking, gizmos and camera controls map through the panel rectangle (reuse the `PixelPerfectLayout` idea).
-- [ ] Default dock layout: Hierarchy left, Inspector right, Assets/Log/Profiler tabbed at the bottom, saved to an `.ini` and a "Reset layout" menu item.
-- [ ] Stop drawing debug windows over the game: F1 debug overlay folded into tabbed panels (Engine stats, Profiler, Post effects, Log), closed by default when not editing.
-- [ ] Separate "play" from "edit" visually: toolbar with Play/Pause/Stop, game view fills the centre while playing, panels optional.
-- [ ] Asset browser panel (textures, prefabs, scenes, sounds) with drag-and-drop onto the scene and Save as prefab by drag.
-- [ ] Editor-only code excluded from shipped builds (see Phase 22).
+Problem: the editor and debug panels draw over the game window, and you cannot open the editor without starting the game. Decision to record: the editor is its **own executable** (like Unity, Godot, Unreal): you edit a scene there and press Play to run the game inside the editor's viewport. Reason: editing and playing are different jobs; a shipped game must not contain editor code; one editor can open any game. The cost is that game code is loaded as a library (a code change needs a rebuild, and at first an editor restart).
+- [ ] Split each game into a library plus a launcher: `Platformer.Game` (components, systems, rules, assets) and a tiny `Platformer` exe that runs it. The exe is what ships.
+- [ ] `IGameModule` in Runtime: one entry point a game library provides to register its components, systems, asset loaders and scene path, replacing the constructor/`Load` wiring that is mixed into `Game` today. `Game` and the editor both call it.
+- [ ] `src/Editor` (new exe, references `Engine.Runtime`): command-line or File > Open picks a game library and a project folder; loads the module by path and shows its scene.
+- [ ] Scene view panel: render the scene into a `RenderTarget` shown as a docked ImGui image; mouse picking, gizmos and orbit/pan/zoom map through the panel rectangle (reuse the `PixelPerfectLayout` idea); the existing editor logic stays pure and tested.
+- [ ] Default dock layout: Hierarchy left, Inspector right, Assets / Log / Profiler / Post effects tabbed at the bottom; saved to an `.ini`; "Reset layout" menu item. No floating debug windows over the scene.
+- [ ] Play, Pause, Stop toolbar: Play snapshots the scene and runs the game's systems into the viewport; Stop restores the snapshot (the snapshot/restore code already exists).
+- [ ] Asset browser panel (textures, prefabs, scenes, sounds) with drag-and-drop onto the scene; drag an entity into it to Save as prefab.
+- [ ] Game code reload: first version tells you to restart the editor after rebuilding the game library; later, reload the assembly (collectible load context) and keep the open scene.
+- [ ] Move the editor classes out of `Engine.Runtime` into an `Engine.Editor` project so a shipped game never references them.
 
 ## Phase 22: Building and shipping a game
 
-- [ ] A `Release` configuration where `Game` has no editor, inspector, profiler or debug overlay (`#if EDITOR` or a compile-time option on the Runtime project; panels live in `Engine.Runtime.Editor` so they can be left out).
+- [ ] The shipped exe (from phase 21's launcher) references no editor code; the in-game debug overlay, inspector and profiler are optional and off in Release (`#if DEBUG` or a compile-time option).
 - [ ] `tools/publish.ps1`: `dotnet publish -c Release -r win-x64 --self-contained` for a sample, copies `Assets/`, trims or leaves out the editor, produces a folder or zip ready to run.
 - [ ] Asset packing/validation step: check every scene, prefab and material loads and every referenced file exists before shipping.
 - [ ] Settings file for the shipped game (window size, fullscreen, volume, key bindings) and a command-line `--editor` flag in Debug.
