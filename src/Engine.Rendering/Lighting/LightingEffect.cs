@@ -26,13 +26,15 @@ public sealed class LightingEffect : IPostEffect
         uniform sampler2D uTexture;
         uniform sampler2D uLightMap;
         uniform float uExposure;
+        uniform int uClamp;
         out vec4 FragColor;
 
         void main()
         {
             vec3 scene = texture(uTexture, vUv).rgb;
             vec3 light = texture(uLightMap, vUv).rgb * uExposure;
-            FragColor = vec4(min(scene * light, vec3(1.0)), 1.0);
+            vec3 lit = scene * light;
+            FragColor = vec4(uClamp == 1 ? min(lit, vec3(1.0)) : lit, 1.0);
         }
         """;
 
@@ -84,7 +86,13 @@ public sealed class LightingEffect : IPostEffect
     /// <inheritdoc />
     public void Apply(PostProcessContext context, Texture2D source, RenderTarget? destination)
     {
-        _lightMap ??= new RenderTarget(_gl, source.Width, source.Height);
+        // The light map must be as precise as the chain: in an HDR chain, lights add up past 1 instead of clipping.
+        if (_lightMap == null || _lightMap.Format.Hdr != context.IsHdr)
+        {
+            _lightMap?.Dispose();
+            _lightMap = new RenderTarget(_gl, source.Width, source.Height, new RenderTargetFormat(Hdr: context.IsHdr));
+        }
+
         _lightMap.Resize(source.Width, source.Height);
         BuildLightMap();
 
@@ -96,6 +104,7 @@ public sealed class LightingEffect : IPostEffect
         _composite.SetUniform("uTexture", 0);
         _composite.SetUniform("uLightMap", 1);
         _composite.SetUniform("uExposure", Exposure);
+        _composite.SetUniform("uClamp", context.IsHdr ? 0 : 1);
         context.Quad.Draw();
         _gl.ActiveTexture(TextureUnit.Texture0);
     }

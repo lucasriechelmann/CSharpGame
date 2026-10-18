@@ -67,7 +67,7 @@ public sealed class TileLayerRenderSystem : ISystem
         var tileSet = _assets.Get(renderer.TileSet);
         _layers.Add(new TileLayerDraw
         {
-            Origin = ParallaxOrigin(transform.Position, _camera.Position, renderer.Parallax),
+            Origin = SnapKeepingDepth(ParallaxOrigin(transform.Position, _camera.ViewPosition, renderer.Parallax)),
             Layer = _assets.Get(renderer.Layer),
             TileSet = tileSet,
             Texture = _assets.Get(tileSet.Texture),
@@ -119,6 +119,13 @@ public sealed class TileLayerRenderSystem : ISystem
                 }
             }
         }
+    }
+
+    /// <summary>The position on the camera's pixel grid when pixel snapping is on; Z, the draw order, is kept.</summary>
+    private Vector3 SnapKeepingDepth(Vector3 position)
+    {
+        var xy = _camera.Snap(new Vector2(position.X, position.Y));
+        return new Vector3(xy.X, xy.Y, position.Z);
     }
 
     /// <summary>

@@ -65,6 +65,13 @@ public sealed class SpriteRenderSystem : ISystem
         _batch.End();
     }
 
+    /// <summary>The position on the camera's pixel grid when pixel snapping is on; Z, the draw order, is kept.</summary>
+    private Vector3 SnapKeepingDepth(Vector3 position)
+    {
+        var xy = _camera.Snap(new Vector2(position.X, position.Y));
+        return new Vector3(xy.X, xy.Y, position.Z);
+    }
+
     private void Collect(Entity entity, ref Transform simulated, ref Sprite sprite)
     {
         if (!sprite.Texture.IsValid) return;
@@ -84,7 +91,7 @@ public sealed class SpriteRenderSystem : ISystem
             Order = _submissions.Count,
             Draw = new SpriteDraw
             {
-                Position = transform.Position,
+                Position = SnapKeepingDepth(transform.Position),
                 Size = new Vector2(sprite.Size.X * transform.Scale.X, sprite.Size.Y * transform.Scale.Y),
                 Pivot = sprite.Pivot,
                 Rotation = transform.RotationZ,

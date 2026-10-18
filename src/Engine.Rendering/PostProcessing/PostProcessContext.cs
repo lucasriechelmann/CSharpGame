@@ -20,11 +20,14 @@ public sealed class PostProcessContext
     /// <summary>The shared full-screen triangle.</summary>
     public FullscreenQuad Quad { get; }
 
-    /// <summary>Window width in pixels, the size of the final image.</summary>
+    /// <summary>Width in pixels of the image the effects draw: the window, or the game image in pixel-perfect mode.</summary>
     public int ScreenWidth { get; internal set; }
 
-    /// <summary>Window height in pixels.</summary>
+    /// <summary>Height in pixels of the image the effects draw.</summary>
     public int ScreenHeight { get; internal set; }
+
+    /// <summary>True when the chain keeps 16-bit float colour, so effects may produce values above 1 and should not clamp them (a <see cref="ToneMapEffect"/> does that at the end).</summary>
+    public bool IsHdr { get; internal set; }
 
     /// <summary>
     /// Directs drawing to <paramref name="destination"/>, or to the window when it is null, and switches off blending and depth

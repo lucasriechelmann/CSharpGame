@@ -9,26 +9,41 @@ namespace Engine.Rendering;
 /// </summary>
 /// <remarks>
 /// Why ping-pong: a shader cannot read and write the same image in one pass, so two targets swap roles each effect. With no
-/// effect enabled nothing is redirected, so unused post-processing costs nothing.
+/// effect enabled and no scene setting on, nothing is redirected, so unused post-processing costs nothing. Three scene settings
+/// also redirect the scene: <see cref="Hdr"/> (16-bit float colour for the whole chain), <see cref="Samples"/> (multisampling that
+/// smooths 3D and rotated-sprite edges) and <see cref="SetPixelPerfect"/> (a low-resolution image scaled up by whole numbers).
 /// </remarks>
-public sealed class PostProcessChain : IDisposable
+public sealed partial class PostProcessChain : IDisposable
 {
     private readonly GL _gl;
-    private readonly RenderTarget[] _targets;
     private readonly FullscreenQuad _quad;
     private readonly PostProcessContext _context;
+    private readonly Shader _present;
     private readonly List<IPostEffect> _effects = new();
     private readonly List<IPostEffect> _active = new();
+    private RenderTarget? _scene;
+    private RenderTarget[] _pingPong = [];
+    private int _windowWidth;
+    private int _windowHeight;
+    private bool _hdr;
+    private int _samples = 1;
+    private int _virtualWidth;
+    private int _virtualHeight;
     private bool _sceneRedirected;
 
     /// <summary>Creates the chain with two targets of the window's size. Needs a current GL context.</summary>
+    /// <param name="gl">The GL context that will own the targets and effects.</param>
+    /// <param name="width">Window width in pixels.</param>
+    /// <param name="height">Window height in pixels.</param>
     public PostProcessChain(GL gl, int width, int height)
     {
         _gl = gl;
         _quad = new FullscreenQuad(gl);
-        // Only target 0 receives the scene, so only it needs a depth buffer (3D meshes are depth-tested while the scene is drawn).
-        _targets = [new RenderTarget(gl, width, height, withDepth: true), new RenderTarget(gl, width, height)];
+        _present = new Shader(gl, FullscreenQuad.VertexSource, PresentFragment);
+        _windowWidth = width;
+        _windowHeight = height;
         _context = new PostProcessContext(gl, _quad, width, height);
+        RebuildTargets();
     }
 
     /// <summary>The effects in execution order.</summary>
@@ -45,57 +60,73 @@ public sealed class PostProcessChain : IDisposable
         }
     }
 
-    /// <summary>Appends an effect; the chain owns it and disposes it.</summary>
-    /// <returns>The same effect, so the caller can keep a typed reference to tweak it.</returns>
+    /// <summary>Appends an effect to the end of the chain and returns it so settings can be set in the same statement.</summary>
     public T Add<T>(T effect) where T : IPostEffect
     {
         _effects.Add(effect);
         return effect;
     }
 
-    /// <summary>Resizes the targets to the new window size. Call from the window's resize event.</summary>
+    /// <summary>Tells the chain the window changed size. Ignored when the size is zero (a minimised window).</summary>
     public void Resize(int width, int height)
     {
         if (width <= 0 || height <= 0) return; // a minimised window reports 0x0; keep the old targets
 
-        foreach (var target in _targets) target.Resize(width, height);
+        _windowWidth = width;
+        _windowHeight = height;
+        if (IsPixelPerfect) return; // the targets keep their game resolution; only where they are drawn changes
+
+        _scene!.Resize(width, height);
+        foreach (var target in _pingPong) target.Resize(width, height);
         _context.ScreenWidth = width;
         _context.ScreenHeight = height;
     }
 
-    /// <summary>Directs the coming frame into the scene target when any effect is enabled; otherwise leaves the window bound.</summary>
+    /// <summary>Starts the frame: when anything needs the scene off-screen, redirects drawing into the scene target.</summary>
     public void BeginScene()
     {
-        _sceneRedirected = IsActive;
-        if (_sceneRedirected) _targets[0].Bind();
+        _sceneRedirected = IsActive || NeedsSceneTarget;
+        if (_sceneRedirected) _scene!.Bind();
     }
 
-    /// <summary>Applies the enabled effects to the scene and presents the result to the window. A no-op when the scene was not redirected.</summary>
+    /// <summary>Ends the frame: resolves multisampling, runs the active effects and presents the result to the window.</summary>
     public void EndScene()
     {
         if (!_sceneRedirected) return;
+
+        _scene!.Resolve();
 
         _active.Clear();
         foreach (var effect in _effects)
             if (effect.Enabled) _active.Add(effect);
 
-        int current = 0;
+        // The first effect reads the scene; every other reads the previous effect's output. Each writes to the ping-pong target that is not
+        // its own source, so nothing is read and written at once, and none ever draws into the (possibly multisampled) scene target.
+        var source = _scene.Texture;
+        int next = 0;
         for (int i = 0; i < _active.Count; i++)
         {
-            bool last = i == _active.Count - 1;
-            _active[i].Apply(_context, _targets[current].Texture, last ? null : _targets[1 - current]);
-            current = 1 - current;
+            // The last effect draws straight to the window, unless the image still has to be scaled up into it.
+            bool toWindow = i == _active.Count - 1 && !IsPixelPerfect;
+            var destination = toWindow ? null : _pingPong[next];
+            _active[i].Apply(_context, source, destination);
+            if (destination == null) continue;
+
+            source = destination.Texture;
+            next = 1 - next;
         }
 
+        if (_active.Count == 0 || IsPixelPerfect) Present(source);
         _gl.BindVertexArray(0);
         _sceneRedirected = false;
     }
 
-    /// <summary>Disposes every effect, both targets and the full-screen triangle.</summary>
+    /// <summary>Frees the effects, targets and shaders.</summary>
     public void Dispose()
     {
         foreach (var effect in _effects) effect.Dispose();
-        foreach (var target in _targets) target.Dispose();
+        DisposeTargets();
+        _present.Dispose();
         _quad.Dispose();
     }
 }

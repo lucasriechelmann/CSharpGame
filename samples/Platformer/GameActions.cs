@@ -24,6 +24,15 @@ public static class GameActions
     /// <summary>Replaces the world with the last quick-save (F9).</summary>
     public const string QuickLoad = "QuickLoad";
 
+    /// <summary>Switches pixel-perfect rendering on or off (F6).</summary>
+    public const string TogglePixelPerfect = "TogglePixelPerfect";
+
+    /// <summary>Switches HDR rendering with tone mapping on or off (F7).</summary>
+    public const string ToggleHdr = "ToggleHdr";
+
+    /// <summary>Cycles multisampling off, 2x, 4x, 8x (F8).</summary>
+    public const string CycleMsaa = "CycleMsaa";
+
     /// <summary>Opens or closes the pause menu (Escape or P).</summary>
     public const string Pause = "Pause";
 

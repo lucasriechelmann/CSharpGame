@@ -29,12 +29,27 @@ public sealed class Camera2D
     public Vector2 ViewportSize { get; set; } = new(1280, 720);
 
     /// <summary>
+    /// Pixel-perfect mode: when true, the camera and everything drawn through it (sprites, tile layers) is positioned on whole pixels of
+    /// the camera's viewport, so pixel art does not shimmer or blur while the camera or sprites move at fractions of a pixel. Use it
+    /// with a viewport equal to the render resolution (see <see cref="PostProcessChain.SetPixelPerfect"/>) and a whole-number zoom.
+    /// </summary>
+    public bool PixelSnap { get; set; }
+
+    /// <summary>The camera position the view is actually built from: <see cref="Position"/>, rounded to a whole pixel when <see cref="PixelSnap"/> is on.</summary>
+    public Vector2 ViewPosition => Snap(Position);
+
+    /// <summary>Rounds a world position to the camera's pixel grid (one pixel is <c>1 / Zoom</c> world units); returns it unchanged when <see cref="PixelSnap"/> is off.</summary>
+    /// <param name="world">A world position.</param>
+    public Vector2 Snap(Vector2 world) =>
+        PixelSnap ? new Vector2(MathF.Round(world.X * _zoom) / _zoom, MathF.Round(world.Y * _zoom) / _zoom) : world;
+
+    /// <summary>
     /// World-to-clip matrix (row-vector convention, ready to upload to OpenGL without transposing).
     /// </summary>
     public Matrix4x4 GetViewProjection()
     {
         // World -> view: undo the camera's translation and rotation, then scale by zoom.
-        var view = Matrix4x4.CreateTranslation(-Position.X, -Position.Y, 0f)
+        var view = Matrix4x4.CreateTranslation(-ViewPosition.X, -ViewPosition.Y, 0f)
                  * Matrix4x4.CreateRotationZ(-Rotation)
                  * Matrix4x4.CreateScale(_zoom, _zoom, 1f);
 

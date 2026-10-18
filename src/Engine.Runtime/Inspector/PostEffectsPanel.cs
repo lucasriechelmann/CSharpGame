@@ -12,6 +12,8 @@ namespace Engine.Runtime.Inspector;
 internal sealed class PostEffectsPanel(PostProcessChain chain)
 {
     private static readonly Dictionary<Type, PropertyInfo[]> PropertyCache = new();
+    private static readonly int[] SampleCounts = [1, 2, 4, 8];
+    private static readonly string[] SampleLabels = ["Off", "2x", "4x", "8x"];
 
     /// <summary>Draws the window. Call between ImGui frame begin and render.</summary>
     public void Draw()
@@ -23,6 +25,9 @@ internal sealed class PostEffectsPanel(PostProcessChain chain)
             ImGui.End();
             return;
         }
+
+        DrawSceneSettings();
+        ImGui.Separator();
 
         if (chain.Effects.Count == 0) ImGui.TextDisabled("No effects in the chain.");
 
@@ -41,6 +46,17 @@ internal sealed class PostEffectsPanel(PostProcessChain chain)
         }
 
         ImGui.End();
+    }
+
+    /// <summary>The chain-wide scene settings: HDR colour and multisampling (pixel-perfect needs the game's camera, so the game offers that).</summary>
+    private void DrawSceneSettings()
+    {
+        bool hdr = chain.Hdr;
+        if (ImGui.Checkbox("HDR (16-bit float)", ref hdr)) chain.Hdr = hdr;
+
+        int selected = Array.IndexOf(SampleCounts, chain.Samples);
+        if (ImGui.Combo("MSAA samples", ref selected, SampleLabels, SampleLabels.Length)) chain.Samples = SampleCounts[selected];
+        if (chain.IsPixelPerfect) ImGui.TextDisabled($"Pixel-perfect {chain.VirtualWidth}x{chain.VirtualHeight} (x{chain.PixelPerfectLayout.Scale:0.##})");
     }
 
     private static void DrawSettings(IPostEffect effect)

@@ -83,22 +83,28 @@ public sealed class Texture2D : IDisposable
 
     /// <summary>
     /// Allocates an uninitialised RGBA texture to render into (the colour attachment of a <see cref="RenderTarget"/>). Linear
-    /// filtering so a target drawn smaller or larger than its size still looks smooth.
+    /// filtering by default so a target drawn smaller or larger than its size still looks smooth.
     /// </summary>
     /// <param name="gl">The GL context that will own the texture.</param>
     /// <param name="width">Width in pixels.</param>
     /// <param name="height">Height in pixels.</param>
-    public static unsafe Texture2D CreateEmpty(GL gl, int width, int height)
+    /// <param name="filter">Nearest keeps hard pixels when the target is scaled up (pixel-perfect mode); mipmaps are not created for targets.</param>
+    /// <param name="hdr">True stores 16-bit floats per channel, so values above 1 (bright lights) survive until a tone-map effect.</param>
+    public static unsafe Texture2D CreateEmpty(GL gl, int width, int height, TextureFilter filter = TextureFilter.Linear, bool hdr = false)
     {
         if (width <= 0 || height <= 0)
             throw new ArgumentOutOfRangeException(nameof(width), $"Texture dimensions must be positive, got {width}x{height}.");
 
         uint handle = gl.GenTexture();
         gl.BindTexture(TextureTarget.Texture2D, handle);
-        gl.TexImage2D(TextureTarget.Texture2D, 0, InternalFormat.Rgba8, (uint)width, (uint)height, 0,
-            PixelFormat.Rgba, PixelType.UnsignedByte, null);
-        gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)GLEnum.Linear);
-        gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)GLEnum.Linear);
+        if (hdr)
+            gl.TexImage2D(TextureTarget.Texture2D, 0, InternalFormat.Rgba16f, (uint)width, (uint)height, 0, PixelFormat.Rgba, PixelType.HalfFloat, null);
+        else
+            gl.TexImage2D(TextureTarget.Texture2D, 0, InternalFormat.Rgba8, (uint)width, (uint)height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, null);
+
+        int sampling = filter == TextureFilter.Nearest ? (int)GLEnum.Nearest : (int)GLEnum.Linear;
+        gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, sampling);
+        gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, sampling);
         gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)GLEnum.ClampToEdge);
         gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)GLEnum.ClampToEdge);
         return new Texture2D(gl, handle, width, height);

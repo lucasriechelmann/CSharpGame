@@ -20,7 +20,7 @@ public sealed partial class PlatformerGame
         if (_statusSecondsLeft > 0) ImGui.TextColored(new Vector4(0.5f, 1f, 0.5f, 1f), _status);
         ImGui.Text($"Sprites: {_batch.Stats.Sprites}   Draw calls: {_batch.Stats.DrawCalls}");
 
-        var mouseWorld = _camera.ScreenToWorld(Input.MousePosition);
+        var mouseWorld = _camera.ScreenToWorld(MouseOnCamera());
         ImGui.Text($"Mouse world: {mouseWorld.X:F0}, {mouseWorld.Y:F0}");
 
         float zoom = _camera.Zoom;

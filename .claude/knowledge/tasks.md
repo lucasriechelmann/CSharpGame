@@ -82,7 +82,8 @@ Small, about one session. Fixes known gaps that affect game feel and that the ed
 
 ## Phase 19: 2D rendering and audio depth
 
-- [ ] Light shadows/occluders, HDR targets, pixel-perfect mode, per-camera effects, MSAA.
+- [x] HDR targets + tone map, pixel-perfect mode, MSAA (window-verified with `tools/drive-display.ps1`).
+- [ ] Light shadows/occluders and per-camera effects. Follow-ups for the done part: bloom/other effects keep 8-bit internal targets, MSAA does not apply when nothing redirects the scene (use the chain), a pixel-perfect mouse mapping in the editor, integer zoom enforcement.
 - [x] Audio: streaming (`WavStream`), positional audio, `AudioSource`/`AudioListener` + `AudioSourceSystem`, mixer groups (`AudioMixer`). Follow-ups: Ogg/MP3 decoding, effects (reverb, low-pass), doppler, ducking, a settings panel for the mixer, an audible check by ear (verified by tests and silent device runs only).
 
 Fast path to a playable game instead: phase 16 then a small 3D game; or phase 18 for more platformer levels.

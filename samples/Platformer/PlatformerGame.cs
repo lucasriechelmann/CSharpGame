@@ -51,6 +51,9 @@ public sealed partial class PlatformerGame : Game
             .Bind(GameActions.ResetCamera, KeyCode.R)
             .Bind(GameActions.QuickSave, KeyCode.F5)
             .Bind(GameActions.QuickLoad, KeyCode.F9)
+            .Bind(GameActions.TogglePixelPerfect, KeyCode.F6)
+            .Bind(GameActions.ToggleHdr, KeyCode.F7)
+            .Bind(GameActions.CycleMsaa, KeyCode.F8)
             .Bind(GameActions.Restart, KeyCode.Enter)
             .Bind(GameActions.Pause, KeyCode.Escape)
             .Bind(GameActions.Pause, KeyCode.P)
@@ -94,9 +97,13 @@ public sealed partial class PlatformerGame : Game
         PostProcess.Add(new BloomEffect(Gl));
         PostProcess.Add(new VignetteEffect(Gl));
         PostProcess.Add(new ColorGradeEffect(Gl) { Enabled = false });
+        _toneMap = PostProcess.Add(new ToneMapEffect(Gl) { Enabled = false, Exposure = 0.75f }); // last; used only while HDR is on
 
         _camera.ViewportSize = new Vector2(Window.Width, Window.Height);
-        Window.Resized += (w, h) => _camera.ViewportSize = new Vector2(w, h);
+        Window.Resized += (w, h) =>
+        {
+            if (!PostProcess.IsPixelPerfect) _camera.ViewportSize = new Vector2(w, h); // pixel-perfect keeps its small game image
+        };
         SnapCameraToHero();
 
         // Per frame: input -> animation parameters -> animation, then facing.
@@ -130,7 +137,11 @@ public sealed partial class PlatformerGame : Game
     /// <inheritdoc />
     protected override void Update(double dt)
     {
-        if (IsEditing) return; // the scene editor (F2) has frozen the game; it owns the camera and the mouse
+        if (IsEditing)
+        {
+            if (PostProcess.IsPixelPerfect) SetPixelPerfect(false); // the editor picks in window pixels, which the scaled game image would break
+            return; // the scene editor (F2) has frozen the game; it owns the camera and the mouse
+        }
 
         if (Actions.WasPressed(GameActions.Pause)) TogglePause();
         if (IsPaused)
@@ -142,12 +153,13 @@ public sealed partial class PlatformerGame : Game
         UpdateCameraControls(dt);
         UpdateStatusMessage(dt);
         UpdateFlow(dt);
+        HandleDisplayKeys();
 
         if (Actions.WasPressed(GameActions.QuickSave)) QuickSave();
         else if (Actions.WasPressed(GameActions.QuickLoad)) QuickLoad();
 
         if (Actions.WasPressed(GameActions.Spawn))
-            SpawnCreaturesAt(_camera.ScreenToWorld(Input.MousePosition), 5);
+            SpawnCreaturesAt(_camera.ScreenToWorld(MouseOnCamera()), 5);
     }
 
     /// <inheritdoc />
