@@ -2,14 +2,14 @@
 
 Work items after the 10-phase roadmap (see `features.md`). Status: `[ ]` todo, `[~]` in progress, `[x]` done. Update this file when a task lands or the plan changes. Order matters: the recommended path is Phase 11, then Phase 12, then Phase 13.
 
-## Phase 11: Game polish and engine hardening (recommended next)
+## Phase 11: Game polish and engine hardening (done)
 
 Small, about one session. Fixes known gaps that affect game feel and that the editor will need.
 
 - [x] **Render interpolation between fixed steps.** Add a previous-transform component, written by the fixed step and blended by the render systems with the frame alpha. Why: motion stutters when the fixed rate and refresh rate do not match.
 - [x] **Logging.** A small `ILogger`-style abstraction in Core (no Silk.NET), with a console sink and an in-overlay log panel. Why: the editor and asset hot-reload both need it.
 - [x] **Pause and menu.** Pause state in `Game`, a menu drawn from `Game.Hud()`.
-- [ ] **Moving platforms.** Physics2D support (carry riders), then use in the sample level.
+- [x] **Moving platforms.** Physics2D support (carry riders), then use in the sample level.
 - [x] **Checkpoints.** Respawn at the last checkpoint instead of restarting the level; rules stay in `GameSession`.
 - [x] **Saved high scores.** Persist to a JSON file; unit-test the load/save path.
 

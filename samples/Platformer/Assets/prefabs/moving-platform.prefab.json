@@ -1,0 +1,70 @@
+{
+  "components": {
+    "Name": {
+      "value": "Moving platform"
+    },
+    "Transform": {
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 4
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      }
+    },
+    "PreviousTransform": {},
+    "Sprite": {
+      "texture": "items.png",
+      "size": {
+        "x": 96,
+        "y": 32
+      },
+      "source": {
+        "x": 128,
+        "y": 0,
+        "width": 48,
+        "height": 16
+      },
+      "color": {
+        "r": 1,
+        "g": 1,
+        "b": 1,
+        "a": 1
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "flip": "None"
+    },
+    "BoxCollider": {
+      "size": {
+        "x": 96,
+        "y": 32
+      },
+      "offset": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    "StaticSolid": {},
+    "MovingPlatform": {
+      "travel": {
+        "x": 64,
+        "y": 0
+      },
+      "speed": 40,
+      "distance": 0,
+      "returning": false
+    }
+  }
+}

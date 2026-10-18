@@ -675,6 +675,18 @@
           }
         }
       }
+    },
+    {
+      "prefab": "prefabs/moving-platform.prefab.json",
+      "components": {
+        "Transform": {
+          "position": {
+            "x": -112,
+            "y": -144,
+            "z": 4
+          }
+        }
+      }
     }
   ]
 }

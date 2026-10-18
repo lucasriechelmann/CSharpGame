@@ -25,6 +25,7 @@ public static class EngineComponents
         .Register<TileLayerRenderer>("TileLayerRenderer")
         .Register<BoxCollider>("BoxCollider")
         .Register<StaticSolid>("StaticSolid")
+        .Register<MovingPlatform>("MovingPlatform")
         .Register<PhysicsBody>("PhysicsBody")
         .Register<PlatformerController>("PlatformerController")
         .Register<PlatformerIntent>("PlatformerIntent");

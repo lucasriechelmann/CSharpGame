@@ -4,7 +4,8 @@ param([string]$OutDir)
 #   tiles.png     80x16   5 tiles of 16x16: 1 dirt, 2 grass, 3 stone, 4 background brick, 5 grass tuft
 #   hero.png     128x16   8 frames: 0-1 idle, 2-5 run, 6 jump, 7 fall
 #   creatures.png 256x16  8 creature types x 2 walk frames (type n uses cells 2n and 2n+1)
-#   items.png    128x16   cells 0-3 spinning coin, 4 locked exit door, 5 open exit door, 6 checkpoint flag (down), 7 checkpoint flag (raised)
+#   items.png    176x16   cells 0-3 spinning coin, 4 locked exit door, 5 open exit door, 6 checkpoint flag (down), 7 checkpoint flag (raised),
+#                         cells 8-10 (one 48x16 image) moving platform
 # Everything faces right so horizontal flips are easy to see.
 
 Add-Type -AssemblyName System.Drawing
@@ -119,7 +120,7 @@ foreach ($blade in @(@(3, 4), @(6, 6), @(9, 5), @(12, 3))) {                 # 5
 $tiles.Save((Join-Path $OutDir "tiles.png"), [System.Drawing.Imaging.ImageFormat]::Png)
 
 # ---- items ----
-$items = New-Sheet 128 16
+$items = New-Sheet 176 16
 $goldEdge = Col 176 120 20
 $goldBody = Col 255 205 40
 $goldShine = Col 255 245 170
@@ -162,6 +163,12 @@ foreach ($cell in 6..7) {
         Fill $items ($ox + 6) ($top + $row) $width 1 $(if ($row -eq 0 -or $row -eq 4) { $flagEdge } else { $flagBody })
     }
 }
+# Moving platform: a 48x16 wooden plank with a grass top, drawn at 2x so it matches the 96x32 collider.
+Fill $items 128 0 48 16 (Col 150 100 60)
+Fill $items 128 0 48 3 (Col 80 200 90)
+Fill $items 128 0 48 1 (Col 130 230 120)
+Fill $items 128 14 48 2 (Col 96 62 36)
+foreach ($seam in 143, 159) { Fill $items $seam 3 1 11 (Col 110 72 42) }
 $items.Save((Join-Path $OutDir "items.png"), [System.Drawing.Imaging.ImageFormat]::Png)
 
 Write-Output "Wrote tiles.png, hero.png, creatures.png, items.png to $OutDir"

@@ -46,7 +46,7 @@ public sealed class EngineComponentsTests : IDisposable
         var registry = EngineComponents.RegisterAll(new ComponentRegistry());
 
         Assert.Equal(
-            new[] { "BoxCollider", "Light2D", "Name", "PhysicsBody", "PlatformerController", "PlatformerIntent", "PreviousTransform", "Sprite", "SpriteAnimator", "StaticSolid", "TileLayerRenderer", "Transform" },
+            new[] { "BoxCollider", "Light2D", "MovingPlatform", "Name", "PhysicsBody", "PlatformerController", "PlatformerIntent", "PreviousTransform", "Sprite", "SpriteAnimator", "StaticSolid", "TileLayerRenderer", "Transform" },
             registry.Names.OrderBy(n => n).ToArray());
     }
 

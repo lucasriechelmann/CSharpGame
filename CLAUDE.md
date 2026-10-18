@@ -1,14 +1,14 @@
 # CSharpGame: a learning-oriented 2D game engine in C# (3D-ready)
 
 Windows, .NET 10, Silk.NET (OpenGL 3.3 core), custom sparse-set ECS, Dear ImGui debug UI.
-Goal: learn how engines work, so write core systems from scratch and use libraries only for plumbing. First game: a platformer. Status: phases 1-10 of 10 done (the engine roadmap is complete; next is an editor and 3D) (see `.claude/knowledge/features.md`).
+Goal: learn how engines work, so write core systems from scratch and use libraries only for plumbing. First game: a platformer. Status: phases 1-11 done (the 10-phase engine roadmap plus the phase 11 polish pass; next is an editor and 3D, see `.claude/knowledge/tasks.md`) (see `.claude/knowledge/features.md`).
 
 ## Projects
 
 - `src/Engine.Core`      ECS, fixed timestep, `Transform`, input state and action map, asset manager. No GPU or window dependencies; unit-testable.
 - `src/Engine.Platform`  Silk.NET window, GL context, input adapter, ImGui controller.
 - `src/Engine.Rendering` Shader, Texture2D, SpriteBatch, Camera2D, `Sprite` component, `SpriteRenderSystem`, `TextureLoader`; `RenderTarget`, `PostProcessChain` and the effects (`ColorGradeEffect`, `VignetteEffect`, `BloomEffect`); `Light2D` and `LightingEffect`.
-- `src/Engine.Physics2D` AABB, tile grid, swept collision solver, `PhysicsSystem`, platformer controller (coyote time, jump buffering, variable jump). No GPU or window dependencies.
+- `src/Engine.Physics2D` AABB, tile grid, swept collision solver, `PhysicsSystem`, moving platforms that carry riders, platformer controller (coyote time, jump buffering, variable jump). No GPU or window dependencies.
 - `src/Engine.Tilemaps`  Chunked `TileLayer`, `TileSet` atlas, `TileGridBuilder` (layer -> physics grid), `TileLayerRenderSystem`.
 - `src/Engine.Animation` `AnimationClip`, data-driven `AnimationStateMachine`, `SpriteAnimator` component, `AnimationSystem`.
 - `src/Engine.Scenes`    JSON scenes and prefabs: `ComponentRegistry`, `SceneSerializer`, `Prefab`, `JsonMerge`. Depends on Core only.
@@ -32,7 +32,7 @@ Dependency direction: samples -> Runtime -> (Core, Platform, Rendering, Scenes, 
 - **No allocation in per-frame/per-entity paths** (no LINQ, no per-frame capturing closures).
 - **Structural ECS changes during a query** go through `CommandBuffer`.
 - **Input**: ask `ActionMap` for intent, never a physical key. Read edges (pressed/released) in per-frame code and latch into components; never in fixed-step systems.
-- **Physics**: order fixed systems as "decide velocities" (patrol, `PlatformerControllerSystem`) then `PhysicsSystem`. Gameplay reads `PhysicsBody.Contacts`/`IsGrounded`. Touching edges never count as overlap (epsilon); a body spawned *inside* a solid passes through it, so spawn clear of solids.
+- **Physics**: order fixed systems as `PreviousTransformSystem`, `MovingPlatformSystem`, then "decide velocities" (patrol, `PlatformerControllerSystem`), then `PhysicsSystem`. Gameplay reads `PhysicsBody.Contacts`/`IsGrounded`. Touching edges never count as overlap (epsilon); a body spawned *inside* a solid passes through it, so spawn clear of solids.
 - **Tilemaps**: tile id 0 = empty, 1+ index a `TileSet` (row-major, 1-based); solidity lives on the tile set and collision is derived with `TileGridBuilder`, never hand-built twice. Draw order: background `TileLayerRenderSystem` -> `SpriteRenderSystem` -> foreground `TileLayerRenderSystem`.
 - **Animation**: gameplay writes animator *parameters* (`SpriteAnimator.SetParameter`); the state machine picks the clip. Run the parameter-writing system before `AnimationSystem`, both per frame. Create animators with `SpriteAnimator.Create`.
 - **Scenes and prefabs**: a component is saved only if registered (`Components.Register<T>("Name")`, in the game's constructor for game components); register it **and** keep it plain public-field data. Files reference assets by *name*, never id; prefab overrides are JSON merge (objects merge, arrays replace, `null` removes a component). Loading is all-or-nothing: parse first, create entities after. Do not store `Entity` references in saved components (not remapped on load yet). New asset kinds that scenes refer to need an `IAssetLoader<T>` registered in `Game.OnLoad`.

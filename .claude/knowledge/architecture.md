@@ -64,7 +64,8 @@ Fixed steps and display frames do not line up, so drawing the raw simulated posi
 - **Solids**: `TileGrid` (cell (0,0) bottom-left, outside = empty) plus `StaticSolid`-tagged `BoxCollider` entities gathered each step (brute-force list; a spatial hash is deferred until static box counts justify it).
 - **Sweep algorithm**: per axis, find the nearest obstacle face ahead of the leading edge across the box's extent on the other axis (shrunk by `Epsilon` = 0.001 so touching is not overlapping); obstacles already behind the leading edge are ignored, so overlapping a solid lets a body leave it but also lets a body spawned inside pass through. Tunnelling-proof for any speed.
 - **Platformer controller**: input layer writes `PlatformerIntent` per frame (`MoveX`, `JumpHeld`, sticky `JumpPressedPending`); fixed-step `PlatformerControllerSystem` (before `PhysicsSystem`) converts the pending flag to a jump buffer, tracks coyote time from last step's `Below` contact, accelerates toward target speed (ground/air), jumps when buffer and coyote are both positive, cuts the jump when released early, and raises gravity scale while falling. Tuning (`PlatformerTuning`) and timers live in one `PlatformerController` component (the ECS supports queries of up to 3 components).
-- **Not yet**: one-way platforms, slopes, moving platforms/carrying, body-vs-body collision, depenetration.
+- **Moving platforms**: `MovingPlatform` (path `Travel`, `Speed`, runtime `Distance`/`Returning`, `default` is valid) on an entity with `BoxCollider` + `StaticSolid`; `MovingPlatformSystem` (fixed, first after `PreviousTransformSystem`) advances it with `MovingPlatformMath.Advance` (ping-pong, reflecting overshoot) and shifts riders by the same delta. A rider = grounded body whose feet are at the platform's old top with horizontal overlap. A platform rising into a body that was at/just above its top lifts it to the new top (otherwise the body ends up inside the solid and, per the sweep rules, falls through). Decisions: platforms stay `StaticSolid`s so `PhysicsSystem` needs no change; riders are shifted, not swept, so a platform can carry a rider into a wall and does not push bodies it hits from the side or above (place paths in open space); the path start is the entity's placed position, so scenes only set travel and speed.
+- **Not yet**: one-way platforms, slopes, body-vs-body collision, depenetration, pushing/crushing by moving platforms.
 
 ## Tilemaps (`src/Engine.Tilemaps`)
 
@@ -114,13 +115,14 @@ Fixed steps and display frames do not line up, so drawing the raw simulated posi
 | `Transform` | `src/Engine.Core/Components/Transform.cs` | `Vector3` position (Z = draw order), `Quaternion` rotation, `Vector3` scale. Never use `default`; use `Identity`/`At`. |
 | `Sprite` | `src/Engine.Rendering/Sprite.cs` | `AssetHandle<Texture2D>`, size, pixel-space `Source` rect (empty = whole texture), tint, pivot, flip. |
 | `BoxCollider`, `PhysicsBody`, `StaticSolid` (tag) | `src/Engine.Physics2D/` | Collider size/offset; velocity, gravity scale and contact flags; immovable solid marker. |
+| `MovingPlatform` | `src/Engine.Physics2D/` | Back-and-forth path (travel, speed) plus runtime distance/direction; carries riders. |
 | `PlatformerController`, `PlatformerIntent` | `src/Engine.Physics2D/` | Tuning + runtime timers; player intent written by an input system. |
 | `Name` | `src/Engine.Core/Components/` | Human-readable label (tools, inspector, saves). |
 | `PreviousTransform` | `src/Engine.Core/Components/` | Position/rotation at the start of the last fixed step; `default` = no history yet (draws at the current transform, so teleports never smear). Opt-in for moving entities (hero, creatures). |
 | `TileLayerRenderer` | `src/Engine.Tilemaps/` | Layer + tile set handles, tint, foreground flag. |
 | `SpriteAnimator` | `src/Engine.Animation/` | Machine handle, state, time, speed, parameters. |
 | `Patrol` | `samples/Platformer/` | Game-specific walking AI; also marks an entity as a creature for `InteractionSystem`. |
-| `Coin`, `Goal` | `samples/Platformer/` | Collectible with a score value; tag for the level exit. |
+| `Coin`, `Goal`, `Checkpoint` | `samples/Platformer/` | Collectible with a score value; tag for the level exit; respawn flag with a `Reached` bool. |
 | `Light2D` | `src/Engine.Rendering/Lighting/` | Point light: colour, intensity, radius. |
 
 ## Assets

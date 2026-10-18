@@ -110,6 +110,7 @@ public sealed partial class PlatformerGame : Game
 
         // Fixed step: record where everything was (for render interpolation), decide velocities (patrol, controller), then let physics move everything.
         FixedSystems.Add(new PreviousTransformSystem());
+        FixedSystems.Add(new MovingPlatformSystem()); // carries riders before anything decides this step's velocities
         FixedSystems.Add(new PatrolSystem());
         FixedSystems.Add(new PlatformerControllerSystem());
         FixedSystems.Add(new PhysicsSystem(_grid, _physicsSettings));
