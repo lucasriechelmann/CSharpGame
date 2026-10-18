@@ -3,7 +3,7 @@ using ImGuiNET;
 
 namespace Platformer;
 
-// The player-facing UI: a status line along the top and a big message when the run ends. Drawn even when F1 hides the debug UI.
+// The player-facing UI: a status line along the top, a big message when the run ends, and the pause menu (PlatformerGame.Pause.cs). Drawn even when F1 hides the debug UI.
 public sealed partial class PlatformerGame
 {
     private const ImGuiWindowFlags HudFlags =
@@ -17,6 +17,7 @@ public sealed partial class PlatformerGame
     {
         DrawStatusLine();
         if (_session.Phase != GamePhase.Playing) DrawEndMessage();
+        if (IsPaused) DrawPauseMenu();
     }
 
     private void DrawStatusLine()

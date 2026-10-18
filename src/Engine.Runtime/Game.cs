@@ -123,6 +123,13 @@ public abstract class Game : IDisposable
     /// </summary>
     public RenderClock RenderClock { get; } = new();
 
+    /// <summary>
+    /// While true the simulation is frozen: <see cref="FrameSystems"/> and <see cref="FixedSystems"/> do not run and the fixed
+    /// timestep stops accumulating time, so nothing moves or animates and no time is "owed" when you resume. <see cref="Update"/>,
+    /// drawing and the GUI keep running, so a game can read input and show a menu. Set it from <see cref="Update"/> or <see cref="Hud"/>.
+    /// </summary>
+    public bool IsPaused { get; set; }
+
     /// <summary>Raw keyboard and mouse state. Prefer <see cref="Actions"/> for game logic.</summary>
     public InputState Input => _window.Input;
 
@@ -177,6 +184,9 @@ public abstract class Game : IDisposable
     /// </summary>
     protected virtual void Hud() { }
 
+    /// <summary>Asks the window to close; the game loop ends after the current frame and <see cref="Unload"/> runs as usual.</summary>
+    public void Quit() => _window.Close();
+
     /// <summary>Opens the window and runs the game loop until the window closes.</summary>
     public void Run() => _window.Run();
 
@@ -226,12 +236,12 @@ public abstract class Game : IDisposable
         if (Input.WasPressed(KeyCode.F1)) _overlay.Toggle();
         Audio.Update();
 
-        FrameSystems.Run(World, dt);
+        if (!IsPaused) FrameSystems.Run(World, dt);
         long start = Profiler.Begin();
         Update(dt);
         Profiler.End(_updateSection, start);
 
-        int steps = _timestep.Advance(dt);
+        int steps = IsPaused ? 0 : _timestep.Advance(dt);
         for (int i = 0; i < steps; i++)
         {
             FixedSystems.Run(World, _timestep.Step);

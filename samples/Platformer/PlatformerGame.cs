@@ -50,7 +50,15 @@ public sealed partial class PlatformerGame : Game
             .Bind(GameActions.ResetCamera, KeyCode.R)
             .Bind(GameActions.QuickSave, KeyCode.F5)
             .Bind(GameActions.QuickLoad, KeyCode.F9)
-            .Bind(GameActions.Restart, KeyCode.Enter);
+            .Bind(GameActions.Restart, KeyCode.Enter)
+            .Bind(GameActions.Pause, KeyCode.Escape)
+            .Bind(GameActions.Pause, KeyCode.P)
+            .Bind(GameActions.MenuUp, KeyCode.Up)
+            .Bind(GameActions.MenuUp, KeyCode.W)
+            .Bind(GameActions.MenuDown, KeyCode.Down)
+            .Bind(GameActions.MenuDown, KeyCode.S)
+            .Bind(GameActions.MenuConfirm, KeyCode.Enter)
+            .Bind(GameActions.MenuConfirm, KeyCode.Space);
 
         // The engine's components are registered already; scenes need the game's own too.
         Components.Register<Patrol>("Patrol");
@@ -116,6 +124,13 @@ public sealed partial class PlatformerGame : Game
     /// <inheritdoc />
     protected override void Update(double dt)
     {
+        if (Actions.WasPressed(GameActions.Pause)) TogglePause();
+        if (IsPaused)
+        {
+            UpdatePauseMenu();
+            return; // frozen: no session clock, restart key, quick-save or spawning
+        }
+
         UpdateCameraControls(dt);
         UpdateStatusMessage(dt);
         UpdateFlow(dt);

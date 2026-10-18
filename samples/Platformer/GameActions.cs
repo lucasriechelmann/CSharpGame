@@ -24,6 +24,18 @@ public static class GameActions
     /// <summary>Replaces the world with the last quick-save (F9).</summary>
     public const string QuickLoad = "QuickLoad";
 
+    /// <summary>Opens or closes the pause menu (Escape or P).</summary>
+    public const string Pause = "Pause";
+
+    /// <summary>Moves the pause menu highlight up (Up or W).</summary>
+    public const string MenuUp = "MenuUp";
+
+    /// <summary>Moves the pause menu highlight down (Down or S).</summary>
+    public const string MenuDown = "MenuDown";
+
+    /// <summary>Chooses the highlighted pause menu entry (Enter or Space).</summary>
+    public const string MenuConfirm = "MenuConfirm";
+
     /// <summary>Starts the level over (Enter).</summary>
     public const string Restart = "Restart";
 }
