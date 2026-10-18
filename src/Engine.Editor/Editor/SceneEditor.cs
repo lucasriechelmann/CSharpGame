@@ -58,7 +58,7 @@ internal sealed partial class SceneEditor : IEditorShell
         _inspector = inspector;
         _log = log;
         _hooks = hooks;
-        _assetBrowser = new AssetBrowserPanel(assets.RootDirectory);
+        _assetBrowser = new AssetBrowserPanel(assets.RootDirectory, LoadThumbnail, prefab => PlacePrefab(prefab, _viewport.Size / 2f));
         _mixer = new MixerPanel(() => game.Audio);
         _game = game;
         _history = new CommandStack(new EditContext(world));

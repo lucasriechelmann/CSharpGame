@@ -14,6 +14,25 @@ internal sealed partial class SceneEditor
     /// <summary>The distance in front of the 3D camera a dropped prefab lands at when the mouse ray misses the ground.</summary>
     private const float DropDistance3D = 6f;
 
+    private readonly HashSet<string> _unloadablePictures = new();
+
+    /// <summary>Loads a picture of the project for the Assets window's hover preview (loaded once, shared with the game). Null for one that cannot be loaded.</summary>
+    private Engine.Rendering.Texture2D? LoadThumbnail(string assetName)
+    {
+        if (_unloadablePictures.Contains(assetName)) return null;
+
+        try
+        {
+            return _assets.Get(_assets.Load<Engine.Rendering.Texture2D>(assetName));
+        }
+        catch (Exception ex) when (ex is FileNotFoundException or InvalidOperationException or InvalidDataException)
+        {
+            _unloadablePictures.Add(assetName); // once: a hover would otherwise retry (and log) every frame
+            _log.Warning("Editor", $"No thumbnail for {assetName}: {ex.Message}");
+            return null;
+        }
+    }
+
     /// <summary>Call right after the scene image is drawn: turns a prefab dropped on it into a new, selected, undoable entity under the mouse.</summary>
     private unsafe void AcceptPrefabDrop()
     {
