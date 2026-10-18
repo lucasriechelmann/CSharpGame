@@ -52,7 +52,7 @@ Dependency direction: samples -> Runtime -> (Core, Platform, Rendering, Scenes, 
 
 - Before adding or changing a data entity/component, a service or project boundary, a cross-project dependency, the frame loop, or the asset/ECS internals, read `.claude/knowledge/architecture.md`.
 - Before writing new code in an area you have not touched this session, read `.claude/knowledge/conventions.md`.
-- Before working on a feature, or choosing what to build next, find its owning modules and the roadmap in `.claude/knowledge/features.md`.
+- Before working on a feature, or choosing what to build next, find its owning modules and the roadmap in `.claude/knowledge/features.md`; the backlog of next tasks is in `.claude/knowledge/tasks.md`.
 
 ## Commands
 
