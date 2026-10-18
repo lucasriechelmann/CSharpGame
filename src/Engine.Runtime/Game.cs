@@ -42,6 +42,9 @@ public abstract class Game : IDisposable
     /// <summary>Systems run once per frame (input handling, animation, camera smoothing).</summary>
     public SystemGroup FrameSystems { get; } = new();
 
+    /// <summary>Systems run each frame after <see cref="Draw"/> (e.g. the sprite renderer), in the order added.</summary>
+    public SystemGroup RenderSystems { get; } = new();
+
     /// <summary>The OpenGL API. Only valid after the window has loaded, i.e. from <see cref="Load"/> onwards.</summary>
     protected GL Gl => _window.Gl;
 
@@ -57,6 +60,9 @@ public abstract class Game : IDisposable
     /// <summary>Called once after the window and OpenGL context exist. Create GPU resources here.</summary>
     protected virtual void Load() { }
 
+    /// <summary>Called once when the game shuts down, before the GL context is destroyed. Dispose GPU resources created in <see cref="Load"/> here.</summary>
+    protected virtual void Unload() { }
+
     /// <summary>Called once per fixed simulation step, after <see cref="FixedSystems"/> have run.</summary>
     /// <param name="dt">The fixed step length in seconds.</param>
     protected virtual void FixedUpdate(double dt) { }
@@ -65,7 +71,7 @@ public abstract class Game : IDisposable
     /// <param name="dt">Seconds since the previous frame.</param>
     protected virtual void Update(double dt) { }
 
-    /// <summary>Called once per frame to draw the scene, before the debug UI is drawn on top.</summary>
+    /// <summary>Called once per frame to prepare the frame (e.g. clear the screen); <see cref="RenderSystems"/> run right after it, then the debug UI is drawn on top.</summary>
     /// <param name="dt">Seconds since the previous frame.</param>
     protected virtual void Draw(double dt) { }
 
@@ -76,7 +82,11 @@ public abstract class Game : IDisposable
     public void Run() => _window.Run();
 
     /// <summary>Releases the window and GPU context.</summary>
-    public void Dispose() => _window.Dispose();
+    public void Dispose()
+    {
+        Unload();
+        _window.Dispose();
+    }
 
     private void OnLoad()
     {
@@ -105,6 +115,7 @@ public abstract class Game : IDisposable
     {
         _stats.RecordFrame(dt);
         Draw(dt);
+        RenderSystems.Run(World, dt);
     }
 
     private void OnGui(double dt)

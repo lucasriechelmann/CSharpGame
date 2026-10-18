@@ -2,6 +2,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Engine.Runtime\Engine.Runtime.csproj" />
+    <ProjectReference Include="..\..\src\Engine.Rendering\Engine.Rendering.csproj" />
+    <ProjectReference Include="..\..\src\Engine.Core\Engine.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>

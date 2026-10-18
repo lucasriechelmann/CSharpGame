@@ -5,9 +5,11 @@
   <Folder Name="/src/">
     <Project Path="src/Engine.Core/Engine.Core.csproj" />
     <Project Path="src/Engine.Platform/Engine.Platform.csproj" />
+    <Project Path="src/Engine.Rendering/Engine.Rendering.csproj" />
     <Project Path="src/Engine.Runtime/Engine.Runtime.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Engine.Core.Tests/Engine.Core.Tests.csproj" />
+    <Project Path="tests/Engine.Rendering.Tests/Engine.Rendering.Tests.csproj" />
   </Folder>
 </Solution>

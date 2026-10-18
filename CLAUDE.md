@@ -7,11 +7,21 @@ Goal: learn how engines work, so write core systems from scratch and use librari
 
 - `src/Engine.Core`     ECS, fixed timestep, math helpers. No GPU or window dependencies (unit-testable).
 - `src/Engine.Platform` Silk.NET window, GL context, input, ImGui controller.
+- `src/Engine.Rendering` Shader, Texture2D, SpriteBatch, Camera2D, Sprite component + SpriteRenderSystem. Pure maths (`SpriteQuad`, `Camera2D`) is unit-tested; GL classes need a context.
 - `src/Engine.Runtime`  `Game` base class, loop, debug overlay. Ties Core and Platform together.
 - `samples/Platformer`  The first game. References the engine like any game project would.
 - `tests/`              xUnit tests. Core logic must be testable without a GPU.
 
-Dependency direction: samples -> Runtime -> (Core, Platform). Core never references Platform or Silk.NET.
+Dependency direction: samples -> Runtime -> (Core, Platform); samples/Runtime -> Rendering -> Core. Core never references Platform, Rendering or Silk.NET.
+
+## Rendering conventions
+
+- World space: X right, Y up, Z = draw order (larger Z in front). Camera zoom 1 = 1 world unit per pixel.
+- Texture/sprite space: (0,0) is the top-left; image row 0 is the top.
+- `Matrix4x4` is row-vector/row-major; upload to GL **without transposing** and multiply as `uViewProjection * vec4(pos, 1)`.
+- Sprites are drawn in submission order with alpha blending and no depth test; sort before submitting.
+- `Game.Draw` clears/prepares the frame, then `RenderSystems` run, then the ImGui overlay. Create GPU resources in `Load`, dispose them in `Unload`.
+- To check rendering visually, run the sample and capture its window (see the session scratchpad `capture.ps1` pattern: launch exe, `CopyFromScreen` the window rect).
 
 ## Code rules (enforced where noted)
 
@@ -57,7 +67,7 @@ Never add a Co-Authored-By trailer to commit messages.
 
 1. Foundation: window, fixed-timestep loop, ImGui debug UI. **Done**
 2. Sparse-set ECS with tests. **Done**
-3. GL wrapper, shaders, textures, batched sprite renderer, 2D camera.
+3. GL wrapper, shaders, textures, batched sprite renderer, 2D camera. **Done**
 4. Input mapping, asset cache, sprite demo.
 5. AABB/tile collision, platformer controller (coyote time, jump buffering).
 6. Tilemaps and sprite animation.
