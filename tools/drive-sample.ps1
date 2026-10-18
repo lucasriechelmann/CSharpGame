@@ -1,0 +1,58 @@
+param([string]$Exe, [string]$OutDir)
+
+Add-Type -AssemblyName System.Drawing
+Add-Type @"
+using System;
+using System.Runtime.InteropServices;
+public static class Win32 {
+    [StructLayout(LayoutKind.Sequential)] public struct RECT { public int Left, Top, Right, Bottom; }
+    [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr hWnd, out RECT rect);
+    [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr hWnd);
+    [DllImport("user32.dll")] public static extern bool SetCursorPos(int x, int y);
+    [DllImport("user32.dll")] public static extern void mouse_event(uint flags, uint dx, uint dy, uint data, UIntPtr extra);
+    [DllImport("user32.dll")] public static extern void keybd_event(byte vk, byte scan, uint flags, UIntPtr extra);
+}
+"@
+
+function Shot($proc, $path) {
+    $rect = New-Object Win32+RECT
+    [Win32]::GetWindowRect($proc.MainWindowHandle, [ref]$rect) | Out-Null
+    $w = $rect.Right - $rect.Left; $h = $rect.Bottom - $rect.Top
+    $bmp = New-Object System.Drawing.Bitmap $w, $h
+    $g = [System.Drawing.Graphics]::FromImage($bmp)
+    $g.CopyFromScreen($rect.Left, $rect.Top, 0, 0, $bmp.Size)
+    $bmp.Save($path, [System.Drawing.Imaging.ImageFormat]::Png)
+}
+
+$proc = Start-Process -FilePath $Exe -PassThru -RedirectStandardError "$OutDir\err.txt"
+try {
+    Start-Sleep -Seconds 4
+    $proc.Refresh()
+    if ($proc.HasExited) { Write-Output "EXITED code=$($proc.ExitCode)"; Get-Content "$OutDir\err.txt" | Select-Object -First 20; return }
+    [Win32]::SetForegroundWindow($proc.MainWindowHandle) | Out-Null
+    Start-Sleep -Milliseconds 800
+
+    $rect = New-Object Win32+RECT
+    [Win32]::GetWindowRect($proc.MainWindowHandle, [ref]$rect) | Out-Null
+
+    # A: baseline
+    Shot $proc "$OutDir\A_baseline.png"
+
+    # B: click in the arena to spawn 10 creatures
+    [Win32]::SetCursorPos($rect.Left + 760, $rect.Top + 420) | Out-Null
+    Start-Sleep -Milliseconds 300
+    [Win32]::mouse_event(0x0002, 0, 0, 0, [UIntPtr]::Zero); Start-Sleep -Milliseconds 80
+    [Win32]::mouse_event(0x0004, 0, 0, 0, [UIntPtr]::Zero)
+    Start-Sleep -Milliseconds 500
+    Shot $proc "$OutDir\B_clicked.png"
+
+    # C: hold D (move right) for 1.5s, capture while held
+    [Win32]::keybd_event(0x44, 0, 0, [UIntPtr]::Zero)
+    Start-Sleep -Milliseconds 1500
+    Shot $proc "$OutDir\C_holdD.png"
+    [Win32]::keybd_event(0x44, 0, 2, [UIntPtr]::Zero)
+    Write-Output "done"
+}
+finally {
+    if (-not $proc.HasExited) { Stop-Process -Id $proc.Id -Force }
+}
