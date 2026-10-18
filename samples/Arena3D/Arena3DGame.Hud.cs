@@ -15,7 +15,8 @@ public sealed partial class Arena3DGame
     protected override void Hud()
     {
         ImGui.SetNextWindowPos(ViewportOrigin + new Vector2(ViewportWidth / 2f, 12f), ImGuiCond.Always, new Vector2(0.5f, 0f));
-        ImGui.Begin("##hud", HudFlags);
+        ImGui.SetNextWindowBgAlpha(0.5f); // the sky behind the bar is bright
+        ImGui.Begin("##hud", HudFlags & ~ImGuiWindowFlags.NoBackground);
         ImGui.SetWindowFontScale(1.6f);
         ImGui.TextColored(new Vector4(1f, 0.85f, 0.3f, 1f), $"Orbs {_session.OrbsCollected}/{_session.OrbsTotal}");
         ImGui.SameLine();
@@ -59,6 +60,8 @@ public sealed partial class Arena3DGame
             ImGui.Text($"Phase {_session.Phase}   time left {_session.TimeLeft:F1}   falls {_session.Falls}");
             float distance = _zoom;
             if (ImGui.SliderFloat("Camera distance", ref distance, MinZoom, MaxZoom)) _zoom = distance;
+            bool sky = _meshes.Lighting.DrawSky;
+            if (ImGui.Checkbox("Procedural sky", ref sky)) _meshes.Lighting.DrawSky = sky;
             bool shadows = _meshes.Lighting.ShadowsEnabled;
             if (ImGui.Checkbox("Sun shadows", ref shadows)) _meshes.Lighting.ShadowsEnabled = shadows;
         }

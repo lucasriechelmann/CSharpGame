@@ -15,6 +15,15 @@ public sealed class Lighting3D
     /// <summary>What a surface reflects when it looks up: the colour of the sky overhead (sRGB). Mirrors the clear colour a game draws its sky with.</summary>
     public Color ReflectedSky { get; set; } = new(0.45f, 0.62f, 0.85f);
 
+    /// <summary>True draws a procedural sky (<see cref="SkyRenderer"/>) behind the world, using <see cref="SkyZenith"/>, <see cref="SkyHorizon"/> and <see cref="ReflectedGround"/>. False leaves the game's clear colour.</summary>
+    public bool DrawSky { get; set; }
+
+    /// <summary>Sky colour straight overhead (sRGB), used when <see cref="DrawSky"/> is on.</summary>
+    public Color SkyZenith { get; set; } = new(0.22f, 0.45f, 0.85f);
+
+    /// <summary>Sky colour at the horizon (sRGB), used when <see cref="DrawSky"/> is on; the ground fades into it too.</summary>
+    public Color SkyHorizon { get; set; } = new(0.75f, 0.85f, 0.95f);
+
     /// <summary>What a surface reflects when it looks down: the colour of the ground (sRGB). Between the two the reflection blends smoothly.</summary>
     public Color ReflectedGround { get; set; } = new(0.25f, 0.24f, 0.22f);
 

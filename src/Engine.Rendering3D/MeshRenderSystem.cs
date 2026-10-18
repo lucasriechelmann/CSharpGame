@@ -36,6 +36,7 @@ public sealed partial class MeshRenderSystem : ISystem, IDisposable
     private readonly Texture2D _white;
     private readonly Shader _shadowShader;
     private readonly ShadowMap _shadowMap;
+    private readonly SkyRenderer _sky;
     private readonly EntityAction<Transform, MeshRenderer> _drawEntity;
     private readonly EntityAction<Transform, ModelRenderer> _drawModelEntity;
     private readonly EntityAction<Transform, DirectionalLight> _collectSun;
@@ -66,6 +67,7 @@ public sealed partial class MeshRenderSystem : ISystem, IDisposable
         _white = Texture2D.CreateWhite(gl);
         _shadowShader = new Shader(gl, ShadowShaderSource.Vertex, ShadowShaderSource.Fragment);
         _shadowMap = new ShadowMap(gl, shadowMapResolution);
+        _sky = new SkyRenderer(gl);
         _drawEntity = GatherEntity; // created once so the per-frame queries do not allocate delegates
         _drawModelEntity = GatherModelEntity;
         _collectSun = CollectSun;
@@ -100,6 +102,12 @@ public sealed partial class MeshRenderSystem : ISystem, IDisposable
         _gl.DepthFunc(DepthFunction.Less);
         _gl.DepthMask(true);
         _gl.Clear(ClearBufferMask.DepthBufferBit);
+        if (Lighting.DrawSky)
+        {
+            _sky.Draw(_camera, Lighting, -_sunDirection, _sunColor == Vector3.Zero ? Vector3.Zero : Vector3.Normalize(_sunColor) * 1.2f);
+            _gl.Enable(EnableCap.DepthTest); // the sky switched it off
+        }
+
         _gl.Disable(EnableCap.Blend);
         _gl.Disable(EnableCap.CullFace); // each material switches it on or off as it is bound
         _gl.FrontFace(FrontFaceDirection.Ccw);
@@ -132,5 +140,6 @@ public sealed partial class MeshRenderSystem : ISystem, IDisposable
         _white.Dispose();
         _shadowShader.Dispose();
         _shadowMap.Dispose();
+        _sky.Dispose();
     }
 }

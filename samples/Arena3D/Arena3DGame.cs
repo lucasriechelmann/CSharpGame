@@ -93,6 +93,7 @@ public sealed partial class Arena3DGame : Game
         FixedSystems.Add(_physics);
         FixedSystems.Add(new OrbCollectSystem(CollectOrb));
         _meshes = new MeshRenderSystem(Gl, Assets, _camera, RenderClock);
+        _meshes.Lighting.DrawSky = true; // a gradient sky with the sun disc where the sun light points; the clear colour in Draw is only a fallback
         RenderSystems.Add(_meshes);
         Log.Info("Game", $"Arena loaded: {World.EntityCount} entities, {_session.OrbsTotal} orbs");
     }

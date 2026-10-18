@@ -94,6 +94,7 @@ public sealed class Scene3DGame : Game
         FixedSystems.Add(new CharacterControllerSystem3D()); // before physics: it sets the velocity physics then applies
         FixedSystems.Add(_physics);
         _meshes = new MeshRenderSystem(Gl, Assets, _camera, RenderClock, poses: poses);
+        _meshes.Lighting.DrawSky = true;
         RenderSystems.Add(_meshes);
 
         // With an effect on, the scene is drawn into an off-screen target: a check that depth testing works there too.
