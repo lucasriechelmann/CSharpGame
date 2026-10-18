@@ -370,10 +370,22 @@ public abstract class Game : IDisposable
     private void OnClosing()
     {
         Unload();
+        DisposeSystems(FixedSystems);
+        DisposeSystems(FrameSystems);
+        DisposeSystems(RenderSystems);
         _hotReloader?.Dispose();
         Audio.Dispose();
         PostProcess.Dispose();
         Assets.Dispose();
+    }
+
+    /// <summary>Disposes the systems of a group that own resources (a render system with GPU buffers), while the GL context still exists.</summary>
+    private static void DisposeSystems(SystemGroup group)
+    {
+        foreach (var system in group.Systems)
+        {
+            if (system is IDisposable disposable) disposable.Dispose();
+        }
     }
 
     private void OnLoad()

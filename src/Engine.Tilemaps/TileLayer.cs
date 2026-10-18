@@ -57,6 +57,7 @@ public sealed class TileLayer
 
         int index = LocalIndex(x, y);
         int previous = chunk.Tiles[index];
+        if (previous != id) chunk.Version++;
         chunk.Tiles[index] = id;
 
         if (previous == 0 && id != 0) chunk.Count++;
@@ -90,6 +91,22 @@ public sealed class TileLayer
         }
 
         return maxX >= minX;
+    }
+
+    /// <summary>Like <see cref="TryGetChunkTiles(int, int, out ReadOnlySpan{int})"/>, and also says how many times the chunk's tiles changed, so a cache can tell when it must rebuild.</summary>
+    /// <returns>False when no tile has been placed in that chunk.</returns>
+    public bool TryGetChunk(int chunkX, int chunkY, out ReadOnlySpan<int> tiles, out int version)
+    {
+        if (_chunks.TryGetValue(Key(chunkX, chunkY), out var chunk))
+        {
+            tiles = chunk.Tiles;
+            version = chunk.Version;
+            return true;
+        }
+
+        tiles = default;
+        version = 0;
+        return false;
     }
 
     /// <summary>

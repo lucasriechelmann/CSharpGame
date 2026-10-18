@@ -33,6 +33,18 @@ public sealed partial class SpriteBatch : IDisposable
     /// </summary>
     public RenderStats Stats => new(_frameDrawCalls, _frameSprites);
 
+    /// <summary>The GL context the batch draws with, for render systems that issue their own draw calls in the same pass (cached tile meshes). They must do so outside a <see cref="Begin"/>/<see cref="End"/> pair.</summary>
+    public GL Gl => _gl;
+
+    /// <summary>Adds work a render system drew itself (outside the batch) to <see cref="Stats"/>, so the numbers stay honest.</summary>
+    /// <param name="drawCalls">Draw calls made.</param>
+    /// <param name="sprites">Quads drawn.</param>
+    public void CountExternal(int drawCalls, int sprites)
+    {
+        _frameDrawCalls += drawCalls;
+        _frameSprites += sprites;
+    }
+
     /// <summary>Zeroes <see cref="Stats"/>. Call once per frame, before the first pass.</summary>
     public void ResetStats()
     {

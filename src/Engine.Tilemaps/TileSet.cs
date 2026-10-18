@@ -66,6 +66,9 @@ public sealed class TileSet
     /// <summary>Total number of tiles in the atlas (valid ids are 1 to this value).</summary>
     public int TileCount => Columns * Rows;
 
+    /// <summary>Counts changes that alter how tiles look (a new animation), so a cache of drawn geometry can tell when it is out of date.</summary>
+    public int Version { get; private set; }
+
     /// <summary>Works out the column and row counts from the loaded texture's size.</summary>
     /// <param name="assets">Manager that owns the texture.</param>
     /// <param name="texture">Handle of the atlas texture.</param>
@@ -146,6 +149,7 @@ public sealed class TileSet
 
         _animations[tileId] = [.. frames];
         _animationLength[tileId] = total;
+        Version++;
     }
 
     /// <summary>True when the tile cycles through frames.</summary>

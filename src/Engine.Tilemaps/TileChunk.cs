@@ -17,4 +17,7 @@ internal sealed class TileChunk
 
     /// <summary>Number of non-empty tiles; when it drops to zero the chunk is discarded.</summary>
     public int Count;
+
+    /// <summary>Counts every change to a tile in this chunk, so a cache of what the chunk looks like can tell when it is out of date.</summary>
+    public int Version;
 }
