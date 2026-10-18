@@ -10,7 +10,7 @@ namespace Engine.Runtime.Editor;
 /// the inspector and the gizmo), and the buttons raise the editor's New, Duplicate and Delete commands. Entities have no parent
 /// links yet, so the list is flat; a tree comes when transforms get parents.
 /// </summary>
-internal sealed class HierarchyPanel(World world, EntityInspector selection, Action newEntity, Action duplicate, Action delete)
+internal sealed class HierarchyPanel(World world, EntityInspector selection, Func<bool> canEdit, Action newEntity, Action duplicate, Action delete)
 {
     private readonly List<Entity> _entities = new();
     private string _filter = string.Empty;
@@ -26,12 +26,14 @@ internal sealed class HierarchyPanel(World world, EntityInspector selection, Act
             return;
         }
 
+        ImGui.BeginDisabled(!canEdit()); // not while the game is playing: Stop restores the world
         if (ImGui.Button("+ New")) newEntity();
         ImGui.SameLine();
         ImGui.BeginDisabled(selection.Selected.IsNull);
         if (ImGui.Button("Duplicate")) duplicate();
         ImGui.SameLine();
         if (ImGui.Button("Delete")) delete();
+        ImGui.EndDisabled();
         ImGui.EndDisabled();
 
         ImGui.SetNextItemWidth(-1f);

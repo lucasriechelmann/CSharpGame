@@ -57,6 +57,22 @@ public sealed partial class PlatformerGame
         World.Get<Sprite>(_hero).Color = new Color(1f, 1f, 1f, blinkOff ? 0.3f : 1f);
     }
 
+    /// <summary>The editor's Play: the edited world becomes a fresh run (new session, clock and score), with collision rebuilt from the level data.</summary>
+    protected override void PlayStarted() => StartFreshRun();
+
+    /// <summary>The editor's Stop: the world is back to its edited state, so discard the run that was played.</summary>
+    protected override void PlayStopped() => StartFreshRun();
+
+    private void StartFreshRun()
+    {
+        IsPaused = false;
+        _session.Reset(CountCoins());
+        _session.SetStart(HeroPosition());
+        ResetRunRecord();
+        SetDoorOpen(false);
+        SnapCameraToHero();
+    }
+
     /// <summary>Reloads the level scene (fresh coins and creatures) and starts a new session.</summary>
     private void RestartRun()
     {

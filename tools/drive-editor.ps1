@@ -1,4 +1,4 @@
-param([string]$Exe, [string]$OutDir, [switch]$Save)
+param([string]$Exe, [string]$OutDir, [switch]$Save, [switch]$Play)
 
 # NOTE: the click coordinates below were measured on a 125% scaled display; on other scales adjust them (the DBG line style:
 # temporarily log the ImGui mouse position to calibrate).
@@ -70,6 +70,16 @@ try {
     Shot $proc "$OutDir\E3u_undone.png"
     Send-Chord 0x59 0x15
     Shot $proc "$OutDir\E3r_redone.png"
+
+    # With -Play: F3 plays, holding D runs the hero right for a second, Ctrl+P stops and the world must be back as edited.
+    if ($Play) {
+        [Win32]::keybd_event(0x72, 0, 0, [UIntPtr]::Zero); Start-Sleep -Milliseconds 80; [Win32]::keybd_event(0x72, 0, 2, [UIntPtr]::Zero); Start-Sleep -Milliseconds 300
+        [Win32]::keybd_event(0x44, 0x20, 0, [UIntPtr]::Zero); Start-Sleep -Milliseconds 1000
+        Shot $proc "$OutDir\P1_playing.png"
+        [Win32]::keybd_event(0x44, 0x20, 2, [UIntPtr]::Zero); Start-Sleep -Milliseconds 200
+        [Win32]::keybd_event(0x72, 0, 0, [UIntPtr]::Zero); Start-Sleep -Milliseconds 80; [Win32]::keybd_event(0x72, 0, 2, [UIntPtr]::Zero); Start-Sleep -Milliseconds 400
+        Shot $proc "$OutDir\P2_stopped.png"
+    }
 
     # Wheel down three ticks zooms out; then middle-drag pans.
     Move-Mouse $rect 518 250

@@ -27,6 +27,7 @@ internal sealed partial class SceneEditor
     private readonly Logger _log;
     private readonly EditorHooks _hooks;
     private readonly CommandStack _history;
+    private string? _playSnapshot;
 
     /// <summary>Creates the editor.</summary>
     /// <param name="world">The world being edited.</param>
@@ -40,15 +41,54 @@ internal sealed partial class SceneEditor
         _log = log;
         _hooks = hooks;
         _history = new CommandStack(new EditContext(world));
-        _hierarchy = new HierarchyPanel(world, inspector, NewEntity, DuplicateSelected, DeleteSelected);
+        _hierarchy = new HierarchyPanel(world, inspector, () => !Playing, NewEntity, DuplicateSelected, DeleteSelected);
     }
 
-    /// <summary>True while the editor is on: the game's simulation is frozen and the editor's UI is drawn.</summary>
+    /// <summary>True while the editor is on (editing or playing): the editor's UI is drawn.</summary>
     public bool Active { get; private set; }
 
-    /// <summary>Turns the editor on or off.</summary>
+    /// <summary>True while the game is running inside the editor (between Play and Stop).</summary>
+    public bool Playing => _playSnapshot != null;
+
+    /// <summary>True while the editor is on and not playing: the simulation is frozen and the scene can be edited.</summary>
+    public bool Editing => Active && !Playing;
+
+    /// <summary>
+    /// Starts the game from the current world. The world is saved first so <see cref="Stop"/> can put everything back exactly as it
+    /// was edited, whatever the game does to it meanwhile.
+    /// </summary>
+    public void Play()
+    {
+        if (!Active || Playing) return;
+
+        _playSnapshot = _hooks.Snapshot();
+        _gizmo.End();
+        _history.Clear();
+        _inspector.History = null; // edits made while playing are live tweaks that Stop discards, so they are not undo steps
+        _hooks.PlayStarted();
+        _log.Info("Editor", "Play (the world is restored on Stop)");
+    }
+
+    /// <summary>Stops the game and restores the world as it was when Play was pressed.</summary>
+    public void Stop()
+    {
+        if (_playSnapshot == null) return;
+
+        string snapshot = _playSnapshot;
+        _playSnapshot = null;
+        _inspector.Selected = Entity.Null;
+        _hooks.Restore(snapshot);
+        _history.Clear(); // the world was rebuilt, so every entity handle in the history is stale
+        _inspector.History = Active ? _history : null;
+        _hooks.PlayStopped();
+        _log.Info("Editor", "Stop (world restored)");
+    }
+
+    /// <summary>Turns the editor on or off. Turning it off while playing stops the game first.</summary>
     public void Toggle()
     {
+        if (Active) Stop();
+
         Active = !Active;
         _gizmo.End();
 
@@ -67,6 +107,8 @@ internal sealed partial class SceneEditor
         _inspector.DrawDetailsWindow();
 
         HandleShortcuts();
+        if (Playing) return; // the game owns the mouse and camera while it plays
+
         HandleViewport();
         _inspector.CommitPendingEdit();
         DrawSceneOverlay();
@@ -77,6 +119,7 @@ internal sealed partial class SceneEditor
         if (!ImGui.BeginMainMenuBar()) return;
 
         string? path = _hooks.ScenePath();
+        ImGui.BeginDisabled(Playing); // file and edit commands change the scene, which is being played
         if (ImGui.BeginMenu("File"))
         {
             if (ImGui.MenuItem("Save scene", "Ctrl+S", false, path != null)) SaveScene();
@@ -97,7 +140,13 @@ internal sealed partial class SceneEditor
             ImGui.EndMenu();
         }
 
-        ImGui.TextDisabled("  Editor: simulation frozen. Middle-drag pans, wheel zooms, Ctrl snaps the gizmo to 8 units.");
+        ImGui.EndDisabled();
+
+        if (ImGui.MenuItem(Playing ? "Stop" : "Play", "F3")) TogglePlay();
+
+        ImGui.TextDisabled(Playing
+            ? "  Playing: changes are discarded when you press Stop."
+            : "  Editor: simulation frozen. Middle-drag pans, wheel zooms, Ctrl snaps the gizmo to 8 units.");
         ImGui.EndMainMenuBar();
     }
 
@@ -107,6 +156,10 @@ internal sealed partial class SceneEditor
         if (io.WantTextInput) return; // typing in a field
 
         bool ctrl = CtrlHeld();
+        // F3, not a Ctrl chord: the key would also reach the game while it plays (Ctrl+P is the sample's pause key too).
+        if (ImGui.IsKeyPressed(ImGuiKey.F3, false)) TogglePlay();
+        if (Playing) return;
+
         bool shift = ImGui.IsKeyDown(ImGuiKey.LeftShift) || ImGui.IsKeyDown(ImGuiKey.RightShift);
         bool editing = _gizmo.IsDragging || ImGui.IsAnyItemActive(); // do not pull the world out from under a drag
         if (ctrl && ImGui.IsKeyPressed(ImGuiKey.Z, false) && !editing) { if (shift) Redo(); else Undo(); }
@@ -133,6 +186,12 @@ internal sealed partial class SceneEditor
         _history.Push(EntityLifetimeCommand.ForCreated(_history.Context, entity, EntityLabel.Of(_world, entity)));
         _inspector.Selected = entity;
         _log.Info("Editor", $"Created {entity}");
+    }
+
+    private void TogglePlay()
+    {
+        if (Playing) Stop();
+        else Play();
     }
 
     /// <summary>Reverts the latest change and selects what it touched.</summary>

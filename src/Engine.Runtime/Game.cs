@@ -56,7 +56,8 @@ public abstract class Game : IDisposable
         var logHistory = new MemoryLogSink();
         Log.AddSink(new ConsoleLogSink()).AddSink(logHistory);
         _logPanel = new LogPanel(logHistory, Log);
-        _editor = new SceneEditor(World, _inspector, Log, new EditorHooks(() => SceneCamera, () => ScenePath, path => Scenes.SaveToFile(path), LoadSceneFromEditor));
+        _editor = new SceneEditor(World, _inspector, Log, new EditorHooks(() => SceneCamera, () => ScenePath, path => Scenes.SaveToFile(path), LoadSceneFromEditor,
+            () => Scenes.Save(), RestoreSceneFromEditor, PlayStarted, PlayStopped));
         FixedSystems.Profile(Profiler, "Fixed");
         FrameSystems.Profile(Profiler, "Frame");
         RenderSystems.Profile(Profiler, "Render");
@@ -134,10 +135,11 @@ public abstract class Game : IDisposable
     public bool IsPaused { get; set; }
 
     /// <summary>
-    /// True while the scene editor (F2) is on. The simulation is frozen exactly as with <see cref="IsPaused"/>, so game code that
-    /// advances its own clocks or reads gameplay input from <see cref="Update"/> should skip itself while this is true.
+    /// True while the scene editor (F2) is on and the game is not playing inside it. The simulation is frozen exactly as with
+    /// <see cref="IsPaused"/>, so game code that advances its own clocks or reads gameplay input from <see cref="Update"/> should skip
+    /// itself while this is true. It is false again between the editor's Play and Stop, when the game runs for real.
     /// </summary>
-    public bool IsEditing => _editor.Active;
+    public bool IsEditing => _editor.Editing;
 
     /// <summary>Raw keyboard and mouse state. Prefer <see cref="Actions"/> for game logic.</summary>
     public InputState Input => _window.Input;
@@ -181,6 +183,18 @@ public abstract class Game : IDisposable
     /// (the hero entity, counts) here, as you do after a quick-load.
     /// </summary>
     protected virtual void SceneReloaded() { }
+
+    /// <summary>
+    /// Called when the editor's Play button is pressed, after the world was saved for Stop. Start a fresh run from the edited world here
+    /// (reset the score and clocks, snap the camera, rebuild anything derived from level data such as collision).
+    /// </summary>
+    protected virtual void PlayStarted() { }
+
+    /// <summary>
+    /// Called when the editor's Stop button is pressed, after the world was restored to what it was at Play (<see cref="SceneReloaded"/>
+    /// has already run). Throw away the state of the run that was played.
+    /// </summary>
+    protected virtual void PlayStopped() { }
 
     /// <summary>Called once after the window and OpenGL context exist. Create GPU resources here.</summary>
     protected virtual void Load() { }
@@ -227,6 +241,14 @@ public abstract class Game : IDisposable
     {
         World.Clear();
         Scenes.LoadFile(path);
+        SceneReloaded();
+    }
+
+    /// <summary>The editor's Stop: replaces the world with the snapshot taken at Play, then lets the game re-establish what it cached.</summary>
+    private void RestoreSceneFromEditor(string json)
+    {
+        World.Clear();
+        Scenes.Load(json);
         SceneReloaded();
     }
 
@@ -311,14 +333,14 @@ public abstract class Game : IDisposable
         if (_overlay.Visible)
         {
             _overlay.Draw();
-            if (_overlay.ShowInspector && !IsEditing) _inspector.Draw(); // the editor has its own hierarchy and inspector windows
+            if (_overlay.ShowInspector && !_editor.Active) _inspector.Draw(); // the editor has its own hierarchy and inspector windows
             if (_overlay.ShowProfiler) _profilerPanel.Draw();
             if (_overlay.ShowPostEffects) _postEffectsPanel.Draw();
             if (_overlay.ShowLog) _logPanel.Draw();
             DebugGui();
         }
 
-        if (IsEditing) _editor.Draw();
+        if (_editor.Active) _editor.Draw();
 
         Profiler.End(_debugGuiSection, start);
         // The GUI callback is the last thing in a frame, so this closes the whole-frame measurement even when the overlay is hidden.

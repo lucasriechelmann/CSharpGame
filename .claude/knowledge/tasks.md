@@ -30,7 +30,7 @@ Small, about one session. Fixes known gaps that affect game feel and that the ed
 ### 12c. Authoring tools
 - [ ] Tile painting.
 - [ ] Prefab-aware editing, including saving without flattening prefab instances (today the editor's Save expands them).
-- [ ] Play/stop that snapshots and restores the scene.
+- [x] Play/stop that snapshots and restores the scene (F3).
 - [ ] Hot-reload of assets.
 
 ## Phase 13: 3D (after the editor, so 3D scenes can be inspected while built)
