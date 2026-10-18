@@ -135,7 +135,7 @@ Details live in [`CLAUDE.md`](CLAUDE.md) and the [`.claude/knowledge/`](.claude/
 
 ## Built with
 
-[.NET 10](https://dotnet.microsoft.com/) · [Silk.NET](https://github.com/dotnet/Silk.NET) (windowing, input, OpenGL) · [OpenAL Soft](https://openal-soft.org/) via Silk.NET (audio) · [Dear ImGui](https://github.com/ocornut/imgui) via ImGui.NET · [StbImageSharp](https://github.com/StbSharp/StbImageSharp) · [xUnit](https://xunit.net/)
+[.NET 10](https://dotnet.microsoft.com/) · [Silk.NET](https://github.com/dotnet/Silk.NET) (windowing, input, OpenGL) · [OpenAL Soft](https://openal-soft.org/) via Silk.NET (audio) · [Dear ImGui](https://github.com/ocornut/imgui) via ImGui.NET · [StbImageSharp](https://github.com/StbSharp/StbImageSharp) · [xUnit v3](https://xunit.net/)
 
 ## License
 

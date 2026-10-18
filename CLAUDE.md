@@ -15,7 +15,7 @@ Goal: learn how engines work, so write core systems from scratch and use librari
 - `src/Engine.Audio`     `AudioClip`, `WavDecoder`, `IAudioDevice` (`OpenAlAudioDevice`, `NullAudioDevice`), `VoicePool`. Depends on Core and Silk.NET.OpenAL only; no window or GL.
 - `src/Engine.Runtime`   `Game` base class and loop, debug overlay, entity inspector and profiler panel (`Inspector/`), `EngineComponents` (registers every engine component), `Game.Scenes`, `Game.Audio`, `Game.Profiler`. Composition root: the only module allowed to depend on every engine module; it also registers all asset loaders.
 - `samples/Platformer`   The first game (playable v1: coins, exit, creatures, lives, HUD), almost entirely data: scene, prefabs, tile layers, tile set and animation graphs are JSON under `Assets/`; rules live in `GameSession` and `InteractionSystem`.
-- `tests/`               xUnit tests, one project per module (`Engine.<Module>.Tests`).
+- `tests/`               xUnit v3 tests (Microsoft.Testing.Platform, see `global.json`), one project per module (`Engine.<Module>.Tests`).
 - `tools/`               PowerShell scripts to run, drive and screenshot the sample (see `tools/README.md`).
 
 Dependency direction: samples -> Runtime -> (Core, Platform, Rendering, Scenes, Physics2D, Tilemaps, Animation, Audio); Tilemaps -> (Core, Rendering, Physics2D); Animation -> (Core, Rendering); Rendering, Platform, Physics2D, Scenes and Audio -> Core. Core never references any other module or Silk.NET; Physics2D never references Rendering or Tilemaps; Scenes knows no component types (Runtime registers them).

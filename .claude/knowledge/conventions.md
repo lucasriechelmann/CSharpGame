@@ -45,8 +45,9 @@ Fail loudly with guard clauses and specific exceptions and messages naming the o
 - GPU objects are `IDisposable`, owned by exactly one object; `unsafe` only where GL needs raw pointers (`Engine.Rendering` has `AllowUnsafeBlocks`).
 - No allocation in per-frame/per-entity paths (no LINQ, no per-frame capturing closures).
 
-## Tests (xUnit)
+## Tests (xUnit v3)
 
+- Test projects use `xunit.v3` with `<OutputType>Exe</OutputType>` and run on Microsoft.Testing.Platform (opted in by the root `global.json`, because the .NET 10 SDK no longer supports the VSTest target for it). Do not add `Microsoft.NET.Test.Sdk` or `xunit.runner.visualstudio`; new test projects copy an existing `.csproj`.
 - Test names describe behaviour with underscores. Reference: `tests/Engine.Core.Tests/Ecs/WorldEntityTests.cs`.
 - One test class per topic, shared fixtures in `tests/*/Fixtures/` (own files). Reference: `tests/Engine.Core.Tests/Fixtures/`.
 - Timing/float tests use binary-exact values (powers of two) to avoid rounding flakiness. Reference: `tests/Engine.Core.Tests/FixedTimestepTests.cs`.
