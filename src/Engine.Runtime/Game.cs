@@ -153,6 +153,12 @@ public abstract class Game : IDisposable
     /// <summary>Game-specific debug panels (ImGui calls). Hidden together with the engine overlay (F1).</summary>
     protected virtual void DebugGui() { }
 
+    /// <summary>
+    /// The game's own on-screen UI (score, lives, messages) as ImGui calls. Unlike <see cref="DebugGui"/> it is drawn every frame,
+    /// even when F1 has hidden the debug UI, because players need it. Drawn after post-processing, so effects never dim it.
+    /// </summary>
+    protected virtual void Hud() { }
+
     /// <summary>Opens the window and runs the game loop until the window closes.</summary>
     public void Run() => _window.Run();
 
@@ -232,6 +238,7 @@ public abstract class Game : IDisposable
     private void OnGui(double dt)
     {
         long start = Profiler.Begin();
+        Hud();
         if (_overlay.Visible)
         {
             _overlay.Draw();

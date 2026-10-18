@@ -4,6 +4,7 @@ param([string]$OutDir)
 #   tiles.png     80x16   5 tiles of 16x16: 1 dirt, 2 grass, 3 stone, 4 background brick, 5 grass tuft
 #   hero.png     128x16   8 frames: 0-1 idle, 2-5 run, 6 jump, 7 fall
 #   creatures.png 256x16  8 creature types x 2 walk frames (type n uses cells 2n and 2n+1)
+#   items.png     96x16   cells 0-3 spinning coin, 4 locked exit door, 5 open exit door
 # Everything faces right so horizontal flips are easy to see.
 
 Add-Type -AssemblyName System.Drawing
@@ -117,4 +118,37 @@ foreach ($blade in @(@(3, 4), @(6, 6), @(9, 5), @(12, 3))) {                 # 5
 }
 $tiles.Save((Join-Path $OutDir "tiles.png"), [System.Drawing.Imaging.ImageFormat]::Png)
 
-Write-Output "Wrote tiles.png, hero.png, creatures.png to $OutDir"
+# ---- items ----
+$items = New-Sheet 96 16
+$goldEdge = Col 176 120 20
+$goldBody = Col 255 205 40
+$goldShine = Col 255 245 170
+foreach ($frame in 0..3) {
+    $rx = @(5.0, 3.2, 1.2, 3.2)[$frame]   # the coin turns edge-on and back, so its width pulses
+    $ox = $frame * 16
+    for ($y = 0; $y -lt 16; $y++) {
+        for ($x = 0; $x -lt 16; $x++) {
+            $dx = ($x - 7.5) / $rx; $dy = ($y - 7.5) / 5.5
+            $d = $dx * $dx + $dy * $dy
+            if ($d -le 1.0) { $items.SetPixel($ox + $x, $y, $(if ($d -gt 0.62) { $goldEdge } else { $goldBody })) }
+        }
+    }
+    if ($rx -gt 3) { $items.SetPixel($ox + 6, 5, $goldShine); $items.SetPixel($ox + 6, 6, $goldShine) }
+}
+# Exit door: stone frame around a dark (locked, red padlock) or glowing cyan (open) doorway.
+foreach ($cell in 4..5) {
+    $ox = $cell * 16
+    Fill $items ($ox + 2) 1 12 15 (Col 112 118 134)
+    Fill $items ($ox + 2) 1 12 1 (Col 140 146 162)
+    if ($cell -eq 4) {
+        Fill $items ($ox + 4) 4 8 12 (Col 24 26 40)
+        Fill $items ($ox + 6) 9 4 4 (Col 200 60 60)
+        Fill $items ($ox + 7) 7 2 2 (Col 200 60 60)
+    } else {
+        Fill $items ($ox + 4) 4 8 12 (Col 90 230 255)
+        Fill $items ($ox + 6) 6 4 10 (Col 220 255 255)
+    }
+}
+$items.Save((Join-Path $OutDir "items.png"), [System.Drawing.Imaging.ImageFormat]::Png)
+
+Write-Output "Wrote tiles.png, hero.png, creatures.png, items.png to $OutDir"

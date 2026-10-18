@@ -22,5 +22,6 @@
     <Project Path="tests/Engine.Runtime.Tests/Engine.Runtime.Tests.csproj" />
     <Project Path="tests/Engine.Scenes.Tests/Engine.Scenes.Tests.csproj" />
     <Project Path="tests/Engine.Tilemaps.Tests/Engine.Tilemaps.Tests.csproj" />
+    <Project Path="tests/Platformer.Tests/Platformer.Tests.csproj" />
   </Folder>
 </Solution>

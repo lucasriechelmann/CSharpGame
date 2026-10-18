@@ -1,0 +1,44 @@
+{
+  "parameters": [],
+  "default": "Spin",
+  "states": [
+    {
+      "name": "Spin",
+      "clip": {
+        "fps": 8,
+        "loop": "Loop",
+        "frames": [
+          {
+            "x": 0,
+            "y": 0,
+            "width": 16,
+            "height": 16,
+            "isEmpty": false
+          },
+          {
+            "x": 16,
+            "y": 0,
+            "width": 16,
+            "height": 16,
+            "isEmpty": false
+          },
+          {
+            "x": 32,
+            "y": 0,
+            "width": 16,
+            "height": 16,
+            "isEmpty": false
+          },
+          {
+            "x": 48,
+            "y": 0,
+            "width": 16,
+            "height": 16,
+            "isEmpty": false
+          }
+        ]
+      }
+    }
+  ],
+  "transitions": []
+}

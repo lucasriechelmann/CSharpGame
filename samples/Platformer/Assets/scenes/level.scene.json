@@ -168,26 +168,6 @@
       "components": {
         "Transform": {
           "position": {
-            "x": -481.49234,
-            "y": -167.81332,
-            "z": 5
-          }
-        },
-        "SpriteAnimator": {
-          "machine": "anim/creature6.anim.json",
-          "stateTime": 0.59353656
-        },
-        "Patrol": {
-          "speed": 78.08595,
-          "direction": -1
-        }
-      }
-    },
-    {
-      "prefab": "prefabs/creature.prefab.json",
-      "components": {
-        "Transform": {
-          "position": {
             "x": 160.11926,
             "y": -128.07466,
             "z": 5
@@ -228,26 +208,6 @@
       "components": {
         "Transform": {
           "position": {
-            "x": -330.1193,
-            "y": -66.95546,
-            "z": 5
-          }
-        },
-        "SpriteAnimator": {
-          "machine": "anim/creature5.anim.json",
-          "stateTime": 0.6264542
-        },
-        "Patrol": {
-          "speed": 98.93482,
-          "direction": 1
-        }
-      }
-    },
-    {
-      "prefab": "prefabs/creature.prefab.json",
-      "components": {
-        "Transform": {
-          "position": {
             "x": -405.5226,
             "y": 187.1871,
             "z": 5
@@ -260,86 +220,6 @@
         "Patrol": {
           "speed": 51.92009,
           "direction": 1
-        }
-      }
-    },
-    {
-      "prefab": "prefabs/creature.prefab.json",
-      "components": {
-        "Transform": {
-          "position": {
-            "x": 231.39331,
-            "y": -81.39325,
-            "z": 5
-          }
-        },
-        "SpriteAnimator": {
-          "machine": "anim/creature6.anim.json",
-          "stateTime": 0.8830873
-        },
-        "Patrol": {
-          "speed": 70.70344,
-          "direction": 1
-        }
-      }
-    },
-    {
-      "prefab": "prefabs/creature.prefab.json",
-      "components": {
-        "Transform": {
-          "position": {
-            "x": -255.37811,
-            "y": 136.88391,
-            "z": 5
-          }
-        },
-        "SpriteAnimator": {
-          "machine": "anim/creature2.anim.json",
-          "stateTime": 0.19376265
-        },
-        "Patrol": {
-          "speed": 61.54216,
-          "direction": -1
-        }
-      }
-    },
-    {
-      "prefab": "prefabs/creature.prefab.json",
-      "components": {
-        "Transform": {
-          "position": {
-            "x": -501.357,
-            "y": 10.818909,
-            "z": 5
-          }
-        },
-        "SpriteAnimator": {
-          "machine": "anim/creature1.anim.json",
-          "stateTime": 0.7491132
-        },
-        "Patrol": {
-          "speed": 79.207085,
-          "direction": 1
-        }
-      }
-    },
-    {
-      "prefab": "prefabs/creature.prefab.json",
-      "components": {
-        "Transform": {
-          "position": {
-            "x": -171.88577,
-            "y": -214.33551,
-            "z": 5
-          }
-        },
-        "SpriteAnimator": {
-          "machine": "anim/creature7.anim.json",
-          "stateTime": 0.50535744
-        },
-        "Patrol": {
-          "speed": 73.30005,
-          "direction": -1
         }
       }
     },
@@ -445,6 +325,318 @@
           },
           "intensity": 1.2,
           "radius": 280
+        }
+      }
+    },
+    {
+      "prefab": "prefabs/coin.prefab.json",
+      "components": {
+        "Transform": {
+          "position": {
+            "x": -69.3,
+            "y": 186,
+            "z": 8
+          }
+        }
+      }
+    },
+    {
+      "prefab": "prefabs/coin.prefab.json",
+      "components": {
+        "Transform": {
+          "position": {
+            "x": -16.0,
+            "y": 186,
+            "z": 8
+          }
+        }
+      }
+    },
+    {
+      "prefab": "prefabs/coin.prefab.json",
+      "components": {
+        "Transform": {
+          "position": {
+            "x": 37.3,
+            "y": 186,
+            "z": 8
+          }
+        }
+      }
+    },
+    {
+      "prefab": "prefabs/coin.prefab.json",
+      "components": {
+        "Transform": {
+          "position": {
+            "x": -416.0,
+            "y": 122,
+            "z": 8
+          }
+        }
+      }
+    },
+    {
+      "prefab": "prefabs/coin.prefab.json",
+      "components": {
+        "Transform": {
+          "position": {
+            "x": -352.0,
+            "y": 122,
+            "z": 8
+          }
+        }
+      }
+    },
+    {
+      "prefab": "prefabs/coin.prefab.json",
+      "components": {
+        "Transform": {
+          "position": {
+            "x": 352.0,
+            "y": 122,
+            "z": 8
+          }
+        }
+      }
+    },
+    {
+      "prefab": "prefabs/coin.prefab.json",
+      "components": {
+        "Transform": {
+          "position": {
+            "x": 416.0,
+            "y": 122,
+            "z": 8
+          }
+        }
+      }
+    },
+    {
+      "prefab": "prefabs/coin.prefab.json",
+      "components": {
+        "Transform": {
+          "position": {
+            "x": -160.0,
+            "y": 58,
+            "z": 8
+          }
+        }
+      }
+    },
+    {
+      "prefab": "prefabs/coin.prefab.json",
+      "components": {
+        "Transform": {
+          "position": {
+            "x": -96.0,
+            "y": 58,
+            "z": 8
+          }
+        }
+      }
+    },
+    {
+      "prefab": "prefabs/coin.prefab.json",
+      "components": {
+        "Transform": {
+          "position": {
+            "x": -32.0,
+            "y": 58,
+            "z": 8
+          }
+        }
+      }
+    },
+    {
+      "prefab": "prefabs/coin.prefab.json",
+      "components": {
+        "Transform": {
+          "position": {
+            "x": -520.0,
+            "y": -6,
+            "z": 8
+          }
+        }
+      }
+    },
+    {
+      "prefab": "prefabs/coin.prefab.json",
+      "components": {
+        "Transform": {
+          "position": {
+            "x": -472.0,
+            "y": -6,
+            "z": 8
+          }
+        }
+      }
+    },
+    {
+      "prefab": "prefabs/coin.prefab.json",
+      "components": {
+        "Transform": {
+          "position": {
+            "x": 218.7,
+            "y": -6,
+            "z": 8
+          }
+        }
+      }
+    },
+    {
+      "prefab": "prefabs/coin.prefab.json",
+      "components": {
+        "Transform": {
+          "position": {
+            "x": 272.0,
+            "y": -6,
+            "z": 8
+          }
+        }
+      }
+    },
+    {
+      "prefab": "prefabs/coin.prefab.json",
+      "components": {
+        "Transform": {
+          "position": {
+            "x": 325.3,
+            "y": -6,
+            "z": 8
+          }
+        }
+      }
+    },
+    {
+      "prefab": "prefabs/coin.prefab.json",
+      "components": {
+        "Transform": {
+          "position": {
+            "x": -293.3,
+            "y": -70,
+            "z": 8
+          }
+        }
+      }
+    },
+    {
+      "prefab": "prefabs/coin.prefab.json",
+      "components": {
+        "Transform": {
+          "position": {
+            "x": -240.0,
+            "y": -70,
+            "z": 8
+          }
+        }
+      }
+    },
+    {
+      "prefab": "prefabs/coin.prefab.json",
+      "components": {
+        "Transform": {
+          "position": {
+            "x": -186.7,
+            "y": -70,
+            "z": 8
+          }
+        }
+      }
+    },
+    {
+      "prefab": "prefabs/coin.prefab.json",
+      "components": {
+        "Transform": {
+          "position": {
+            "x": 472.0,
+            "y": -70,
+            "z": 8
+          }
+        }
+      }
+    },
+    {
+      "prefab": "prefabs/coin.prefab.json",
+      "components": {
+        "Transform": {
+          "position": {
+            "x": 520.0,
+            "y": -70,
+            "z": 8
+          }
+        }
+      }
+    },
+    {
+      "prefab": "prefabs/coin.prefab.json",
+      "components": {
+        "Transform": {
+          "position": {
+            "x": 32.0,
+            "y": -134,
+            "z": 8
+          }
+        }
+      }
+    },
+    {
+      "prefab": "prefabs/coin.prefab.json",
+      "components": {
+        "Transform": {
+          "position": {
+            "x": 96.0,
+            "y": -134,
+            "z": 8
+          }
+        }
+      }
+    },
+    {
+      "prefab": "prefabs/coin.prefab.json",
+      "components": {
+        "Transform": {
+          "position": {
+            "x": -368,
+            "y": -230,
+            "z": 8
+          }
+        }
+      }
+    },
+    {
+      "prefab": "prefabs/coin.prefab.json",
+      "components": {
+        "Transform": {
+          "position": {
+            "x": 16,
+            "y": -230,
+            "z": 8
+          }
+        }
+      }
+    },
+    {
+      "prefab": "prefabs/coin.prefab.json",
+      "components": {
+        "Transform": {
+          "position": {
+            "x": 400,
+            "y": -230,
+            "z": 8
+          }
+        }
+      }
+    },
+    {
+      "prefab": "prefabs/goal.prefab.json",
+      "components": {
+        "Transform": {
+          "position": {
+            "x": 48.0,
+            "y": 184,
+            "z": 6
+          }
         }
       }
     }

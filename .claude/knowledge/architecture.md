@@ -92,6 +92,12 @@ Shutdown: GPU cleanup happens in the window's `Closing` event, **while the GL co
 - **Inspector**: `ComponentRegistry.Describe()` supplies name, type and a valid default value (`Register<T>(name, defaultValue)`, e.g. `Transform.Identity`) for the Add menu. `FieldEditor` draws one widget per type (boxed `object` in, changed flag out) and recurses into structs: public-field structs are edited in place on the box, positional record structs (`Rect`, `Color`) are edited per constructor parameter and rebuilt through the constructor. Quaternions go through `QuaternionMath` (Euler degrees, pitch clamped at +-90). The inspector copies the component out, edits, and writes back only when something changed.
 - **Audio flow**: `Game.OnLoad` registers `AudioClipLoader` and creates the device with `OpenAlAudioDevice.TryCreate` (a missing OpenAL library or output device yields a `NullAudioDevice` whose `Description` explains why; the overlay shows it). `OnUpdate` calls `Audio.Update()` (frees finished voices). `OnClosing` disposes the device after `Unload` and before `Assets`. `Play` takes a free voice or steals the oldest (`VoicePool`), buffers upload on first play or `Preload`, and handles are generation-checked so a stale `VoiceId` never stops someone else's sound.
 
+## Sample game rules (`samples/Platformer`)
+
+- **Split of responsibilities**: `GameSession` (pure: lives, score, coins, clock, `GamePhase`) owns every rule and has no engine types. `InteractionSystem` (fixed group, after `PhysicsSystem`) only detects hero overlaps (`BoxCollider.GetBounds` / `Aabb.Overlaps`) with `Coin`, `Patrol` (the creature marker) and `Goal` entities and reports events to the session; removals go through a `CommandBuffer` after the queries. A stomp = hero moving down with its feet above the creature's middle; anything else is a hit (knockback away from the creature). `PlatformerGame.Flow.cs` ticks the session each frame, zeroes the hero's `PlatformerIntent` once the run is over, swaps the exit door art when the last coin is taken, blinks the hero while invulnerable, and restarts by `World.Clear()` + `Scenes.LoadFile` (the same path as quick-load, which also re-syncs the coin count from the coins left in the world).
+- **Content as data**: `coin.prefab.json` and `goal.prefab.json` plus scene entries that override only the position; `Coin` and `Goal` are registered components, so quick-save/load and the inspector handle them with no extra code. The locked/open door is two cells of `items.png`, chosen by setting `Sprite.Source`.
+- **UI**: `Game.Hud()` (new hook, called every frame before the debug panels, so it survives F1) draws the status line and end message with ImGui windows flagged no-decoration/no-input; the font scale is set per window.
+
 ## Components (data)
 
 | Component | Defined in | Notes |
@@ -103,7 +109,9 @@ Shutdown: GPU cleanup happens in the window's `Closing` event, **while the GL co
 | `Name` | `src/Engine.Core/Components/` | Human-readable label (tools, inspector, saves). |
 | `TileLayerRenderer` | `src/Engine.Tilemaps/` | Layer + tile set handles, tint, foreground flag. |
 | `SpriteAnimator` | `src/Engine.Animation/` | Machine handle, state, time, speed, parameters. |
-| `Patrol` | `samples/Platformer/` | Game-specific walking AI. |
+| `Patrol` | `samples/Platformer/` | Game-specific walking AI; also marks an entity as a creature for `InteractionSystem`. |
+| `Coin`, `Goal` | `samples/Platformer/` | Collectible with a score value; tag for the level exit. |
+| `Light2D` | `src/Engine.Rendering/Lighting/` | Point light: colour, intensity, radius. |
 
 ## Assets
 

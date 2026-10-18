@@ -115,6 +115,8 @@ public sealed partial class PlatformerGame
         Scenes.LoadFile(QuickSavePath);
         _hero = FindHero();
         SnapCameraToHero();
+        _session.SyncCoinsRemaining(CountCoins()); // the saved world holds only the coins not yet collected
+        SetDoorOpen(_session.GoalUnlocked);
         ShowStatus($"Loaded {World.EntityCount} entities");
     }
 

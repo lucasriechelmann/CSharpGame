@@ -23,4 +23,7 @@ public static class GameActions
 
     /// <summary>Replaces the world with the last quick-save (F9).</summary>
     public const string QuickLoad = "QuickLoad";
+
+    /// <summary>Starts the level over (Enter).</summary>
+    public const string Restart = "Restart";
 }

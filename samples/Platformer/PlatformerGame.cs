@@ -31,6 +31,8 @@ public sealed partial class PlatformerGame : Game
     private SpriteBatch _batch = null!;
     private TileGrid _grid = null!;
     private AudioClip _spawnSound = null!;
+    private GameSounds _sounds = null!;
+    private GameSession _session = null!;
     private Entity _hero;
 
     /// <summary>Registers input bindings and the game's own components for scene files. Systems are added in <see cref="Load"/>.</summary>
@@ -46,10 +48,13 @@ public sealed partial class PlatformerGame : Game
             .Bind(GameActions.Spawn, MouseButton.Left)
             .Bind(GameActions.ResetCamera, KeyCode.R)
             .Bind(GameActions.QuickSave, KeyCode.F5)
-            .Bind(GameActions.QuickLoad, KeyCode.F9);
+            .Bind(GameActions.QuickLoad, KeyCode.F9)
+            .Bind(GameActions.Restart, KeyCode.Enter);
 
         // The engine's components are registered already; scenes need the game's own too.
         Components.Register<Patrol>("Patrol");
+        Components.Register<Coin>("Coin");
+        Components.Register<Goal>("Goal");
     }
 
     /// <inheritdoc />
@@ -66,6 +71,8 @@ public sealed partial class PlatformerGame : Game
 
         _spawnSound = Assets.Get(Assets.Load<AudioClip>("sounds/spawn.wav"));
         Audio.Preload(_spawnSound);
+        _sounds = LoadGameSounds();
+        _session = new GameSession(CountCoins());
 
         // Full-screen effects, in order: lights first (so the glow can bloom), then bloom, vignette and an off-by-default colour grade.
         // Lights themselves are Light2D components in the scene file (the hero carries a lantern); tune everything live in the "Post effects" window.
@@ -92,6 +99,7 @@ public sealed partial class PlatformerGame : Game
         FixedSystems.Add(new PatrolSystem());
         FixedSystems.Add(new PlatformerControllerSystem());
         FixedSystems.Add(new PhysicsSystem(_grid, _physicsSettings));
+        FixedSystems.Add(new InteractionSystem(_session, Audio, _sounds, () => _hero)); // after physics: sees the settled positions
 
         // Render passes: background and ground tiles, then sprites, then foreground tiles in front.
         RenderSystems.Add(new TileLayerRenderSystem(_batch, _camera, Assets, foreground: false));
@@ -107,6 +115,7 @@ public sealed partial class PlatformerGame : Game
     {
         UpdateCamera(dt);
         UpdateStatusMessage(dt);
+        UpdateFlow(dt);
 
         if (Actions.WasPressed(GameActions.QuickSave)) QuickSave();
         else if (Actions.WasPressed(GameActions.QuickLoad)) QuickLoad();

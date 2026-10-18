@@ -4,6 +4,12 @@ param([string]$OutDir = "$PSScriptRoot\..\samples\Platformer\Assets\sounds")
 #   jump.wav  - quick rising square-wave chirp
 #   land.wav  - short low-passed noise thump
 #   spawn.wav - two quick sine blips
+#   coin.wav  - bright two-note pickup chime
+#   hurt.wav  - descending buzz
+#   stomp.wav - short pop
+#   win.wav   - rising arpeggio
+#   lose.wav  - slow falling tone
+#   unlock.wav - rising chirp when the exit opens
 
 $rate = 22050
 New-Item -ItemType Directory -Force $OutDir | Out-Null
@@ -52,3 +58,42 @@ for ($i = 0; $i -lt $blip; $i++) {
     $spawn[$blip + [int]($rate * 0.02) + $i] = [Math]::Sin(2 * [Math]::PI * 1320 * $i / $rate) * 0.4 * $env
 }
 Write-Wav "$OutDir\spawn.wav" $spawn
+
+# Tone helper: sine (or square) at a frequency that glides from $f0 to $f1, with an attack/decay envelope, added into $buf at $start.
+function Add-Tone([double[]]$buf, [int]$start, [double]$seconds, [double]$f0, [double]$f1, [double]$gain, [bool]$square) {
+    $n = [int]($rate * $seconds); $phase = 0.0
+    for ($i = 0; $i -lt $n -and ($start + $i) -lt $buf.Length; $i++) {
+        $t = $i / $n
+        $phase += ($f0 + ($f1 - $f0) * $t) / $rate
+        $wave = if ($square) { if (($phase % 1.0) -lt 0.5) { 1.0 } else { -1.0 } } else { [Math]::Sin(2 * [Math]::PI * $phase) }
+        $env = [Math]::Min(1.0, $i / ($rate * 0.005)) * [Math]::Pow(1.0 - $t, 1.5)
+        $buf[$start + $i] += $wave * $gain * $env
+    }
+}
+
+$coin = New-Object double[] ([int]($rate * 0.3))
+Add-Tone $coin 0 0.08 988 988 0.35 $false
+Add-Tone $coin ([int]($rate * 0.07)) 0.22 1319 1319 0.35 $false
+Write-Wav "$OutDir\coin.wav" $coin
+
+$hurt = New-Object double[] ([int]($rate * 0.35))
+Add-Tone $hurt 0 0.35 330 90 0.4 $true
+Write-Wav "$OutDir\hurt.wav" $hurt
+
+$stomp = New-Object double[] ([int]($rate * 0.12))
+Add-Tone $stomp 0 0.12 420 120 0.5 $false
+Write-Wav "$OutDir\stomp.wav" $stomp
+
+$win = New-Object double[] ([int]($rate * 0.9))
+$notes = @(523, 659, 784, 1047)
+for ($k = 0; $k -lt 4; $k++) { Add-Tone $win ([int]($rate * 0.14 * $k)) 0.4 $notes[$k] $notes[$k] 0.3 $false }
+Write-Wav "$OutDir\win.wav" $win
+
+$lose = New-Object double[] ([int]($rate * 0.9))
+Add-Tone $lose 0 0.9 392 130 0.35 $true
+Write-Wav "$OutDir\lose.wav" $lose
+
+$unlock = New-Object double[] ([int]($rate * 0.5))
+Add-Tone $unlock 0 0.18 660 660 0.3 $false
+Add-Tone $unlock ([int]($rate * 0.15)) 0.35 990 1320 0.3 $false
+Write-Wav "$OutDir\unlock.wav" $unlock
