@@ -33,7 +33,7 @@ public sealed partial class SceneSerializer
             throw new InvalidOperationException($"Scene is missing the '{EntitiesKey}' array.");
 
         // Phase 1: parse everything. Errors surface here, before the world is touched.
-        var prepared = new List<List<Action<World, Entity>>>(entityNodes.Count);
+        var prepared = new List<PreparedEntity>(entityNodes.Count);
         foreach (var node in entityNodes)
         {
             if (node is not JsonObject entityJson)
@@ -54,21 +54,29 @@ public sealed partial class SceneSerializer
         return Load(File.ReadAllText(fullPath));
     }
 
-    private Entity Create(List<Action<World, Entity>> appliers)
+    /// <summary>An entity entry parsed and ready to create: what to add, and which prefab (if any) it was made from.</summary>
+    private readonly record struct PreparedEntity(List<Action<World, Entity>> Appliers, string? Prefab);
+
+    private Entity Create(PreparedEntity prepared)
     {
         var entity = _world.CreateEntity();
-        foreach (var apply in appliers) apply(_world, entity);
+        foreach (var apply in prepared.Appliers) apply(_world, entity);
+
+        // Remember the prefab so saving can write the entity as a prefab plus overrides instead of expanding it.
+        if (prepared.Prefab != null) _world.Add(entity, new PrefabLink { Prefab = prepared.Prefab });
         return entity;
     }
 
     /// <summary>Resolves the entity's prefab chain and overrides, then parses each component into a ready-to-apply action.</summary>
-    private List<Action<World, Entity>> PrepareEntity(JsonObject entityJson)
+    private PreparedEntity PrepareEntity(JsonObject entityJson)
     {
         var components = ResolveComponents(entityJson, depth: 0);
 
         var appliers = new List<Action<World, Entity>>(components.Count);
         foreach (var (name, node) in components)
             appliers.Add(_registry.Get(name).Prepare(node!, _options));
-        return appliers;
+
+        string? prefab = entityJson[PrefabKey]?.GetValue<string>();
+        return new PreparedEntity(appliers, prefab);
     }
 }

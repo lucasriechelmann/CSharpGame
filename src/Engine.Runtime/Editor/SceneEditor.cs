@@ -257,7 +257,7 @@ internal sealed partial class SceneEditor
         if (path == null) return;
 
         _hooks.Save(path);
-        _log.Info("Editor", $"Saved {_world.EntityCount} entities to {path} (prefab instances are saved expanded)");
+        _log.Info("Editor", $"Saved {_world.EntityCount} entities to {path} (prefab instances as prefab + overrides)");
         SaveDirtyTileLayers();
     }
 
