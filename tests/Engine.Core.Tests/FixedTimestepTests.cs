@@ -8,7 +8,7 @@ public class FixedTimestepTests
     [Fact]
     public void Runs_whole_steps_and_keeps_remainder()
     {
-        var t = new FixedTimestep(0.125);
+        var t = new FixedTimestep(0.125, maxFrameSeconds: 1);
         Assert.Equal(2, t.Advance(0.3125));
         Assert.Equal(0.5, t.Alpha, 6);
     }
