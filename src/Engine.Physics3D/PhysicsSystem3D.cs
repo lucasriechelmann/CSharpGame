@@ -7,12 +7,17 @@ using Engine.Core.Hierarchy;
 namespace Engine.Physics3D;
 
 /// <summary>
-/// Moves every <see cref="PhysicsBody3D"/> that has a <see cref="Transform"/> and a <see cref="BoxCollider3D"/>: applies gravity, then
-/// moves along X, then Z, then Y, stopping at <see cref="StaticSolid3D"/> boxes. Horizontal first and vertical last, so a body that
-/// lands finds its floor after its sideways motion is settled. Run it in the fixed-step group, after any system that changes velocities.
-/// Bodies do not collide with each other yet (see the architecture notes).
+/// Moves every <see cref="PhysicsBody3D"/> that has a <see cref="Transform"/> and a <see cref="BoxCollider3D"/> or <see cref="CapsuleCollider3D"/>: applies gravity, then
+/// moves along X, then Z, then Y, stopping at <see cref="StaticSolid3D"/> boxes and at other bodies. Horizontal first and vertical last,
+/// so a body that lands finds its floor after its sideways motion is settled. Run it in the fixed-step group, after any system that
+/// changes velocities.
 /// </summary>
-public sealed class PhysicsSystem3D : ISystem
+/// <remarks>
+/// <para>Bodies are stepped lowest first (by the bottom of their box, ties by entity id), so a stack settles from the bottom up: the
+/// body underneath has already been stopped by the floor when the one above is swept against it.</para>
+/// <para>Split by topic: this file (gathering, ray queries), <c>PhysicsSystem3D.Boxes.cs</c> (stepping a box body), <c>PhysicsSystem3D.Capsules.cs</c> (stepping a capsule or sphere body).</para>
+/// </remarks>
+public sealed partial class PhysicsSystem3D : ISystem
 {
     /// <summary>How far to look for a surface when reporting contacts; far above float noise (<see cref="CollisionSolver3D.Epsilon"/>), far below a visible gap.</summary>
     private const float ContactSkin = 0.01f;
@@ -20,8 +25,14 @@ public sealed class PhysicsSystem3D : ISystem
     private readonly PhysicsSettings3D _settings;
     private readonly CollisionSolver3D _solver = new();
     private readonly List<Entity> _solidEntities = new();
+    private readonly List<Entity> _obbEntities = new();
+    private readonly List<Entity> _bodies = new();
+    private readonly List<bool> _isCapsule = new();
+    private readonly List<int> _order = new();
+    private readonly BodyOrder _bodyOrder;
     private readonly EntityAction<Transform, BoxCollider3D, StaticSolid3D> _collectSolid;
-    private readonly EntityAction<Transform, PhysicsBody3D, BoxCollider3D> _moveBody;
+    private readonly EntityAction<Transform, PhysicsBody3D, BoxCollider3D> _collectBox;
+    private readonly EntityAction<Transform, PhysicsBody3D, CapsuleCollider3D> _collectCapsule;
     private float _dt;
     private World _world = null!;
 
@@ -30,12 +41,14 @@ public sealed class PhysicsSystem3D : ISystem
     public PhysicsSystem3D(PhysicsSettings3D? settings = null)
     {
         _settings = settings ?? new PhysicsSettings3D();
+        _bodyOrder = new BodyOrder(_solver.DynamicBoxes, _bodies);
         _collectSolid = CollectSolid; // created once so the per-step queries do not allocate delegates
-        _moveBody = MoveBody;
+        _collectBox = CollectBox;
+        _collectCapsule = CollectCapsule;
     }
 
     /// <summary>
-    /// Finds the nearest static solid a ray hits, among the solids gathered in the last step (so before the first step there are none).
+    /// Finds the nearest solid or body a ray hits, among those gathered in the last step (so before the first step there are none).
     /// </summary>
     /// <param name="ray">The ray (unit direction), for example from <c>Camera3D.ScreenPointToRay</c>.</param>
     /// <param name="maxDistance">How far along the ray to look.</param>
@@ -47,7 +60,9 @@ public sealed class PhysicsSystem3D : ISystem
         entity = Entity.Null;
         if (!_solver.Raycast(ray, maxDistance, out hit)) return false;
 
-        entity = _solidEntities[hit.Index];
+        int obbBase = _solidEntities.Count;
+        int bodyBase = obbBase + _obbEntities.Count;
+        entity = hit.Index < obbBase ? _solidEntities[hit.Index] : hit.Index < bodyBase ? _obbEntities[hit.Index - obbBase] : _bodies[hit.Index - bodyBase];
         return true;
     }
 
@@ -59,84 +74,78 @@ public sealed class PhysicsSystem3D : ISystem
 
         _solver.StaticBoxes.Clear();
         _solidEntities.Clear();
+        _solver.StaticObbs.Clear();
+        _obbEntities.Clear();
+        _solver.DynamicBoxes.Clear();
+        _bodies.Clear();
+        _isCapsule.Clear();
         world.Query(_collectSolid);
-        world.Query(_moveBody);
+        world.Query(_collectBox);
+        world.Query(_collectCapsule);
+
+        // Lowest first, so what is underneath has settled before what rests on it is swept against it.
+        _order.Clear();
+        for (int i = 0; i < _bodies.Count; i++) _order.Add(i);
+        _order.Sort(_bodyOrder);
+
+        foreach (int index in _order)
+        {
+            if (_isCapsule[index]) StepCapsule(index);
+            else StepBox(index);
+        }
     }
 
     private void CollectSolid(Entity entity, ref Transform transform, ref BoxCollider3D collider, ref StaticSolid3D solid)
     {
-        _solver.StaticBoxes.Add(collider.GetBounds(TransformHierarchy.GetWorldPosition(_world, entity, transform)));
-        _solidEntities.Add(entity);
+        if (!collider.Oriented)
+        {
+            _solver.StaticBoxes.Add(collider.GetBounds(TransformHierarchy.GetWorldPosition(_world, entity, transform)));
+            _solidEntities.Add(entity);
+            return;
+        }
+
+        // An oriented solid takes the entity's world rotation; a matrix with no rotation in it (a zero scale) counts as unrotated.
+        var world = TransformHierarchy.GetWorldMatrix(_world, entity);
+        var rotation = Matrix4x4.Decompose(world, out _, out var turned, out _) ? turned : Quaternion.Identity;
+        _solver.StaticObbs.Add(collider.GetObb(world.Translation, rotation));
+        _obbEntities.Add(entity);
     }
 
-    private void MoveBody(Entity entity, ref Transform transform, ref PhysicsBody3D body, ref BoxCollider3D collider)
+    private void CollectBox(Entity entity, ref Transform transform, ref PhysicsBody3D body, ref BoxCollider3D collider)
     {
         // A body's transform is moved as world space; under a parent it would be local and the box would be in the wrong place.
         if (TransformHierarchy.HasParent(_world, entity))
             throw new InvalidOperationException($"{entity} has a PhysicsBody3D and a Parent; moving bodies must be roots (static solids may be children).");
 
-        // Gravity first (semi-implicit Euler: update the velocity, then move with it), clamped to the terminal fall speed.
-        body.Velocity.Y += _settings.Gravity * body.GravityScale * _dt;
-        body.Velocity.Y = MathF.Max(body.Velocity.Y, -_settings.MaxFallSpeed);
+        if (collider.Oriented)
+            throw new InvalidOperationException($"{entity} is a moving body with an oriented BoxCollider3D; bodies do not rotate, so only static solids can be oriented.");
+        if (_world.Has<CapsuleCollider3D>(entity))
+            throw new InvalidOperationException($"{entity} has both a BoxCollider3D and a CapsuleCollider3D; a body has one collision shape.");
 
-        // Friction acts while standing on something (contacts from the last step), slowing the horizontal motion without reversing it.
-        if (body.IsGrounded && _settings.GroundFriction > 0f) ApplyFriction(ref body.Velocity);
-
-        var box = collider.GetBounds(transform.Position);
-        var moved = Vector3.Zero;
-        MoveAlong(ref box, ref moved, ref body.Velocity.X, Axis3D.X);
-        MoveAlong(ref box, ref moved, ref body.Velocity.Z, Axis3D.Z);
-        MoveAlong(ref box, ref moved, ref body.Velocity.Y, Axis3D.Y);
-
-        transform.Position += moved;
-        body.Contacts = DetectContacts(box);
+        _solver.DynamicBoxes.Add(collider.GetBounds(transform.Position));
+        _bodies.Add(entity);
+        _isCapsule.Add(false);
     }
 
-    private void ApplyFriction(ref Vector3 velocity)
+    private void CollectCapsule(Entity entity, ref Transform transform, ref PhysicsBody3D body, ref CapsuleCollider3D collider)
     {
-        var horizontal = new Vector2(velocity.X, velocity.Z);
-        float speed = horizontal.Length();
-        if (speed == 0f) return;
+        if (TransformHierarchy.HasParent(_world, entity))
+            throw new InvalidOperationException($"{entity} has a PhysicsBody3D and a Parent; moving bodies must be roots (static solids may be children).");
+        if (collider.Radius <= 0f)
+            throw new InvalidOperationException($"{entity} has a CapsuleCollider3D with radius {collider.Radius}; the radius must be positive.");
 
-        float slowed = MathF.Max(speed - _settings.GroundFriction * _dt, 0f);
-        horizontal *= slowed / speed;
-        velocity.X = horizontal.X;
-        velocity.Z = horizontal.Y;
+        _solver.DynamicBoxes.Add(collider.GetBounds(transform.Position));
+        _bodies.Add(entity);
+        _isCapsule.Add(true);
     }
 
-    /// <summary>Sweeps the box along one axis by its velocity component, moves it, and zeroes the velocity when something blocked it.</summary>
-    private void MoveAlong(ref Aabb3 box, ref Vector3 moved, ref float velocity, Axis3D axis)
+    /// <summary>Orders bodies by the bottom of their box, then by entity id, so the step order is the same on every run.</summary>
+    private sealed class BodyOrder(List<Aabb3> boxes, List<Entity> bodies) : IComparer<int>
     {
-        float delta = velocity * _dt;
-        if (delta == 0f) return;
-
-        float allowed = _solver.Sweep(box, axis, delta, out bool hit);
-        var step = AxisMath.Along(axis, allowed);
-        box = box.Translated(step);
-        moved += step;
-        if (hit) velocity = 0f;
-    }
-
-    /// <summary>
-    /// Probes a hair's breadth in each direction so contacts stay reported while a body rests against a surface, not only on the step
-    /// where it arrived (a body pushed into a wall has zero velocity and would otherwise report nothing).
-    /// </summary>
-    private CollisionFlags3D DetectContacts(in Aabb3 box)
-    {
-        var contacts = CollisionFlags3D.None;
-        _solver.Sweep(box, Axis3D.Y, -ContactSkin, out bool below);
-        _solver.Sweep(box, Axis3D.Y, ContactSkin, out bool above);
-        _solver.Sweep(box, Axis3D.X, -ContactSkin, out bool minX);
-        _solver.Sweep(box, Axis3D.X, ContactSkin, out bool maxX);
-        _solver.Sweep(box, Axis3D.Z, -ContactSkin, out bool minZ);
-        _solver.Sweep(box, Axis3D.Z, ContactSkin, out bool maxZ);
-
-        if (below) contacts |= CollisionFlags3D.Below;
-        if (above) contacts |= CollisionFlags3D.Above;
-        if (minX) contacts |= CollisionFlags3D.MinX;
-        if (maxX) contacts |= CollisionFlags3D.MaxX;
-        if (minZ) contacts |= CollisionFlags3D.MinZ;
-        if (maxZ) contacts |= CollisionFlags3D.MaxZ;
-        return contacts;
+        public int Compare(int a, int b)
+        {
+            int byHeight = boxes[a].Min.Y.CompareTo(boxes[b].Min.Y);
+            return byHeight != 0 ? byHeight : bodies[a].Id.CompareTo(bodies[b].Id);
+        }
     }
 }

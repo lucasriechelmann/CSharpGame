@@ -23,4 +23,13 @@ public static class GameActions
 
     /// <summary>Hold to fly faster (Shift).</summary>
     public const string Fast = "Fast";
+
+    /// <summary>Walk the player capsule forward / backward (Up / Down arrows).</summary>
+    public const string WalkForward = "WalkForward";
+
+    /// <summary>Walk the player capsule right / left (Right / Left arrows).</summary>
+    public const string WalkRight = "WalkRight";
+
+    /// <summary>Jump with the player capsule (Enter).</summary>
+    public const string Jump = "Jump";
 }

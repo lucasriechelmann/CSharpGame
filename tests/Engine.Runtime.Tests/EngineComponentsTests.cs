@@ -4,6 +4,7 @@ using Engine.Core.Assets;
 using Engine.Core.Components;
 using Engine.Core.Ecs;
 using Engine.Physics2D;
+using Engine.Physics3D;
 using Engine.Rendering;
 using Engine.Rendering3D;
 using Engine.Runtime;
@@ -54,8 +55,30 @@ public sealed class EngineComponentsTests : IDisposable
         var registry = EngineComponents.RegisterAll(new ComponentRegistry());
 
         Assert.Equal(
-            new[] { "BoxCollider", "BoxCollider3D", "DirectionalLight", "Light2D", "MeshRenderer", "ModelRenderer", "MovingPlatform", "Name", "PhysicsBody", "PhysicsBody3D", "PlatformerController", "PlatformerIntent", "PointLight3D", "PreviousTransform", "Sprite", "SpriteAnimator", "StaticSolid", "StaticSolid3D", "TileLayerRenderer", "Transform" },
+            new[] { "BoxCollider", "BoxCollider3D", "CapsuleCollider3D", "CharacterController3D", "DirectionalLight", "Light2D", "MeshRenderer", "ModelRenderer", "MovingPlatform", "Name", "PhysicsBody", "PhysicsBody3D", "PlatformerController", "PlatformerIntent", "PointLight3D", "PreviousTransform", "Sprite", "SpriteAnimator", "StaticSolid", "StaticSolid3D", "TileLayerRenderer", "Transform" },
             registry.Names.OrderBy(n => n).ToArray());
+    }
+
+    [Fact]
+    public void Capsule_and_character_components_round_trip()
+    {
+        var e = _world.CreateEntity();
+        _world.Add(e, new CapsuleCollider3D { Radius = 0.4f, Height = 1.8f, Offset = new Vector3(0f, 0.1f, 0f) });
+        var controller = CharacterController3D.Create();
+        controller.MoveSpeed = 7f;
+        _world.Add(e, controller);
+        _world.Add(e, new PhysicsBody3D { GravityScale = 1f, Mass = 70f });
+        _world.Add(e, new BoxCollider3D { Size = new Vector3(6f, 0.4f, 4f), Oriented = true });
+
+        var loaded = RoundTrip();
+
+        var capsule = _world.Get<CapsuleCollider3D>(loaded);
+        Assert.Equal(0.4f, capsule.Radius);
+        Assert.Equal(1.8f, capsule.Height);
+        Assert.Equal(0.1f, capsule.Offset.Y);
+        Assert.Equal(7f, _world.Get<CharacterController3D>(loaded).MoveSpeed);
+        Assert.Equal(70f, _world.Get<PhysicsBody3D>(loaded).Mass);
+        Assert.True(_world.Get<BoxCollider3D>(loaded).Oriented);
     }
 
     [Fact]

@@ -13,6 +13,17 @@ public static class AxisMath
         _ => v.Z,
     };
 
+    /// <summary>Writes the component of <paramref name="v"/> along <paramref name="axis"/>.</summary>
+    public static void Set(ref Vector3 v, Axis3D axis, float value)
+    {
+        switch (axis)
+        {
+            case Axis3D.X: v.X = value; break;
+            case Axis3D.Y: v.Y = value; break;
+            default: v.Z = value; break;
+        }
+    }
+
     /// <summary>A vector that has <paramref name="value"/> on <paramref name="axis"/> and zero elsewhere.</summary>
     public static Vector3 Along(Axis3D axis, float value) => axis switch
     {

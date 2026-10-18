@@ -36,6 +36,8 @@ public static class EngineComponents
         .Register<BoxCollider3D>("BoxCollider3D")
         .Register<StaticSolid3D>("StaticSolid3D")
         .Register<PhysicsBody3D>("PhysicsBody3D")
+        .Register<CapsuleCollider3D>("CapsuleCollider3D")
+        .Register("CharacterController3D", CharacterController3D.Create())
         .Register<PlatformerController>("PlatformerController")
         .Register<PlatformerIntent>("PlatformerIntent");
 }

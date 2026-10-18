@@ -118,6 +118,26 @@
         "MeshRenderer": { "mesh": "meshes/sphere", "material": "materials/glow.material.json" },
         "PointLight3D": { "color": { "r": 0.9, "g": 0.3, "b": 1, "a": 1 }, "intensity": 2.5, "radius": 7 }
       }
+    },
+    {
+      "components": {
+        "Name": { "value": "Ramp" },
+        "Transform": { "position": { "x": -4, "y": 1.0, "z": 5 }, "rotation": { "x": 0, "y": 0, "z": 0.1305, "w": 0.9914 }, "scale": { "x": 6, "y": 0.4, "z": 4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/gold.material.json" },
+        "BoxCollider3D": { "size": { "x": 6, "y": 0.4, "z": 4 }, "offset": { "x": 0, "y": 0, "z": 0 }, "oriented": true },
+        "StaticSolid3D": {}
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Player" },
+        "Transform": { "position": { "x": 1.5, "y": 1, "z": 4 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 1, "y": 1, "z": 1 } },
+        "MeshRenderer": { "mesh": "meshes/capsule", "material": "materials/blue.material.json" },
+        "CapsuleCollider3D": { "radius": 0.4, "height": 1.8, "offset": { "x": 0, "y": 0, "z": 0 } },
+        "PhysicsBody3D": { "gravityScale": 1, "mass": 70 },
+        "CharacterController3D": { "moveSpeed": 5, "acceleration": 40, "airAcceleration": 12, "jumpSpeed": 5.5, "coyoteTime": 0.1, "jumpBufferTime": 0.12 },
+        "PreviousTransform": {}
+      }
     }
   ]
 }

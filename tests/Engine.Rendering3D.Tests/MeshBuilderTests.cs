@@ -122,4 +122,57 @@ public class MeshBuilderTests
     {
         Assert.Throws<ArgumentOutOfRangeException>(() => MeshBuilder.Sphere(1f, segments, rings));
     }
+
+    [Fact]
+    public void Capsule_bounds_are_the_radius_wide_and_the_height_tall()
+    {
+        var capsule = MeshBuilder.Capsule(0.4f, 1.8f, segments: 16, capRings: 4);
+
+        Assert.Equal(0.4f, capsule.BoundsMax.X, 3);
+        Assert.Equal(0.9f, capsule.BoundsMax.Y, 3);
+        Assert.Equal(-0.9f, capsule.BoundsMin.Y, 3);
+        Assert.Equal(0.4f, capsule.BoundsMax.Z, 3);
+    }
+
+    [Fact]
+    public void Capsule_vertices_are_on_the_surface_with_unit_outward_normals()
+    {
+        var capsule = MeshBuilder.Capsule(0.5f, 2f, segments: 12, capRings: 4);
+        float half = 2f * 0.5f - 0.5f; // the straight part runs from -0.5 to 0.5
+
+        foreach (var vertex in capsule.Vertices)
+        {
+            // The nearest point on the axis segment is at most the radius away: the surface of a capsule is a radius from its axis.
+            var onAxis = new Vector3(0f, Math.Clamp(vertex.Position.Y, -half, half), 0f);
+            Assert.Equal(0.5f, Vector3.Distance(vertex.Position, onAxis), 3);
+            Assert.Equal(1f, vertex.Normal.Length(), 3);
+            Assert.True(Vector3.Dot(Vector3.Normalize(vertex.Position - onAxis), vertex.Normal) > 0.999f);
+        }
+    }
+
+    [Fact]
+    public void Capsule_triangles_wind_counter_clockwise_seen_from_outside()
+    {
+        var capsule = MeshBuilder.Capsule(0.5f, 2f, segments: 12, capRings: 4);
+
+        AssertOutwardWinding(capsule, (position, normal) => Vector3.Dot(position, normal) > 0f || MathF.Abs(position.Y) > 0.4f);
+    }
+
+    [Fact]
+    public void A_capsule_exactly_as_tall_as_wide_is_a_sphere_shape()
+    {
+        var capsule = MeshBuilder.Capsule(1f, 2f, segments: 8, capRings: 4);
+
+        Assert.Equal(1f, capsule.BoundsMax.Y, 3);
+    }
+
+    [Theory]
+    [InlineData(0f, 2f, 8, 4)]
+    [InlineData(1f, 1.5f, 8, 4)] // shorter than two radii
+    [InlineData(1f, 2f, 2, 4)]
+    [InlineData(1f, 2f, 8, 1)]
+    public void Capsule_rejects_bad_dimensions(float radius, float height, int segments, int capRings)
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => MeshBuilder.Capsule(radius, height, segments, capRings));
+    }
 }

@@ -57,13 +57,12 @@ Small, about one session. Fixes known gaps that affect game feel and that the ed
 - [ ] Not built: a docked viewport / game-view panel rendering into a `RenderTarget` (needs a viewport abstraction in `Game`; reasons in `architecture.md`).
 - [ ] Follow-ups: triangle-accurate picking, box-select (marquee), gizmo handles for planes, pivot/centre toggle, camera bookmarks, showing physics colliders as wire boxes.
 
-## Phase 16: 3D physics stage 2
+## Phase 16: 3D physics stage 2 (done)
 
-Independent of 14-15.
-
-- [ ] Body-vs-body boxes (push, stack).
-- [ ] Sphere and capsule colliders, capsule character controller.
-- [ ] Oriented boxes (SAT).
+- [x] Body-vs-body boxes: mass-weighted inelastic pushing, stacking (bodies stepped lowest first), contacts and rays that see bodies.
+- [x] Sphere and capsule colliders (`CapsuleCollider3D`) that collide and slide; `CharacterController3D` + `CharacterControllerSystem3D` (walk, air control, coyote time, jump buffer); `MeshBuilder.Capsule` for the visual.
+- [x] Oriented static boxes (`BoxCollider3D.Oriented`, `Obb3`, `Sat`): ramps; exact for capsules and rays, discrete push-out for box bodies.
+- [ ] Follow-ups: rigid-body rotation and inertia (crates topple and roll), mesh/convex colliders, stepping up ledges and a slope limit for the character, a body riding a body or platform, swept tests against oriented solids, exact capsule-vs-capsule, sleeping, a spatial hash/BVH once static counts justify it, showing colliders as wireframes in the editor.
 
 ## Phase 17: 3D rendering depth
 

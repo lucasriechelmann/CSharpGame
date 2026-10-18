@@ -19,7 +19,8 @@ namespace Scene3D;
 /// <remarks>
 /// The content is data (<c>Assets/scenes/room.scene.json</c> and the <c>.material.json</c> files); the code only creates what
 /// a file cannot hold, the procedural meshes and the checker texture, and registers them under the names the scene uses.
-/// Space throws a crate (a <see cref="PhysicsBody3D"/> that falls onto the floor and the platform); the left mouse button casts a
+/// Space throws a crate (a <see cref="PhysicsBody3D"/> that falls onto the floor and the platform, stacks and gets pushed); the arrow keys walk the
+/// blue capsule player (Enter jumps; it climbs the gold ramp and pushes crates); the left mouse button casts a
 /// ray from the cursor, moves a marker to where it hits a static solid and logs what was hit.
 /// </remarks>
 public sealed class Scene3DGame : Game
@@ -36,6 +37,7 @@ public sealed class Scene3DGame : Game
     private MeshRenderSystem _meshes = null!;
     private PhysicsSystem3D _physics = null!;
     private Entity _marker;
+    private Entity _player;
     private int _thrown;
     private string _lastPick = "(left-click the world)";
     private Vector2 _lastMouse;
@@ -51,7 +53,10 @@ public sealed class Scene3DGame : Game
             .Bind(GameActions.LookHeld, MouseButton.Right)
             .Bind(GameActions.Drop, KeyCode.Space)
             .Bind(GameActions.Pick, MouseButton.Left)
-            .Bind(GameActions.Fast, KeyCode.ShiftLeft);
+            .Bind(GameActions.Fast, KeyCode.ShiftLeft)
+            .BindAxis(GameActions.WalkForward, KeyCode.Down, KeyCode.Up)
+            .BindAxis(GameActions.WalkRight, KeyCode.Left, KeyCode.Right)
+            .Bind(GameActions.Jump, KeyCode.Enter);
 
         Components.Register<Spin>("Spin");
 
@@ -66,6 +71,7 @@ public sealed class Scene3DGame : Game
         // Procedural assets first: the scene and the materials refer to them by name.
         Assets.Add("meshes/cube", new Mesh(Gl, MeshBuilder.Cube(Vector3.One)));
         Assets.Add("meshes/sphere", new Mesh(Gl, MeshBuilder.Sphere(0.5f)));
+        Assets.Add("meshes/capsule", new Mesh(Gl, MeshBuilder.Capsule(0.4f, 1.8f)));
         Assets.Add("meshes/floor", new Mesh(Gl, MeshBuilder.Plane(40f, 40f, uvRepeat: 20f)));
         Assets.Add("checker", CreateChecker());
 
@@ -75,11 +81,13 @@ public sealed class Scene3DGame : Game
         Window.Resized += (w, h) => _camera.ViewportSize = new Vector2(w, h);
 
         _marker = FindByName("Pick marker");
+        _player = FindByName("Player");
         FrameSystems.Add(new SpinSystem());
 
         // Fixed step: record where everything was (for render interpolation), then let physics move the crates.
         _physics = new PhysicsSystem3D();
         FixedSystems.Add(new PreviousTransformSystem());
+        FixedSystems.Add(new CharacterControllerSystem3D()); // before physics: it sets the velocity physics then applies
         FixedSystems.Add(_physics);
         _meshes = new MeshRenderSystem(Gl, Assets, _camera, RenderClock);
         RenderSystems.Add(_meshes);
@@ -100,6 +108,7 @@ public sealed class Scene3DGame : Game
     {
         // The world was rebuilt (editor Reload or Stop): every entity handle cached from the old one is stale.
         _marker = FindByName("Pick marker");
+        _player = FindByName("Player");
         _crates.Clear();
     }
 
@@ -138,6 +147,7 @@ public sealed class Scene3DGame : Game
         _wasLooking = looking;
         _lastMouse = mouse;
 
+        DrivePlayer();
         if (Actions.WasPressed(GameActions.Drop)) ThrowCrate();
         if (Actions.WasPressed(GameActions.Pick)) PickWithRay();
 
@@ -149,6 +159,24 @@ public sealed class Scene3DGame : Game
             speed * (float)dt);
     }
 
+    /// <summary>
+    /// Writes the arrow keys into the player's <see cref="CharacterController3D"/> as a direction relative to where the camera looks
+    /// (up arrow walks away from the camera along the ground), and latches a jump press; the fixed step turns that into velocity.
+    /// </summary>
+    private void DrivePlayer()
+    {
+        if (!World.IsAlive(_player)) return;
+
+        var forward = _camera.Forward with { Y = 0f };
+        forward = forward.LengthSquared() > 1e-6f ? Vector3.Normalize(forward) : -Vector3.UnitZ;
+        var right = Vector3.Cross(forward, Vector3.UnitY);
+        var wish = forward * Actions.GetAxis(GameActions.WalkForward) + right * Actions.GetAxis(GameActions.WalkRight);
+
+        ref var controller = ref World.Get<CharacterController3D>(_player);
+        controller.Move = new Vector2(wish.X, wish.Z);
+        if (Actions.WasPressed(GameActions.Jump)) controller.JumpPressed = true;
+    }
+
     /// <summary>Spawns a crate just in front of the camera and throws it along the view direction with a little lift.</summary>
     private void ThrowCrate()
     {
@@ -157,7 +185,7 @@ public sealed class Scene3DGame : Game
         var transform = World.Get<Transform>(crate);
         transform.Position = _camera.Position + forward * 1.5f;
         World.Set(crate, transform);
-        // Each crate is thrown a little to the side of the last, so they do not land in the same spot (bodies do not collide with each other yet).
+        // Each crate is thrown a little to the side of the last, so they do not all land in the same spot (they stack and push each other, but a tidy spread reads better).
         var sideways = _camera.Right * (_thrown++ % 3 - 1) * 1.5f;
         World.Set(crate, new PhysicsBody3D { Velocity = forward * ThrowSpeed + sideways + Vector3.UnitY * 2f, GravityScale = 1f });
 

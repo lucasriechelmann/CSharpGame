@@ -71,6 +71,75 @@ public static class MeshBuilder
         return new MeshData(vertices, indices);
     }
 
+    /// <summary>
+    /// An upright capsule (a cylinder closed by a hemisphere at each end) centred on the origin with smooth normals: the visual twin of
+    /// <c>CapsuleCollider3D</c>.
+    /// </summary>
+    /// <param name="radius">Radius of the cylinder and the caps.</param>
+    /// <param name="height">Total height, pole to pole; at least twice the radius (equal makes a sphere).</param>
+    /// <param name="segments">Slices around the Y axis (at least 3).</param>
+    /// <param name="capRings">Bands in each hemisphere (at least 2).</param>
+    public static MeshData Capsule(float radius, float height, int segments = 32, int capRings = 8)
+    {
+        if (radius <= 0f) throw new ArgumentOutOfRangeException(nameof(radius), $"Capsule radius must be positive, got {radius}.");
+        if (height < radius * 2f) throw new ArgumentOutOfRangeException(nameof(height), $"A capsule is at least as tall as it is wide ({radius * 2f}), got {height}.");
+        if (segments < 3) throw new ArgumentOutOfRangeException(nameof(segments), $"A capsule needs at least 3 segments, got {segments}.");
+        if (capRings < 2) throw new ArgumentOutOfRangeException(nameof(capRings), $"A capsule needs at least 2 rings per cap, got {capRings}.");
+
+        // The profile from the top pole to the bottom pole: (height of the ring, its radius, the surface normal's vertical and radial parts).
+        // Top cap, then the straight side (its two end rings are the caps' equators), then the bottom cap.
+        float half = height * 0.5f - radius;
+        var profile = new List<(float Y, float Ring, float NormalY, float NormalRing)>();
+        for (int i = 0; i <= capRings; i++)
+        {
+            float polar = i / (float)capRings * (MathF.PI / 2f); // 0 at the pole, pi/2 at the equator
+            profile.Add((half + radius * MathF.Cos(polar), radius * MathF.Sin(polar), MathF.Cos(polar), MathF.Sin(polar)));
+        }
+
+        for (int i = 0; i <= capRings; i++)
+        {
+            float polar = MathF.PI / 2f + i / (float)capRings * (MathF.PI / 2f); // pi/2 at the equator, pi at the pole
+            profile.Add((-half + radius * MathF.Cos(polar), radius * MathF.Sin(polar), MathF.Cos(polar), MathF.Sin(polar)));
+        }
+
+        int rings = profile.Count - 1;
+        int columns = segments + 1; // one extra so the seam vertex can have u = 1 as well as u = 0
+        var vertices = new Vertex3D[columns * profile.Count];
+        for (int ring = 0; ring < profile.Count; ring++)
+        {
+            var (y, ringRadius, normalY, normalRing) = profile[ring];
+            float v = ring / (float)rings;
+            for (int segment = 0; segment <= segments; segment++)
+            {
+                float u = segment / (float)segments;
+                float azimuth = u * MathF.Tau;
+                float cos = MathF.Cos(azimuth);
+                float sin = -MathF.Sin(azimuth);
+                vertices[ring * columns + segment] = new Vertex3D(
+                    new Vector3(ringRadius * cos, y, ringRadius * sin),
+                    new Vector3(normalRing * cos, normalY, normalRing * sin),
+                    new Vector2(u, v));
+            }
+        }
+
+        var indices = new List<uint>(segments * rings * 6);
+        for (int ring = 0; ring < rings; ring++)
+        {
+            for (int segment = 0; segment < segments; segment++)
+            {
+                uint a = (uint)(ring * columns + segment);
+                uint b = a + 1;
+                uint c = a + (uint)columns;
+                uint d = c + 1;
+                // Counter-clockwise seen from outside; the quads touching a pole collapse to one triangle.
+                if (ring != 0) { indices.Add(a); indices.Add(c); indices.Add(b); }
+                if (ring != rings - 1) { indices.Add(b); indices.Add(c); indices.Add(d); }
+            }
+        }
+
+        return new MeshData(vertices, [.. indices]);
+    }
+
     /// <summary>A UV sphere (latitude/longitude grid) centred on the origin with smooth normals.</summary>
     /// <param name="radius">Distance from the centre to the surface.</param>
     /// <param name="segments">Slices around the Y axis (at least 3).</param>
