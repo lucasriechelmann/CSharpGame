@@ -27,9 +27,10 @@ public static partial class ProjectTemplate
     /// <param name="parentFolder">The folder to create the project folder in.</param>
     /// <param name="name">The project name (see <see cref="IsValidName"/>).</param>
     /// <param name="engineDir">The folder holding the engine assemblies, written into <c>Directory.Build.props</c> so building outside the editor works too.</param>
+    /// <param name="kind">What the project starts with (an empty 2D scene, a 2D platformer or a 3D scene).</param>
     /// <exception cref="ArgumentException">The name is not valid.</exception>
     /// <exception cref="IOException">The project folder already exists and is not empty.</exception>
-    public static string Create(string parentFolder, string name, string engineDir)
+    public static string Create(string parentFolder, string name, string engineDir, ProjectKind kind = ProjectKind.Empty2D)
     {
         if (!IsValidName(name, out string problem)) throw new ArgumentException(problem, nameof(name));
 
@@ -38,11 +39,20 @@ public static partial class ProjectTemplate
             throw new IOException($"The folder '{root}' already exists and is not empty.");
 
         string engine = engineDir.EndsWith(Path.DirectorySeparatorChar) ? engineDir : engineDir + Path.DirectorySeparatorChar;
-        foreach (var (path, content) in Files)
+        foreach (var (path, content) in FilesFor(kind))
             Write(Path.Combine(root, Fill(path, name, engine)), Fill(content, name, engine));
 
-        Directory.CreateDirectory(Path.Combine(root, "Assets", "sprites"));
-        File.WriteAllBytes(Path.Combine(root, "Assets", "sprites", "square.png"), SquareSprite());
+        if (kind != ProjectKind.Scene3D)
+        {
+            Directory.CreateDirectory(Path.Combine(root, "Assets", "sprites"));
+            File.WriteAllBytes(Path.Combine(root, "Assets", "sprites", "square.png"), SquareSprite());
+        }
+
+        if (kind == ProjectKind.Platformer2D)
+        {
+            Write(Path.Combine(root, "Assets", "levels", "ground.layer.json"), PlatformerLevelJson());
+            File.WriteAllBytes(Path.Combine(root, "Assets", "tiles.png"), PlatformerTiles());
+        }
 
         string projectFile = Path.Combine(root, name + ProjectFile.Extension);
         new ProjectFile
@@ -69,6 +79,20 @@ public static partial class ProjectTemplate
         string text = File.ReadAllText(props);
         string updated = EngineDirPattern().Replace(text, $"<EngineDir Condition=\"'$(EngineDir)' == ''\">{engine}</EngineDir>");
         if (updated != text) File.WriteAllText(props, updated);
+    }
+
+    /// <summary>The files of the shared base, with the kind's own files replacing those of the same path and any others added.</summary>
+    private static IEnumerable<(string Path, string Content)> FilesFor(ProjectKind kind)
+    {
+        var extra = kind switch
+        {
+            ProjectKind.Platformer2D => PlatformerFiles,
+            ProjectKind.Scene3D => Scene3DFiles,
+            _ => [],
+        };
+        var overrides = extra.ToDictionary(file => file.Path, file => file.Content);
+        foreach (var (path, content) in Files) yield return (path, overrides.Remove(path, out string? replaced) ? replaced : content);
+        foreach (var (path, content) in overrides) yield return (path, content);
     }
 
     private static string Fill(string text, string name, string engineDir) => text.Replace(NameToken, name).Replace(EngineDirToken, engineDir);

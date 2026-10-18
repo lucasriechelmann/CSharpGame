@@ -137,6 +137,15 @@ internal sealed partial class HubShell : IEditorShell
         ImGui.InputText("##name", ref _name, 64, ImGuiInputTextFlags.AutoSelectAll);
 
         ImGui.Dummy(new Vector2(0f, 4f));
+        ImGui.TextDisabled("Template");
+        foreach (var kind in Enum.GetValues<ProjectKind>())
+        {
+            if (ImGui.Selectable(ProjectKindInfo.Title(kind), _kind == kind, ImGuiSelectableFlags.None, new Vector2(360f, 0f))) _kind = kind;
+            ImGui.SameLine();
+            ImGui.TextDisabled(ProjectKindInfo.Description(kind));
+        }
+
+        ImGui.Dummy(new Vector2(0f, 4f));
         ImGui.TextDisabled("Location");
         ImGui.SetNextItemWidth(520f);
         ImGui.InputText("##location", ref _location, 260, ImGuiInputTextFlags.AutoSelectAll);

@@ -13,6 +13,7 @@ internal sealed partial class HubShell
     private string _buildTitle = string.Empty;
     private string _pendingProject = string.Empty;
     private string _name = "MyGame";
+    private ProjectKind _kind = ProjectKind.Empty2D;
     private string _location;
     private string _message = string.Empty;
 
@@ -47,7 +48,7 @@ internal sealed partial class HubShell
     {
         try
         {
-            string file = ProjectTemplate.Create(_location.Trim(), _name, DotnetBuild.EngineDirectory);
+            string file = ProjectTemplate.Create(_location.Trim(), _name, DotnetBuild.EngineDirectory, _kind);
             _message = string.Empty;
             OpenProject(file);
         }

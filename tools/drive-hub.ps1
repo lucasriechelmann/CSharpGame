@@ -58,10 +58,11 @@ try {
 
     Shot $hub "$OutDir\hub_0_home.png"
     Click $hub 110 160                      # New project
-    TypeInto $hub 200 205 $Name             # name field
-    TypeInto $hub 300 268 $Location         # location field
+    TypeInto $hub 200 213 $Name             # name field
+    Click $hub 100 296                      # the "2D platformer" template
+    TypeInto $hub 300 378 $Location         # location field
     Shot $hub "$OutDir\hub_1_new.png"
-    Click $hub 90 360                       # Create
+    Click $hub 84 461                       # Create
     Start-Sleep -Milliseconds 800
     Shot $hub "$OutDir\hub_2_building.png"
 

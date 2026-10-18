@@ -18,7 +18,7 @@ public static class EditorApp
         try
         {
             if (args.Length == 0) return RunHub();
-            if (args[0] == "--new") return args.Length == 3 ? CreateProject(args[1], args[2]) : Usage();
+            if (args[0] == "--new") return NewProject(args);
             if (args[0] == "--publish") return args.Length >= 2 ? PublishProject(args[1], args.Length >= 3 ? args[2] : null) : Usage();
             if (args[0].StartsWith("--", StringComparison.Ordinal)) return Usage();
 
@@ -45,9 +45,21 @@ public static class EditorApp
         return 0;
     }
 
-    private static int CreateProject(string parentFolder, string name)
+    /// <summary>Reads <c>--new &lt;parent folder&gt; &lt;name&gt; [--template empty|platformer|3d]</c>.</summary>
+    private static int NewProject(string[] args)
     {
-        string file = ProjectTemplate.Create(parentFolder, name, DotnetBuild.EngineDirectory);
+        if (args.Length == 3) return CreateProject(args[1], args[2], ProjectKind.Empty2D);
+        if (args.Length != 5 || args[3] != "--template") return Usage();
+
+        if (ProjectKindInfo.TryParse(args[4], out var kind)) return CreateProject(args[1], args[2], kind);
+
+        Console.Error.WriteLine($"Unknown template '{args[4]}'. Use empty, platformer or 3d.");
+        return 2;
+    }
+
+    private static int CreateProject(string parentFolder, string name, ProjectKind kind)
+    {
+        string file = ProjectTemplate.Create(parentFolder, name, DotnetBuild.EngineDirectory, kind);
         Console.WriteLine($"Created {file}");
         var project = ProjectFile.Load(file);
         if (!Build(project.GameProjectPath, "Debug")) return 1;
@@ -107,7 +119,7 @@ public static class EditorApp
         Console.Error.WriteLine("Usage:");
         Console.Error.WriteLine("  Editor                                   show the project hub");
         Console.Error.WriteLine("  Editor <project.csgame.json> [--no-build] open a project");
-        Console.Error.WriteLine("  Editor --new <parent folder> <name>       create and build a new project");
+        Console.Error.WriteLine("  Editor --new <parent folder> <name> [--template empty|platformer|3d]  create and build a new project");
         Console.Error.WriteLine("  Editor --publish <project.csgame.json> [output folder]");
         return 2;
     }
