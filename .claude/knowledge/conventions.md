@@ -36,7 +36,7 @@ XML `<summary>` on every public/protected type and member (build error via CS159
 
 ## Errors and validation
 
-Fail loudly with guard clauses and specific exceptions and messages naming the offending value (`InvalidOperationException`, `ArgumentException`, `KeyNotFoundException`, `FileNotFoundException`); never swallow exceptions. Reference: `src/Engine.Core/Ecs/World.Internals.cs` (`ThrowIfDead`, `ThrowIfIterating`), `src/Engine.Core/Input/ActionMap.cs` (unbound action throws to surface typos). No logging framework yet.
+Fail loudly with guard clauses and specific exceptions and messages naming the offending value (`InvalidOperationException`, `ArgumentException`, `KeyNotFoundException`, `FileNotFoundException`); never swallow exceptions. Reference: `src/Engine.Core/Ecs/World.Internals.cs` (`ThrowIfDead`, `ThrowIfIterating`), `src/Engine.Core/Input/ActionMap.cs` (unbound action throws to surface typos). Logging is additive: log what happened with `Game.Log` (`Log.Info("Game", ...)`; categories are short area names), and still throw. Not for per-frame work (each call builds a string). Reference: `samples/Platformer/PlatformerGame.Scene.cs` (`QuickSave`).
 
 ## Math and rendering
 

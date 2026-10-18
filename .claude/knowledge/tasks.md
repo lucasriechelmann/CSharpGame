@@ -7,7 +7,7 @@ Work items after the 10-phase roadmap (see `features.md`). Status: `[ ]` todo, `
 Small, about one session. Fixes known gaps that affect game feel and that the editor will need.
 
 - [x] **Render interpolation between fixed steps.** Add a previous-transform component, written by the fixed step and blended by the render systems with the frame alpha. Why: motion stutters when the fixed rate and refresh rate do not match.
-- [ ] **Logging.** A small `ILogger`-style abstraction in Core (no Silk.NET), with a console sink and an in-overlay log panel. Why: the editor and asset hot-reload both need it.
+- [x] **Logging.** A small `ILogger`-style abstraction in Core (no Silk.NET), with a console sink and an in-overlay log panel. Why: the editor and asset hot-reload both need it.
 - [ ] **Pause and menu.** Pause state in `Game`, a menu drawn from `Game.Hud()`.
 - [ ] **Moving platforms.** Physics2D support (carry riders), then use in the sample level.
 - [ ] **Checkpoints.** Respawn at the last checkpoint instead of restarting the level; rules stay in `GameSession`.

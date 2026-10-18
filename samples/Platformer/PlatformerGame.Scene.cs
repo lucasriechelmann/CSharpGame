@@ -62,6 +62,8 @@ public sealed partial class PlatformerGame
             if (IsFree(spot)) SpawnCreature(spot);
         }
 
+        Log.Debug("Game", $"Spawn request near ({position.X:F0}, {position.Y:F0}), up to {count} creatures");
+
         // One blip per click, not per creature, with a random pitch so repeated clicks do not sound identical.
         Audio.Play(_spawnSound, volume: 0.5f, pitch: Range(0.9f, 1.2f));
     }
@@ -100,6 +102,7 @@ public sealed partial class PlatformerGame
     {
         Scenes.SaveToFile(QuickSavePath);
         ShowStatus($"Saved {World.EntityCount} entities");
+        Log.Info("Game", $"Quick-saved {World.EntityCount} entities to {QuickSavePath}");
     }
 
     /// <summary>Replaces the whole world with the quick-save, then re-finds the hero and snaps the camera to it.</summary>
@@ -108,6 +111,7 @@ public sealed partial class PlatformerGame
         if (!File.Exists(QuickSavePath))
         {
             ShowStatus("No quick-save yet (press F5)");
+            Log.Warning("Game", "Quick-load ignored: no quick-save file yet");
             return;
         }
 
@@ -118,6 +122,7 @@ public sealed partial class PlatformerGame
         _session.SyncCoinsRemaining(CountCoins()); // the saved world holds only the coins not yet collected
         SetDoorOpen(_session.GoalUnlocked);
         ShowStatus($"Loaded {World.EntityCount} entities");
+        Log.Info("Game", $"Quick-loaded {World.EntityCount} entities");
     }
 
     private void ShowStatus(string message)

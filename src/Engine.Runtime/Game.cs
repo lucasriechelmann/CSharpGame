@@ -5,6 +5,7 @@ using Engine.Core.Assets;
 using Engine.Core.Diagnostics;
 using Engine.Core.Ecs;
 using Engine.Core.Input;
+using Engine.Core.Logging;
 using Engine.Platform;
 using Engine.Runtime.Inspector;
 using Engine.Rendering;
@@ -26,6 +27,7 @@ public abstract class Game : IDisposable
     private readonly DebugOverlay _overlay;
     private readonly EntityInspector _inspector;
     private readonly ProfilerPanel _profilerPanel;
+    private readonly LogPanel _logPanel;
     private PostEffectsPanel _postEffectsPanel = null!;
     private int _postProcessSection;
     private readonly int _frameSection;
@@ -49,6 +51,9 @@ public abstract class Game : IDisposable
         _overlay = new DebugOverlay(_window, _timestep, _stats, World, Assets, () => Audio);
         _inspector = new EntityInspector(World, Components);
         _profilerPanel = new ProfilerPanel(Profiler);
+        var logHistory = new MemoryLogSink();
+        Log.AddSink(new ConsoleLogSink()).AddSink(logHistory);
+        _logPanel = new LogPanel(logHistory, Log);
         FixedSystems.Profile(Profiler, "Fixed");
         FrameSystems.Profile(Profiler, "Frame");
         RenderSystems.Profile(Profiler, "Render");
@@ -84,6 +89,13 @@ public abstract class Game : IDisposable
     /// registered automatically once the window is ready, so scenes can refer to those files by name from <see cref="Load"/> onwards.
     /// </summary>
     public SceneSerializer Scenes { get; }
+
+    /// <summary>
+    /// Where the engine and the game write events ("Audio: OpenAL Soft ready", "Game: quick-saved 37 entities"). Entries go to the
+    /// console and to the "Log" debug window; add your own <see cref="ILogSink"/> for anything else. Debug-level messages are
+    /// dropped until <see cref="Logger.MinimumLevel"/> is lowered (the Log window has a selector).
+    /// </summary>
+    public Logger Log { get; } = new();
 
     /// <summary>
     /// Per-section frame timing. Every system in <see cref="FixedSystems"/>, <see cref="FrameSystems"/> and <see cref="RenderSystems"/>
@@ -195,7 +207,11 @@ public abstract class Game : IDisposable
         _postEffectsPanel = new PostEffectsPanel(PostProcess);
         _postProcessSection = Profiler.GetSection("Post process");
         _window.Resized += PostProcess.Resize;
-        Audio = OpenAlAudioDevice.TryCreate(out var device, out string reason) ? device! : new NullAudioDevice(reason);
+        bool audioReady = OpenAlAudioDevice.TryCreate(out var device, out string reason);
+        Audio = audioReady ? device! : new NullAudioDevice(reason);
+        if (audioReady) Log.Info("Audio", Audio.Description);
+        else Log.Warning("Audio", $"No sound: {reason}");
+        Log.Info("Engine", $"Window {_window.Width}x{_window.Height}, fixed step {_timestep.Step * 1000:F2} ms");
         Load();
     }
 
@@ -252,6 +268,7 @@ public abstract class Game : IDisposable
             if (_overlay.ShowInspector) _inspector.Draw();
             if (_overlay.ShowProfiler) _profilerPanel.Draw();
             if (_overlay.ShowPostEffects) _postEffectsPanel.Draw();
+            if (_overlay.ShowLog) _logPanel.Draw();
             DebugGui();
         }
 

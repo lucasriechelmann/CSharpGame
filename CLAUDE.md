@@ -45,6 +45,7 @@ Dependency direction: samples -> Runtime -> (Core, Platform, Rendering, Scenes, 
 - **Shutdown**: free GPU resources in `Unload`/the window `Closing` event, while the GL context still exists (`Game` then disposes `Audio`, the `PostProcess` chain, then `Assets`). Never touch GL from `Dispose` or after `Run()` returns.
 - **Render stats**: call `SpriteBatch.ResetStats()` once per frame (in `Draw`) because a frame has several batch passes.
 - **GPU resources** are `IDisposable`, owned by exactly one object; create in `Load`, dispose in `Unload`; `Game.Assets` disposes loaded assets.
+- **Logging**: record events through `Game.Log` (`Logger`: `Info`/`Warning`/`Error`, short category), never `Console.WriteLine`; it also feeds the in-game Log window. Never in per-frame/per-entity paths, and logging does not replace throwing.
 - **Fail loudly** with specific guard-clause exceptions; never swallow exceptions.
 - **Gotchas**: `Matrix4x4` is row-vector/row-major, upload to GL **without transposing**; `default(Transform)` is invalid, use `Transform.Identity`/`At`; use binary-exact floats in timing tests.
 - Verify rendering and input changes in the real window with `tools/` (unit tests do not cover GL code).

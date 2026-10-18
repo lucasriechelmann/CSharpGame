@@ -60,6 +60,7 @@ public sealed partial class PlatformerGame
         SetDoorOpen(false);
         SnapCameraToHero();
         ShowStatus("New run");
+        Log.Info("Game", $"New run: {_session.CoinsTotal} coins to collect");
     }
 
     /// <summary>Switches the exit door's art and brightness between locked and open.</summary>

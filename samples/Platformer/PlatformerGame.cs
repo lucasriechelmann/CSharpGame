@@ -74,6 +74,7 @@ public sealed partial class PlatformerGame : Game
         Audio.Preload(_spawnSound);
         _sounds = LoadGameSounds();
         _session = new GameSession(CountCoins());
+        Log.Info("Game", $"Level loaded: {World.EntityCount} entities, {_session.CoinsTotal} coins");
 
         // Full-screen effects, in order: lights first (so the glow can bloom), then bloom, vignette and an off-by-default colour grade.
         // Lights themselves are Light2D components in the scene file (the hero carries a lantern); tune everything live in the "Post effects" window.
