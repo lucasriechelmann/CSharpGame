@@ -67,6 +67,13 @@ public sealed partial class PlatformerGame : Game
         _spawnSound = Assets.Get(Assets.Load<AudioClip>("sounds/spawn.wav"));
         Audio.Preload(_spawnSound);
 
+        // Full-screen effects, in order: lights first (so the glow can bloom), then bloom, vignette and an off-by-default colour grade.
+        // Lights themselves are Light2D components in the scene file (the hero carries a lantern); tune everything live in the "Post effects" window.
+        PostProcess.Add(new LightingEffect(Gl, World, _camera) { Ambient = new Vector3(0.38f, 0.4f, 0.55f), Exposure = 1.5f });
+        PostProcess.Add(new BloomEffect(Gl));
+        PostProcess.Add(new VignetteEffect(Gl));
+        PostProcess.Add(new ColorGradeEffect(Gl) { Enabled = false });
+
         _camera.ViewportSize = new Vector2(Window.Width, Window.Height);
         Window.Resized += (w, h) => _camera.ViewportSize = new Vector2(w, h);
         SnapCameraToHero();

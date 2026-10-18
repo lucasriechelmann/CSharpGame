@@ -72,7 +72,9 @@ public sealed partial class SpriteBatch
     private void PrepareState()
     {
         _gl.Enable(EnableCap.Blend);
-        _gl.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+        _gl.BlendFunc(
+            BlendingFactor.SrcAlpha,
+            _blend == SpriteBlend.Additive ? BlendingFactor.One : BlendingFactor.OneMinusSrcAlpha);
         _gl.Disable(EnableCap.DepthTest);
         _gl.Disable(EnableCap.CullFace);
     }

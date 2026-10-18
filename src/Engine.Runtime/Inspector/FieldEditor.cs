@@ -18,7 +18,8 @@ namespace Engine.Runtime.Inspector;
 /// </remarks>
 internal static partial class FieldEditor
 {
-    private const float DragSpeed = 0.1f;
+    /// <summary>Drag step that suits the value's size: fine for 0..1 settings such as intensities, coarse for world positions.</summary>
+    private static float SpeedFor(float magnitude) => MathF.Abs(magnitude) < 5f ? 0.01f : 0.1f;
 
     /// <summary>Draws the editor for <paramref name="value"/>.</summary>
     /// <param name="label">Field name shown beside the widget.</param>
@@ -38,7 +39,7 @@ internal static partial class FieldEditor
         if (type == typeof(float))
         {
             float v = (float)value!;
-            if (!ImGui.DragFloat(label, ref v, DragSpeed)) return false;
+            if (!ImGui.DragFloat(label, ref v, SpeedFor(v))) return false;
             value = v;
             return true;
         }
@@ -82,7 +83,7 @@ internal static partial class FieldEditor
     private static bool DrawVector2(string label, ref object? value)
     {
         var v = (Vector2)value!;
-        if (!ImGui.DragFloat2(label, ref v, DragSpeed)) return false;
+        if (!ImGui.DragFloat2(label, ref v, SpeedFor(MathF.Max(MathF.Abs(v.X), MathF.Abs(v.Y))))) return false;
         value = v;
         return true;
     }
@@ -90,7 +91,7 @@ internal static partial class FieldEditor
     private static bool DrawVector3(string label, ref object? value)
     {
         var v = (Vector3)value!;
-        if (!ImGui.DragFloat3(label, ref v, DragSpeed)) return false;
+        if (!ImGui.DragFloat3(label, ref v, SpeedFor(MathF.Max(MathF.Abs(v.X), MathF.Max(MathF.Abs(v.Y), MathF.Abs(v.Z)))))) return false;
         value = v;
         return true;
     }
@@ -98,7 +99,7 @@ internal static partial class FieldEditor
     private static bool DrawVector4(string label, ref object? value)
     {
         var v = (Vector4)value!;
-        if (!ImGui.DragFloat4(label, ref v, DragSpeed)) return false;
+        if (!ImGui.DragFloat4(label, ref v, SpeedFor(MathF.Max(MathF.Max(MathF.Abs(v.X), MathF.Abs(v.Y)), MathF.Max(MathF.Abs(v.Z), MathF.Abs(v.W)))))) return false;
         value = v;
         return true;
     }

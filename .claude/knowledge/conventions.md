@@ -28,6 +28,7 @@ XML `<summary>` on every public/protected type and member (build error via CS159
 - **Data-driven animation**: build a state machine in a small factory (`HeroAnimations.Create`), cache parameter indices in the system constructor, write parameters per frame. Reference: `samples/Platformer/HeroAnimationSystem.cs`.
 - **System placement:** per-frame/input systems in `FrameSystems`, simulation in `FixedSystems`, drawing in `RenderSystems`. Reference: `samples/Platformer/PlatformerGame.cs` constructor.
 - **Input:** read via `ActionMap` using `const string` names in a per-game `GameActions` class; read edges per frame and latch into components, never inside fixed systems. Reference: `samples/Platformer/PlayerInputSystem.cs`.
+- **Full-screen effects:** derive from `SinglePassEffect` (fragment source as a `const string`, settings as public auto-properties, upload them in `SetUniforms`) and add it with `PostProcess.Add` in `Load`. Reference: `src/Engine.Rendering/PostProcessing/VignetteEffect.cs`. Effects that need several passes implement `IPostEffect` (`BloomEffect`).
 - **Timing your own work:** register a profiler section once (`Profiler.GetSection`) and keep the id; wrap the work in `Begin`/`End`. Reference: `src/Engine.Runtime/Game.cs` (`_updateSection`).
 - **Sound from gameplay:** observe state (physics contacts, velocity) in a frame system and call `IAudioDevice.Play`; preload clips in the constructor or `Load`. Reference: `samples/Platformer/HeroSoundSystem.cs`.
 - **Assets:** components hold `AssetHandle<T>`, load via `Game.Assets`; do not dispose assets manually.
@@ -52,7 +53,8 @@ Fail loudly with guard clauses and specific exceptions and messages naming the o
 - JSON/format tests cover: happy path, round trip (write then read), defaults when keys are omitted, and every rejection path with the exception type (`InvalidOperationException` for bad data, `FileNotFoundException` for missing files). Reference: `tests/Engine.Scenes.Tests/SceneLoadFailureTests.cs` (also asserts the world is unchanged on failure).
 - Filesystem tests use a unique temp directory and clean up in `Dispose`. Reference: `tests/Engine.Core.Tests/Assets/AssetManagerTests.cs`.
 - Audio device tests talk to real OpenAL and return quietly when no device exists; keep them silent (`volume: 0`). Pure parts (`WavDecoder`, `VoicePool`) are tested with in-memory data (`tests/Engine.Audio.Tests/Fixtures/WavBuilder.cs`). Profiler tests wind a `FakeClock` by hand.
-- GPU code (`Shader`, `Texture2D`, `SpriteBatch`) and ImGui panels (`FieldEditor`, `EntityInspector`, `ProfilerPanel`) have no unit tests; verify it visually with `tools/` (see `tools/README.md`).
+- Rendering maths that feeds GPU code is pure and tested (`LightMath`: falloff, gradient pixels, culling); render targets, effects and `LightingEffect` are verified in the window with `tools/capture-clean.ps1`.
+- GPU code (`Shader`, `Texture2D`, `SpriteBatch`, `RenderTarget`, post effects) and ImGui panels (`FieldEditor`, `EntityInspector`, `ProfilerPanel`) have no unit tests; verify it visually with `tools/` (see `tools/README.md`).
 
 ## Git
 

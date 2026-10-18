@@ -26,6 +26,8 @@ public abstract class Game : IDisposable
     private readonly DebugOverlay _overlay;
     private readonly EntityInspector _inspector;
     private readonly ProfilerPanel _profilerPanel;
+    private PostEffectsPanel _postEffectsPanel = null!;
+    private int _postProcessSection;
     private readonly int _frameSection;
     private readonly int _updateSection;
     private readonly int _fixedUpdateSection;
@@ -96,6 +98,13 @@ public abstract class Game : IDisposable
     /// </summary>
     public IAudioDevice Audio { get; private set; } = new NullAudioDevice("starts when the window loads");
 
+    /// <summary>
+    /// Full-screen effects (lighting, bloom, vignette, colour grade) applied to the finished scene. Available from <see cref="Load"/>
+    /// onwards: add effects there, e.g. <c>PostProcess.Add(new BloomEffect(Gl))</c>. While no effect is enabled the scene draws
+    /// straight to the window and this costs nothing.
+    /// </summary>
+    public PostProcessChain PostProcess { get; private set; } = null!;
+
     /// <summary>Raw keyboard and mouse state. Prefer <see cref="Actions"/> for game logic.</summary>
     public InputState Input => _window.Input;
 
@@ -158,6 +167,7 @@ public abstract class Game : IDisposable
     {
         Unload();
         Audio.Dispose();
+        PostProcess.Dispose();
         Assets.Dispose();
     }
 
@@ -169,6 +179,10 @@ public abstract class Game : IDisposable
         Assets.Register(new AnimationStateMachineLoader());
         Assets.Register(new PrefabLoader());
         Assets.Register(new AudioClipLoader());
+        PostProcess = new PostProcessChain(Gl, _window.Width, _window.Height);
+        _postEffectsPanel = new PostEffectsPanel(PostProcess);
+        _postProcessSection = Profiler.GetSection("Post process");
+        _window.Resized += PostProcess.Resize;
         Audio = OpenAlAudioDevice.TryCreate(out var device, out string reason) ? device! : new NullAudioDevice(reason);
         Load();
     }
@@ -205,10 +219,14 @@ public abstract class Game : IDisposable
     private void OnRender(double dt)
     {
         _stats.RecordFrame(dt);
+        PostProcess.BeginScene();
         long start = Profiler.Begin();
         Draw(dt);
         Profiler.End(_drawSection, start);
         RenderSystems.Run(World, dt);
+        start = Profiler.Begin();
+        PostProcess.EndScene();
+        Profiler.End(_postProcessSection, start);
     }
 
     private void OnGui(double dt)
@@ -219,6 +237,7 @@ public abstract class Game : IDisposable
             _overlay.Draw();
             if (_overlay.ShowInspector) _inspector.Draw();
             if (_overlay.ShowProfiler) _profilerPanel.Draw();
+            if (_overlay.ShowPostEffects) _postEffectsPanel.Draw();
             DebugGui();
         }
 

@@ -342,6 +342,111 @@
           "direction": -1
         }
       }
+    },
+    {
+      "components": {
+        "Name": {
+          "value": "Lamp (warm)"
+        },
+        "Transform": {
+          "position": {
+            "x": -250,
+            "y": -150,
+            "z": 15
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "scale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          }
+        },
+        "Light2D": {
+          "color": {
+            "r": 1.0,
+            "g": 0.65,
+            "b": 0.3,
+            "a": 1
+          },
+          "intensity": 1.2,
+          "radius": 260
+        }
+      }
+    },
+    {
+      "components": {
+        "Name": {
+          "value": "Lamp (cyan)"
+        },
+        "Transform": {
+          "position": {
+            "x": 120,
+            "y": -130,
+            "z": 15
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "scale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          }
+        },
+        "Light2D": {
+          "color": {
+            "r": 0.35,
+            "g": 0.85,
+            "b": 1.0,
+            "a": 1
+          },
+          "intensity": 1.1,
+          "radius": 280
+        }
+      }
+    },
+    {
+      "components": {
+        "Name": {
+          "value": "Lamp (violet)"
+        },
+        "Transform": {
+          "position": {
+            "x": 520,
+            "y": -150,
+            "z": 15
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "scale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          }
+        },
+        "Light2D": {
+          "color": {
+            "r": 0.8,
+            "g": 0.45,
+            "b": 1.0,
+            "a": 1
+          },
+          "intensity": 1.2,
+          "radius": 280
+        }
+      }
     }
   ]
 }

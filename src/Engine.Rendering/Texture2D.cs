@@ -68,6 +68,29 @@ public sealed class Texture2D : IDisposable
         return FromPixels(gl, image.Width, image.Height, image.Data, filter);
     }
 
+    /// <summary>
+    /// Allocates an uninitialised RGBA texture to render into (the colour attachment of a <see cref="RenderTarget"/>). Linear
+    /// filtering so a target drawn smaller or larger than its size still looks smooth.
+    /// </summary>
+    /// <param name="gl">The GL context that will own the texture.</param>
+    /// <param name="width">Width in pixels.</param>
+    /// <param name="height">Height in pixels.</param>
+    public static unsafe Texture2D CreateEmpty(GL gl, int width, int height)
+    {
+        if (width <= 0 || height <= 0)
+            throw new ArgumentOutOfRangeException(nameof(width), $"Texture dimensions must be positive, got {width}x{height}.");
+
+        uint handle = gl.GenTexture();
+        gl.BindTexture(TextureTarget.Texture2D, handle);
+        gl.TexImage2D(TextureTarget.Texture2D, 0, InternalFormat.Rgba8, (uint)width, (uint)height, 0,
+            PixelFormat.Rgba, PixelType.UnsignedByte, null);
+        gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)GLEnum.Linear);
+        gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)GLEnum.Linear);
+        gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)GLEnum.ClampToEdge);
+        gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)GLEnum.ClampToEdge);
+        return new Texture2D(gl, handle, width, height);
+    }
+
     /// <summary>A 1x1 opaque white texture. Draw it with a tint <see cref="Color"/> to get solid-colour quads.</summary>
     public static Texture2D CreateWhite(GL gl) => FromPixels(gl, 1, 1, [255, 255, 255, 255]);
 

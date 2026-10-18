@@ -22,6 +22,7 @@ public sealed partial class SpriteBatch : IDisposable
     private Texture2D? _currentTexture;
     private int _spriteCount;
     private bool _begun;
+    private SpriteBlend _blend;
     private int _frameDrawCalls;
     private int _frameSprites;
 
@@ -39,15 +40,17 @@ public sealed partial class SpriteBatch : IDisposable
         _frameSprites = 0;
     }
 
-    /// <summary>Starts a batch. Sets alpha blending and disables depth testing (2D sprites are ordered by submission).</summary>
+    /// <summary>Starts a batch. Sets the blend mode and disables depth testing (2D sprites are ordered by submission).</summary>
     /// <param name="viewProjection">World-to-clip matrix, normally <see cref="Camera2D.GetViewProjection"/>.</param>
+    /// <param name="blend">How sprites combine with what is already drawn; alpha blending unless lights or glows are being added.</param>
     /// <exception cref="InvalidOperationException">A batch is already in progress.</exception>
-    public void Begin(in Matrix4x4 viewProjection)
+    public void Begin(in Matrix4x4 viewProjection, SpriteBlend blend = SpriteBlend.Alpha)
     {
         if (_begun) throw new InvalidOperationException("Begin was called twice without End.");
 
         _begun = true;
         _viewProjection = viewProjection;
+        _blend = blend;
         PrepareState();
     }
 

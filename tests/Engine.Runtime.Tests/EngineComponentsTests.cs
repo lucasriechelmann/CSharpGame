@@ -46,7 +46,7 @@ public sealed class EngineComponentsTests : IDisposable
         var registry = EngineComponents.RegisterAll(new ComponentRegistry());
 
         Assert.Equal(
-            new[] { "BoxCollider", "Name", "PhysicsBody", "PlatformerController", "PlatformerIntent", "Sprite", "SpriteAnimator", "StaticSolid", "TileLayerRenderer", "Transform" },
+            new[] { "BoxCollider", "Light2D", "Name", "PhysicsBody", "PlatformerController", "PlatformerIntent", "Sprite", "SpriteAnimator", "StaticSolid", "TileLayerRenderer", "Transform" },
             registry.Names.OrderBy(n => n).ToArray());
     }
 
@@ -56,6 +56,20 @@ public sealed class EngineComponentsTests : IDisposable
         var registry = EngineComponents.RegisterAll(new ComponentRegistry());
 
         Assert.Throws<ArgumentException>(() => EngineComponents.RegisterAll(registry));
+    }
+
+    [Fact]
+    public void Light_round_trips()
+    {
+        var e = _world.CreateEntity();
+        _world.Add(e, Light2D.Create(180f, new Color(1f, 0.5f, 0.25f), 1.5f));
+
+        var loaded = RoundTrip();
+
+        var light = _world.Get<Light2D>(loaded);
+        Assert.Equal(180f, light.Radius);
+        Assert.Equal(1.5f, light.Intensity);
+        Assert.Equal(new Color(1f, 0.5f, 0.25f), light.Color);
     }
 
     [Fact]

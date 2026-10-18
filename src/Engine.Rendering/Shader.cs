@@ -52,6 +52,18 @@ public sealed class Shader : IDisposable
     /// <summary>Sets an <c>int</c> uniform (also used for sampler texture units). The program must be in use.</summary>
     public void SetUniform(string name, int value) => _gl.Uniform1(Location(name), value);
 
+    /// <summary>Sets a <c>float</c> uniform. The program must be in use.</summary>
+    public void SetUniform(string name, float value) => _gl.Uniform1(Location(name), value);
+
+    /// <summary>Sets a <c>vec2</c> uniform. The program must be in use.</summary>
+    public void SetUniform(string name, Vector2 value) => _gl.Uniform2(Location(name), value.X, value.Y);
+
+    /// <summary>Sets a <c>vec3</c> uniform. The program must be in use.</summary>
+    public void SetUniform(string name, Vector3 value) => _gl.Uniform3(Location(name), value.X, value.Y, value.Z);
+
+    /// <summary>Sets a <c>vec4</c> uniform. The program must be in use.</summary>
+    public void SetUniform(string name, Vector4 value) => _gl.Uniform4(Location(name), value.X, value.Y, value.Z, value.W);
+
     /// <summary>Sets a <c>mat4</c> uniform from a System.Numerics matrix without transposing (see <see cref="Camera2D.GetViewProjection"/>). The program must be in use.</summary>
     public void SetUniform(string name, in Matrix4x4 value)
     {

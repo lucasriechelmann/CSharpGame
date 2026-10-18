@@ -19,6 +19,9 @@ internal sealed class DebugOverlay(GameWindow window, FixedTimestep timestep, Fr
     /// <summary>Whether the profiler window is open.</summary>
     public bool ShowProfiler { get; private set; } = true;
 
+    /// <summary>Whether the post-effects window is open.</summary>
+    public bool ShowPostEffects { get; private set; } = true;
+
     /// <summary>Flips <see cref="Visible"/>.</summary>
     public void Toggle() => Visible = !Visible;
 
@@ -46,6 +49,8 @@ internal sealed class DebugOverlay(GameWindow window, FixedTimestep timestep, Fr
         ImGui.SameLine();
         bool profiler = ShowProfiler;
         if (ImGui.Checkbox("Profiler", ref profiler)) ShowProfiler = profiler;
+        bool postEffects = ShowPostEffects;
+        if (ImGui.Checkbox("Post effects", ref postEffects)) ShowPostEffects = postEffects;
 
         ImGui.Text("F1: toggle debug UI");
         ImGui.End();

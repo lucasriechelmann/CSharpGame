@@ -1,6 +1,11 @@
 {
   "components": {
     "Name": { "value": "Hero" },
+    "Light2D": {
+      "color": { "r": 1, "g": 0.85, "b": 0.55, "a": 1 },
+      "intensity": 1,
+      "radius": 240
+    },
     "Transform": {
       "position": {
         "x": -528,

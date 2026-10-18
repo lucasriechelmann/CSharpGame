@@ -19,6 +19,7 @@ public static class EngineComponents
         .Register<Name>("Name")
         .Register("Transform", Transform.Identity)
         .Register<Sprite>("Sprite")
+        .Register("Light2D", Light2D.Create(160f, Color.White))
         .Register<SpriteAnimator>("SpriteAnimator")
         .Register<TileLayerRenderer>("TileLayerRenderer")
         .Register<BoxCollider>("BoxCollider")

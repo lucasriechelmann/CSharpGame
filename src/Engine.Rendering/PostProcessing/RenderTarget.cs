@@ -1,0 +1,80 @@
+using Silk.NET.OpenGL;
+
+namespace Engine.Rendering;
+
+/// <summary>
+/// An off-screen image you can draw into: an OpenGL framebuffer object whose colour attachment is a <see cref="Texture2D"/>.
+/// Render the scene into one, then read <see cref="Texture"/> in a later pass; that is the basis of post-processing and lighting.
+/// Owns the framebuffer and its texture.
+/// </summary>
+public sealed class RenderTarget : IDisposable
+{
+    private readonly GL _gl;
+    private uint _framebuffer;
+
+    /// <summary>Creates a target of the given size. Needs a current GL context.</summary>
+    /// <exception cref="InvalidOperationException">The driver reports the framebuffer as incomplete.</exception>
+    public RenderTarget(GL gl, int width, int height)
+    {
+        _gl = gl;
+        Texture = null!;
+        Create(width, height);
+    }
+
+    /// <summary>The colour image. Bind it to a texture unit to sample what was drawn. Replaced by <see cref="Resize"/>, so do not cache it.</summary>
+    public Texture2D Texture { get; private set; }
+
+    /// <summary>Width in pixels.</summary>
+    public int Width => Texture.Width;
+
+    /// <summary>Height in pixels.</summary>
+    public int Height => Texture.Height;
+
+    /// <summary>Makes this target the destination of subsequent draws and sets the viewport to cover it.</summary>
+    public void Bind()
+    {
+        _gl.BindFramebuffer(FramebufferTarget.Framebuffer, _framebuffer);
+        _gl.Viewport(0, 0, (uint)Width, (uint)Height);
+    }
+
+    /// <summary>Directs drawing back to the window (framebuffer 0) with a viewport of the given size.</summary>
+    public static void BindScreen(GL gl, int width, int height)
+    {
+        gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+        gl.Viewport(0, 0, (uint)width, (uint)height);
+    }
+
+    /// <summary>Reallocates the target at a new size (contents are lost). Does nothing when the size is unchanged.</summary>
+    public void Resize(int width, int height)
+    {
+        if (width == Width && height == Height) return;
+
+        Destroy();
+        Create(width, height);
+    }
+
+    /// <summary>Deletes the framebuffer and its texture.</summary>
+    public void Dispose() => Destroy();
+
+    private void Create(int width, int height)
+    {
+        Texture = Texture2D.CreateEmpty(_gl, width, height);
+        _framebuffer = _gl.GenFramebuffer();
+        _gl.BindFramebuffer(FramebufferTarget.Framebuffer, _framebuffer);
+        _gl.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0, TextureTarget.Texture2D, Texture.Handle, 0);
+
+        var status = _gl.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
+        _gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+        if (status != GLEnum.FramebufferComplete)
+        {
+            Destroy();
+            throw new InvalidOperationException($"Render target {width}x{height} is incomplete: {status}.");
+        }
+    }
+
+    private void Destroy()
+    {
+        _gl.DeleteFramebuffer(_framebuffer);
+        Texture.Dispose();
+    }
+}

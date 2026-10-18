@@ -42,7 +42,7 @@ Per display frame (`Game.OnUpdate` then `Game.OnRender`, driven by Silk's window
 2. `FrameSystems` run, then `Game.Update` (read input here, latch intent into components, e.g. `PlayerInputSystem` writes `PlatformerIntent`).
 3. `FixedTimestep.Advance(dt)` returns N steps; for each: `FixedSystems`, then `Game.FixedUpdate`.
 4. `Input.EndFrame()` clears pressed/released edges and scroll.
-5. Render: `Game.Draw` (resets batch stats, clears), `RenderSystems` in registration order (sample: background/ground `TileLayerRenderSystem`, `SpriteRenderSystem` which gathers `Transform`+`Sprite` and sorts back-to-front by Z then texture, foreground `TileLayerRenderSystem`; each pass is its own `SpriteBatch.Begin/End`), then the ImGui overlay (`DebugOverlay` + `Game.DebugGui`).
+5. Render: `PostProcess.BeginScene()` (redirects drawing into the scene target only if some effect is enabled), `Game.Draw` (resets batch stats, clears), `RenderSystems` in registration order (sample: background/ground `TileLayerRenderSystem`, `SpriteRenderSystem` which gathers `Transform`+`Sprite` and sorts back-to-front by Z then texture, foreground `TileLayerRenderSystem`; each pass is its own `SpriteBatch.Begin/End`), then `PostProcess.EndScene()` (runs the enabled effects, the last one writing to the window), then the ImGui overlay (`DebugOverlay` + `Game.DebugGui`), which is drawn after the effects so tools are never darkened or bloomed.
 
 Shutdown: GPU cleanup happens in the window's `Closing` event, **while the GL context still exists**: `GameWindow.OnClosing` raises `Closing` (so `Game` runs `Unload()` then `Assets.Dispose()`), then disposes the ImGui controller and input. `Game.Dispose`/`GameWindow.Dispose` afterwards only release the managed GL bindings and the window. (Decision and reason: after `Run()` returns the context is destroyed and any GL delete throws `NoContext`; this crashed every normal window close until phase 7.)
 
@@ -111,6 +111,10 @@ Shutdown: GPU cleanup happens in the window's `Closing` event, **while the GL co
 
 ## Rendering pipeline
 
+- **Post-processing** (`Engine.Rendering/PostProcessing`): `RenderTarget` = framebuffer object + `Texture2D` colour attachment (RGBA8, linear filter; `Resize` recreates it). `FullscreenQuad` draws one oversized triangle from `gl_VertexID` (no vertex buffer, only the empty VAO core profile requires), and its vertex source is shared by every effect, which supplies `vUv`. `PostProcessChain` owns two window-sized targets: `BeginScene` binds target 0 when any effect is enabled, `EndScene` runs the enabled effects ping-ponging between the targets, the last writing to framebuffer 0. A shader cannot read what it writes, hence two targets. Textures sampled from a target are not flipped: render and sample share GL's bottom-left origin. `Game` resizes the chain from the window's resize event, times it as the `Post process` profiler section and disposes it after `Unload`.
+- **Effects**: `SinglePassEffect` (base: one shader, `SetUniforms` hook) for colour grade and vignette; `BloomEffect` implements `IPostEffect` itself (bright pass to a half-resolution target, N rounds of separable 9-tap Gaussian, composite). Settings are public properties; `Runtime/Inspector/PostEffectsPanel` edits them by reflection through `FieldEditor`.
+- **Lighting**: `LightingEffect` (first in the chain) rebuilds a screen-sized light map each frame: clear to `Ambient`, then a `SpriteBatch` pass with `SpriteBlend.Additive` (blend `SrcAlpha, One`) draws one tinted radial-gradient quad per `Light2D` in view (gradient texture from `LightMath.BuildGradientPixels`, falloff `(1 - d^2)^2`), through the scene camera so lights align with sprites. The composite shader outputs `scene * lightMap * Exposure`. Decision: a light-map multiply rather than per-sprite lighting, because its cost does not grow with sprite count and the sprite renderer is untouched; the price is no shadows and no normal maps.
+
 - World space: X right, Y up, Z draw order (larger = in front). `Camera2D` zoom 1 = 1 world unit per pixel; `GetViewProjection()` is row-vector `Matrix4x4`, uploaded to GL without transpose and used as `uViewProjection * vec4(pos, 1)`.
 - `SpriteQuad.Write` (pure, tested) builds 4 vertices from a `SpriteDraw`; `SpriteBatch` fills a `SpriteVertex[]` (max 8192 sprites, 16-bit indices), uploads with `glBufferSubData`, draws with a static index buffer, flushing on texture change. Alpha blending on, depth test off. Built-in GLSL 330 shader in `SpriteShaderSource`.
 - Texture space: (0,0) top-left, image row 0 is the top. Window framebuffer size is assumed equal to window size (inferred; not tested on high-DPI displays).
@@ -121,4 +125,4 @@ None (no network, database or config files).
 
 ## Planned (from the roadmap, not built yet)
 
-Post-processing and 2D lights (phase 9), an editor that builds on the inspector, music streaming and positional audio, and a 3D renderer beside `Engine.Rendering`.
+Light occluders/shadows, an editor that builds on the inspector, music streaming and positional audio, and a 3D renderer beside `Engine.Rendering`.
