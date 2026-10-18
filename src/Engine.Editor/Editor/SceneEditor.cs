@@ -39,7 +39,7 @@ internal sealed partial class SceneEditor : IEditorShell
     private readonly RenderedBoxes _boxes;
     private readonly SceneViewport _viewport = new();
     private readonly AssetBrowserPanel _assetBrowser;
-    private bool _layoutPending = !File.Exists("imgui.ini"); // no saved layout yet: start from the default one (Reset layout asks for it again)
+    private bool _layoutPending = !File.Exists(EditorPaths.LayoutFile); // no saved layout yet: start from the default one (Reset layout asks for it again)
     private readonly Game _game;
     private string? _playSnapshot;
 

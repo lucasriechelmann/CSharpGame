@@ -262,6 +262,19 @@ public abstract class Game : IDisposable
         set => _window.ConfigureImGui = value;
     }
 
+    /// <summary>The window title, for a host that knows better than the game (the editor shows the project name).</summary>
+    internal string WindowTitle
+    {
+        get => _window.Title;
+        set => _window.Title = value;
+    }
+
+    /// <summary>Hides the F1 debug overlay windows (a host with its own interface does not want them).</summary>
+    internal void HideDebugOverlay()
+    {
+        if (_overlay.Visible) _overlay.Toggle();
+    }
+
     /// <summary>Asks for a dark window title bar. Set it before <see cref="Run"/>.</summary>
     internal bool DarkTitleBar
     {

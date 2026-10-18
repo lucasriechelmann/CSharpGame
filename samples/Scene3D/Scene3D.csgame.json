@@ -1,0 +1,8 @@
+{
+  "name": "Scene3D",
+  "gameProject": "Scene3D.csproj",
+  "gameLibrary": "bin/Debug/net10.0/Scene3D.Game.dll",
+  "launcher": "../Scene3D.Launcher/Scene3D.Launcher.csproj",
+  "assets": "Assets",
+  "scene": "scenes/room.scene.json"
+}

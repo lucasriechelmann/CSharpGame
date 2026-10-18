@@ -158,4 +158,22 @@ public static class Win11Theme
     private static Vector4 Rgb(byte r, byte g, byte b) => new(r / 255f, g / 255f, b / 255f, 1f);
 
     private static Vector4 Rgba(byte r, byte g, byte b, float a) => new(r / 255f, g / 255f, b / 255f, a);
+
+    /// <summary>
+    /// Chooses the file ImGui keeps its window layout in (ImGui otherwise writes <c>imgui.ini</c> into the working folder, shared by every program and project
+    /// started from there), or turns saving off when <paramref name="path"/> is null. Call it from the same setup callback as <see cref="Configure"/>.
+    /// </summary>
+    /// <param name="path">The layout file, or null for none.</param>
+    public static unsafe void UseLayoutFile(string? path)
+    {
+        var io = ImGui.GetIO();
+        if (path is null)
+        {
+            io.NativePtr->IniFilename = null;
+            return;
+        }
+
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        io.NativePtr->IniFilename = (byte*)Marshal.StringToHGlobalAnsi(path); // ImGui keeps the pointer for the life of the program
+    }
 }

@@ -5,9 +5,9 @@ param([string]$OutDir, [string]$Game = "Platformer", [string]$Configuration = "D
 # window-relative pixels read off a screenshot of the default layout at 1280x720, so the script assumes that window size.
 
 $root = Split-Path -Parent $PSScriptRoot
+Remove-Item (Join-Path $env:APPDATA "Game Editor\layout.ini") -ErrorAction SilentlyContinue # a fresh run builds the default window layout
 $exe = Join-Path $root "src\Engine.Editor\bin\$Configuration\net10.0\Editor.exe"
-$dll = Join-Path $root "samples\$Game\bin\$Configuration\net10.0\$Game.Game.dll"
-$project = Join-Path $root "samples\$Game"
+$project = Join-Path $root "samples\$Game\$Game.csgame.json"
 
 Add-Type -AssemblyName System.Drawing
 Add-Type @"
@@ -45,7 +45,7 @@ function Click($proc, $x, $y) {
     [EdDrive]::mouse_event(0x0004, 0, 0, 0, [UIntPtr]::Zero); Start-Sleep -Milliseconds 700
 }
 
-$proc = Start-Process -FilePath $exe -ArgumentList @("--game", "`"$dll`"", "--project", "`"$project`"") -PassThru -RedirectStandardError "$OutDir\app_err.txt"
+$proc = Start-Process -FilePath $exe -ArgumentList @("`"$project`"", "--no-build") -PassThru -RedirectStandardError "$OutDir\app_err.txt"
 $null = $proc.Handle
 try {
     Start-Sleep -Seconds 6

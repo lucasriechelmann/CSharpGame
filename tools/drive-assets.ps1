@@ -5,9 +5,9 @@ param([string]$OutDir, [string]$Configuration = "Debug")
 # Positions are window-relative pixels for the default 1280x720 layout.
 
 $root = Split-Path -Parent $PSScriptRoot
+Remove-Item (Join-Path $env:APPDATA "Game Editor\layout.ini") -ErrorAction SilentlyContinue # a fresh run builds the default window layout
 $exe = Join-Path $root "src\Engine.Editor\bin\$Configuration\net10.0\Editor.exe"
-$dll = Join-Path $root "samples\Platformer\bin\$Configuration\net10.0\Platformer.Game.dll"
-$project = Join-Path $root "samples\Platformer"
+$project = Join-Path $root "samples\Platformer\Platformer.csgame.json"
 
 Add-Type -AssemblyName System.Drawing
 Add-Type @"
@@ -48,7 +48,7 @@ function Drag($proc, $x0, $y0, $x1, $y1) {
     [AssetsDrive]::mouse_event(0x0004, 0, 0, 0, [UIntPtr]::Zero); Start-Sleep -Milliseconds 700
 }
 
-$proc = Start-Process -FilePath $exe -ArgumentList @("--game", "`"$dll`"", "--project", "`"$project`"") -PassThru -RedirectStandardError "$OutDir\assets_err.txt"
+$proc = Start-Process -FilePath $exe -ArgumentList @("`"$project`"", "--no-build") -PassThru -RedirectStandardError "$OutDir\assets_err.txt"
 $null = $proc.Handle
 try {
     Start-Sleep -Seconds 6

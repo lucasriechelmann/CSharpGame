@@ -13,12 +13,13 @@ public sealed record GameLaunch(string AssetRoot, string DataRoot, bool EditsSou
     public static GameLaunch Default => new(Path.Combine(AppContext.BaseDirectory, "Assets"), AppContext.BaseDirectory);
 
     /// <summary>Opens a project folder (one that has an <c>Assets</c> folder): assets are edited in place, other files go to a <c>.local</c> folder inside it.</summary>
-    /// <param name="projectFolder">The folder containing <c>Assets</c>.</param>
+    /// <param name="projectFolder">The folder containing the assets folder.</param>
+    /// <param name="assetsFolder">The assets folder's name inside it.</param>
     /// <exception cref="DirectoryNotFoundException">The folder has no <c>Assets</c> folder.</exception>
-    public static GameLaunch ForProject(string projectFolder)
+    public static GameLaunch ForProject(string projectFolder, string assetsFolder = "Assets")
     {
-        string assets = Path.Combine(Path.GetFullPath(projectFolder), "Assets");
-        if (!Directory.Exists(assets)) throw new DirectoryNotFoundException($"'{projectFolder}' has no Assets folder.");
+        string assets = Path.Combine(Path.GetFullPath(projectFolder), assetsFolder);
+        if (!Directory.Exists(assets)) throw new DirectoryNotFoundException($"'{projectFolder}' has no {assetsFolder} folder.");
 
         return new GameLaunch(assets, Path.Combine(Path.GetFullPath(projectFolder), ".local"), EditsSource: true);
     }

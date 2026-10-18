@@ -1,0 +1,8 @@
+{
+  "name": "Platformer",
+  "gameProject": "Platformer.csproj",
+  "gameLibrary": "bin/Debug/net10.0/Platformer.Game.dll",
+  "launcher": "../Platformer.Launcher/Platformer.Launcher.csproj",
+  "assets": "Assets",
+  "scene": "scenes/level.scene.json"
+}

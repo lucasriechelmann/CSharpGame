@@ -1,21 +1,23 @@
 param(
     [ValidateSet("Platformer", "Scene3D")] [string]$Game = "Platformer",
     [string]$Configuration = "Debug",
+    [string]$Project = "",
+    [switch]$Hub,
     [string]$Shot = "",
     [int]$WaitSeconds = 5
 )
 
-# Starts the editor on one of the sample games (build first: dotnet build). With -Shot <png> it waits, screenshots the editor window and
+# Starts the editor on a project: -Project <file.csgame.json>, or one of the samples with -Game (build first: dotnet build). With -Shot <png> it waits, screenshots the editor window and
 # closes it, which is how the editor is checked without a person at the keyboard. Without it, the editor stays open until you close it.
 
 $root = Split-Path -Parent $PSScriptRoot
+Remove-Item (Join-Path $env:APPDATA "Game Editor\layout.ini") -ErrorAction SilentlyContinue # a fresh run builds the default window layout
 $exe = Join-Path $root "src\Engine.Editor\bin\$Configuration\net10.0\Editor.exe"
-$dll = Join-Path $root "samples\$Game\bin\$Configuration\net10.0\$Game.Game.dll"
-$project = Join-Path $root "samples\$Game"
-foreach ($path in @($exe, $dll)) { if (-not (Test-Path $path)) { Write-Error "Missing $path (run dotnet build first)"; exit 1 } }
+if ($Hub) { $Project = "" } elseif ($Project -eq "") { $Project = Join-Path $root "samples\$Game\$Game.csgame.json" }
+foreach ($path in @($exe, $(if ($Hub) { $exe } else { $Project }))) { if (-not (Test-Path $path)) { Write-Error "Missing $path (run dotnet build first)"; exit 1 } }
 
 if ($Shot -eq "") {
-    Start-Process -FilePath $exe -ArgumentList @("--game", "`"$dll`"", "--project", "`"$project`"") -Wait
+    Start-Process -FilePath $exe -ArgumentList $(if ($Hub) { @() } else { @("`"$Project`"", "--no-build") }) -Wait
     return
 }
 
@@ -32,7 +34,7 @@ public static class EditorWin32 {
 "@
 
 [EditorWin32]::SetProcessDPIAware() | Out-Null # without this the screenshot covers only 80% of a window on a 125% display
-$proc = Start-Process -FilePath $exe -ArgumentList @("--game", "`"$dll`"", "--project", "`"$project`"") -PassThru -RedirectStandardError "$Shot.err.txt"
+$proc = Start-Process -FilePath $exe -ArgumentList $(if ($Hub) { @() } else { @("`"$Project`"", "--no-build") }) -PassThru -RedirectStandardError "$Shot.err.txt"
 try {
     Start-Sleep -Seconds $WaitSeconds
     $proc.Refresh()

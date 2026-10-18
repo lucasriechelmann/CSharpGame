@@ -60,6 +60,9 @@ public sealed class GameWindow : IDisposable
     /// <summary>Current window height in pixels.</summary>
     public int Height => _window.Size.Y;
 
+    /// <summary>The window title; can be changed at any time.</summary>
+    public string Title { get => _window.Title; set => _window.Title = value; }
+
     /// <summary>Whether presentation is synchronised with the display refresh. Can be changed at runtime.</summary>
     public bool VSync { get => _window.VSync; set => _window.VSync = value; }
 
