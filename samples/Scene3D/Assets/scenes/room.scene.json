@@ -1,0 +1,72 @@
+{
+  "version": 1,
+  "entities": [
+    {
+      "components": {
+        "Name": { "value": "Floor" },
+        "Transform": { "position": { "x": 0, "y": 0, "z": 0 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 1, "y": 1, "z": 1 } },
+        "MeshRenderer": { "mesh": "meshes/floor", "material": "materials/floor.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Sun" },
+        "Transform": { "position": { "x": 0, "y": 10, "z": 0 }, "rotation": { "x": -0.4215, "y": 0.2228, "z": 0.1076, "w": 0.8724 }, "scale": { "x": 1, "y": 1, "z": 1 } },
+        "DirectionalLight": { "color": { "r": 1, "g": 0.96, "b": 0.88, "a": 1 }, "intensity": 0.9 }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Red cube" },
+        "Transform": { "position": { "x": -3, "y": 1, "z": 0 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 2, "y": 2, "z": 2 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/red.material.json" },
+        "Spin": { "axis": { "x": 0, "y": 1, "z": 0 }, "speed": 0.8 }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Blue sphere" },
+        "Transform": { "position": { "x": 0, "y": 1.2, "z": -2 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 2.4, "y": 2.4, "z": 2.4 } },
+        "MeshRenderer": { "mesh": "meshes/sphere", "material": "materials/blue.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Gold cube" },
+        "Transform": { "position": { "x": 3, "y": 0.6, "z": 1 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 1.2, "y": 1.2, "z": 1.2 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/gold.material.json" },
+        "Spin": { "axis": { "x": 1, "y": 1, "z": 0 }, "speed": 1.5 }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Stretched sphere" },
+        "Transform": { "position": { "x": 5.5, "y": 1.5, "z": -3 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 1, "y": 3, "z": 1 } },
+        "MeshRenderer": { "mesh": "meshes/sphere", "material": "materials/gold.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Back wall" },
+        "Transform": { "position": { "x": 0, "y": 1.5, "z": -9 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 16, "y": 3, "z": 0.5 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/floor.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Lamp (warm)" },
+        "Transform": { "position": { "x": 1.5, "y": 2.2, "z": 2.5 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.3, "y": 0.3, "z": 0.3 } },
+        "MeshRenderer": { "mesh": "meshes/sphere", "material": "materials/glow.material.json" },
+        "PointLight3D": { "color": { "r": 1, "g": 0.6, "b": 0.25, "a": 1 }, "intensity": 2.5, "radius": 9 }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Lamp (cyan)" },
+        "Transform": { "position": { "x": -5, "y": 1.2, "z": -2 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.3, "y": 0.3, "z": 0.3 } },
+        "MeshRenderer": { "mesh": "meshes/sphere", "material": "materials/glow.material.json" },
+        "PointLight3D": { "color": { "r": 0.25, "g": 0.8, "b": 1, "a": 1 }, "intensity": 2.5, "radius": 9 }
+      }
+    }
+  ]
+}

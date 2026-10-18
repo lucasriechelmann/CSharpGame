@@ -35,8 +35,8 @@ Small, about one session. Fixes known gaps that affect game feel and that the ed
 
 ## Phase 13: 3D (after the editor, so 3D scenes can be inspected while built)
 
-- [ ] Mesh and material system, depth buffer, `Camera3D`.
-- [ ] Basic lighting.
+- [x] Mesh and material system, depth buffer, `Camera3D` (13a: `Engine.Rendering3D`, `samples/Scene3D`). Follow-ups: draw sorting and transparency, instancing, a 3D editor view with picking and gizmo, transform parents.
+- [x] Basic lighting (13b: ambient, one sun, point lights). Follow-ups: shadows (shadow maps), normal maps, spot lights.
 - [ ] Model loading (glTF).
 - [ ] 3D physics decision: write our own or integrate one.
 

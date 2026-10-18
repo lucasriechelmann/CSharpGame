@@ -44,6 +44,7 @@ Fail loudly with guard clauses and specific exceptions and messages naming the o
 - Put pure maths in testable static/pure types separate from GL calls. Reference: `src/Engine.Rendering/SpriteQuad.cs` vs `SpriteBatch.Gpu.cs`.
 - GPU objects are `IDisposable`, owned by exactly one object; `unsafe` only where GL needs raw pointers (`Engine.Rendering` has `AllowUnsafeBlocks`).
 - No allocation in per-frame/per-entity paths (no LINQ, no per-frame capturing closures).
+- 3D: CPU geometry is `MeshData` (validated, with bounds), the GPU object is `Mesh`; shapes come from `MeshBuilder`; add `MeshRenderSystem` before the 2D render passes; perspective comes from `Projection3D.Perspective` (OpenGL depth), never from `Matrix4x4.CreatePerspectiveFieldOfView`. Reference: `samples/Scene3D/Scene3DGame.cs`. Camera input maths lives in a pure class (`FlyCamera`), the game only feeds it deltas.
 
 ## Tests (xUnit v3)
 

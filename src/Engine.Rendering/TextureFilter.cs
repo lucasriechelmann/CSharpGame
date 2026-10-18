@@ -8,4 +8,10 @@ public enum TextureFilter
 
     /// <summary>Smooth blending between pixels. Better for high-resolution art.</summary>
     Linear,
+
+    /// <summary>
+    /// Smooth blending plus mipmaps: pre-shrunk copies of the image, so a surface seen at a grazing angle or far away (a 3D floor)
+    /// is averaged instead of shimmering. Costs a third more memory; pointless for 2D sprites drawn near 1:1.
+    /// </summary>
+    Trilinear,
 }

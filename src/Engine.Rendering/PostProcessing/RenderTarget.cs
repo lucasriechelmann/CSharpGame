@@ -5,18 +5,25 @@ namespace Engine.Rendering;
 /// <summary>
 /// An off-screen image you can draw into: an OpenGL framebuffer object whose colour attachment is a <see cref="Texture2D"/>.
 /// Render the scene into one, then read <see cref="Texture"/> in a later pass; that is the basis of post-processing and lighting.
-/// Owns the framebuffer and its texture.
+/// Optionally has a depth buffer too (needed to draw 3D). Owns the framebuffer, its texture and the depth renderbuffer.
 /// </summary>
 public sealed class RenderTarget : IDisposable
 {
     private readonly GL _gl;
+    private readonly bool _withDepth;
     private uint _framebuffer;
+    private uint _depthBuffer;
 
     /// <summary>Creates a target of the given size. Needs a current GL context.</summary>
+    /// <param name="gl">The GL context that will own the target.</param>
+    /// <param name="width">Width in pixels.</param>
+    /// <param name="height">Height in pixels.</param>
+    /// <param name="withDepth">Attach a 24-bit depth buffer so 3D geometry can be depth-tested while drawing into the target. Costs memory, so only the scene target asks for it.</param>
     /// <exception cref="InvalidOperationException">The driver reports the framebuffer as incomplete.</exception>
-    public RenderTarget(GL gl, int width, int height)
+    public RenderTarget(GL gl, int width, int height, bool withDepth = false)
     {
         _gl = gl;
+        _withDepth = withDepth;
         Texture = null!;
         Create(width, height);
     }
@@ -63,6 +70,16 @@ public sealed class RenderTarget : IDisposable
         _gl.BindFramebuffer(FramebufferTarget.Framebuffer, _framebuffer);
         _gl.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0, TextureTarget.Texture2D, Texture.Handle, 0);
 
+        if (_withDepth)
+        {
+            // A renderbuffer rather than a texture: nothing samples the depth later, and renderbuffers are what drivers optimise for depth.
+            _depthBuffer = _gl.GenRenderbuffer();
+            _gl.BindRenderbuffer(RenderbufferTarget.Renderbuffer, _depthBuffer);
+            _gl.RenderbufferStorage(RenderbufferTarget.Renderbuffer, InternalFormat.DepthComponent24, (uint)width, (uint)height);
+            _gl.FramebufferRenderbuffer(FramebufferTarget.Framebuffer, FramebufferAttachment.DepthAttachment, RenderbufferTarget.Renderbuffer, _depthBuffer);
+            _gl.BindRenderbuffer(RenderbufferTarget.Renderbuffer, 0);
+        }
+
         var status = _gl.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
         _gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
         if (status != GLEnum.FramebufferComplete)
@@ -75,6 +92,12 @@ public sealed class RenderTarget : IDisposable
     private void Destroy()
     {
         _gl.DeleteFramebuffer(_framebuffer);
+        if (_depthBuffer != 0)
+        {
+            _gl.DeleteRenderbuffer(_depthBuffer);
+            _depthBuffer = 0;
+        }
+
         Texture.Dispose();
     }
 }

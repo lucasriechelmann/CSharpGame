@@ -30,6 +30,7 @@ public sealed class GameWindow : IDisposable
             Title = title,
             Size = new Vector2D<int>(width, height),
             VSync = vsync,
+            PreferredDepthBufferBits = 24, // 3D meshes are depth-tested when no post effect redirects the scene into a target
             API = new GraphicsAPI(ContextAPI.OpenGL, ContextProfile.Core, ContextFlags.ForwardCompatible, new APIVersion(3, 3)),
         };
         _window = Window.Create(options);

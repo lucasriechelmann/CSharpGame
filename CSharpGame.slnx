@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/samples/">
     <Project Path="samples/Platformer/Platformer.csproj" />
+    <Project Path="samples/Scene3D/Scene3D.csproj" />
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/Engine.Animation/Engine.Animation.csproj" />
@@ -9,6 +10,7 @@
     <Project Path="src/Engine.Physics2D/Engine.Physics2D.csproj" />
     <Project Path="src/Engine.Platform/Engine.Platform.csproj" />
     <Project Path="src/Engine.Rendering/Engine.Rendering.csproj" />
+    <Project Path="src/Engine.Rendering3D/Engine.Rendering3D.csproj" />
     <Project Path="src/Engine.Runtime/Engine.Runtime.csproj" />
     <Project Path="src/Engine.Scenes/Engine.Scenes.csproj" />
     <Project Path="src/Engine.Tilemaps/Engine.Tilemaps.csproj" />
@@ -19,6 +21,7 @@
     <Project Path="tests/Engine.Core.Tests/Engine.Core.Tests.csproj" />
     <Project Path="tests/Engine.Physics2D.Tests/Engine.Physics2D.Tests.csproj" />
     <Project Path="tests/Engine.Rendering.Tests/Engine.Rendering.Tests.csproj" />
+    <Project Path="tests/Engine.Rendering3D.Tests/Engine.Rendering3D.Tests.csproj" />
     <Project Path="tests/Engine.Runtime.Tests/Engine.Runtime.Tests.csproj" />
     <Project Path="tests/Engine.Scenes.Tests/Engine.Scenes.Tests.csproj" />
     <Project Path="tests/Engine.Tilemaps.Tests/Engine.Tilemaps.Tests.csproj" />

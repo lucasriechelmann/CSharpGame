@@ -5,6 +5,7 @@
     <ProjectReference Include="..\Engine.Audio\Engine.Audio.csproj" />
     <ProjectReference Include="..\Engine.Platform\Engine.Platform.csproj" />
     <ProjectReference Include="..\Engine.Rendering\Engine.Rendering.csproj" />
+    <ProjectReference Include="..\Engine.Rendering3D\Engine.Rendering3D.csproj" />
     <ProjectReference Include="..\Engine.Scenes\Engine.Scenes.csproj" />
     <ProjectReference Include="..\Engine.Tilemaps\Engine.Tilemaps.csproj" />
     <ProjectReference Include="..\Engine.Animation\Engine.Animation.csproj" />

@@ -10,6 +10,7 @@ using Engine.Platform;
 using Engine.Runtime.Editor;
 using Engine.Runtime.Inspector;
 using Engine.Rendering;
+using Engine.Rendering3D;
 using Engine.Scenes;
 using Engine.Tilemaps;
 using Silk.NET.OpenGL;
@@ -282,6 +283,7 @@ public abstract class Game : IDisposable
     {
         Assets.Register(new TextureLoader(Gl));
         Assets.Register(new TileSetLoader(Assets));
+        Assets.Register(new MaterialLoader(Assets));
         Assets.Register(new TileLayerLoader());
         Assets.Register(new AnimationStateMachineLoader());
         Assets.Register(new PrefabLoader());

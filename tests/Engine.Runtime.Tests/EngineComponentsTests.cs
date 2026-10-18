@@ -5,6 +5,7 @@ using Engine.Core.Components;
 using Engine.Core.Ecs;
 using Engine.Physics2D;
 using Engine.Rendering;
+using Engine.Rendering3D;
 using Engine.Runtime;
 using Engine.Scenes;
 using Engine.Tilemaps;
@@ -40,13 +41,20 @@ public sealed class EngineComponentsTests : IDisposable
         return Assert.Single(_scenes.Load(json));
     }
 
+    private List<T> All<T>() where T : struct
+    {
+        var found = new List<T>();
+        _world.Query((Entity entity, ref T component) => found.Add(component));
+        return found;
+    }
+
     [Fact]
     public void Every_engine_component_is_registered()
     {
         var registry = EngineComponents.RegisterAll(new ComponentRegistry());
 
         Assert.Equal(
-            new[] { "BoxCollider", "Light2D", "MovingPlatform", "Name", "PhysicsBody", "PlatformerController", "PlatformerIntent", "PreviousTransform", "Sprite", "SpriteAnimator", "StaticSolid", "TileLayerRenderer", "Transform" },
+            new[] { "BoxCollider", "DirectionalLight", "Light2D", "MeshRenderer", "MovingPlatform", "Name", "PhysicsBody", "PlatformerController", "PlatformerIntent", "PointLight3D", "PreviousTransform", "Sprite", "SpriteAnimator", "StaticSolid", "TileLayerRenderer", "Transform" },
             registry.Names.OrderBy(n => n).ToArray());
     }
 
@@ -70,6 +78,39 @@ public sealed class EngineComponentsTests : IDisposable
         Assert.Equal(180f, light.Radius);
         Assert.Equal(1.5f, light.Intensity);
         Assert.Equal(new Color(1f, 0.5f, 0.25f), light.Color);
+    }
+
+    [Fact]
+    public void Directional_and_point_lights_round_trip()
+    {
+        var sun = _world.CreateEntity();
+        _world.Add(sun, new DirectionalLight { Color = new Color(1f, 0.5f, 0.25f), Intensity = 0.75f });
+        var lamp = _world.CreateEntity();
+        _world.Add(lamp, PointLight3D.Create(9f, new Color(0.25f, 0.5f, 1f), 2f));
+
+        string json = _scenes.Save();
+        _world.Clear();
+        _scenes.Load(json);
+
+        var loadedSun = Assert.Single(All<DirectionalLight>());
+        Assert.Equal(new Color(1f, 0.5f, 0.25f), loadedSun.Color);
+        Assert.Equal(0.75f, loadedSun.Intensity);
+        var loadedLamp = Assert.Single(All<PointLight3D>());
+        Assert.Equal(9f, loadedLamp.Radius);
+        Assert.Equal(2f, loadedLamp.Intensity);
+        Assert.Equal(new Color(0.25f, 0.5f, 1f), loadedLamp.Color);
+    }
+
+    [Fact]
+    public void Mesh_renderer_without_assets_round_trips_with_invalid_handles()
+    {
+        var e = _world.CreateEntity();
+        _world.Add(e, new MeshRenderer());
+
+        var r = _world.Get<MeshRenderer>(RoundTrip());
+
+        Assert.False(r.Mesh.IsValid);
+        Assert.False(r.Material.IsValid);
     }
 
     [Fact]

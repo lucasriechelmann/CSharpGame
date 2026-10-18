@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Engine.Runtime\Engine.Runtime.csproj" />
+    <ProjectReference Include="..\..\src\Engine.Rendering\Engine.Rendering.csproj" />
+    <ProjectReference Include="..\..\src\Engine.Rendering3D\Engine.Rendering3D.csproj" />
+    <ProjectReference Include="..\..\src\Engine.Core\Engine.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Silk.NET.OpenGL" Version="2.23.0" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <!-- Game.Assets loads from an "Assets" folder next to the executable. -->
+  <ItemGroup>
+    <Content Include="Assets\**\*" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

@@ -13,6 +13,8 @@ PowerShell helpers for verifying the engine visually. Unit tests cover the maths
 | `make-sounds.ps1 [-OutDir <dir>]` | Synthesises the sample's sound effects (`jump.wav`, `land.wav`, `spawn.wav`) into `samples/Platformer/Assets/sounds`. |
 | `make-sprite-sheets.ps1 -OutDir <dir>` | Regenerates the Platformer sample's art in `samples/Platformer/Assets`: `tiles.png` (5 tiles), `hero.png` (8 animation frames), `creatures.png` (8 types x 2 walk frames) and `items.png` (spinning coin, locked and open exit door, checkpoint flag down and raised). |
 
+The 3D sample works with the same scripts: `.\tools\capture-clean.ps1 -Exe samples\Scene3D\bin\Debug\net10.0\Scene3D.exe -Out $env:TEMP\scene3d.png` (the F1 that hides the panels is occasionally missed on the first try; run it again). To check depth testing through the post-processing target, flip the vignette to `Enabled = true` in `Scene3DGame.Load` temporarily.
+
 Example (after `dotnet build`):
 
 ```powershell

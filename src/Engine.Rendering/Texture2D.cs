@@ -48,11 +48,14 @@ public sealed class Texture2D : IDisposable
         gl.TexImage2D(TextureTarget.Texture2D, 0, InternalFormat.Rgba8, (uint)width, (uint)height, 0,
             PixelFormat.Rgba, PixelType.UnsignedByte, rgba);
 
-        int glFilter = filter == TextureFilter.Nearest ? (int)GLEnum.Nearest : (int)GLEnum.Linear;
-        gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, glFilter);
-        gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, glFilter);
+        int magFilter = filter == TextureFilter.Nearest ? (int)GLEnum.Nearest : (int)GLEnum.Linear;
+        int minFilter = filter == TextureFilter.Trilinear ? (int)GLEnum.LinearMipmapLinear : magFilter;
+        gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, minFilter);
+        gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, magFilter);
+        // Clamping suits sprites (no bleeding across atlas cells); 3D surfaces want tiling, see Texture2D.SetRepeat.
         gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)GLEnum.ClampToEdge);
         gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)GLEnum.ClampToEdge);
+        if (filter == TextureFilter.Trilinear) gl.GenerateMipmap(TextureTarget.Texture2D);
 
         return new Texture2D(gl, handle, width, height);
     }
@@ -93,6 +96,17 @@ public sealed class Texture2D : IDisposable
 
     /// <summary>A 1x1 opaque white texture. Draw it with a tint <see cref="Color"/> to get solid-colour quads.</summary>
     public static Texture2D CreateWhite(GL gl) => FromPixels(gl, 1, 1, [255, 255, 255, 255]);
+
+    /// <summary>
+    /// Makes the texture tile (wrap around) instead of clamping at its edges, so UV coordinates beyond 0..1 repeat the image. 3D
+    /// surfaces such as floors and walls need it; sprite sheets do not (clamping stops neighbouring cells bleeding in).
+    /// </summary>
+    public void SetRepeat()
+    {
+        _gl.BindTexture(TextureTarget.Texture2D, Handle);
+        _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)GLEnum.Repeat);
+        _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)GLEnum.Repeat);
+    }
 
     /// <summary>Binds the texture to a texture unit for the next draw call.</summary>
     /// <param name="unit">Texture unit index (0 for the first).</param>

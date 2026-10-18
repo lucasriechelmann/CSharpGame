@@ -26,7 +26,8 @@ public sealed class PostProcessChain : IDisposable
     {
         _gl = gl;
         _quad = new FullscreenQuad(gl);
-        _targets = [new RenderTarget(gl, width, height), new RenderTarget(gl, width, height)];
+        // Only target 0 receives the scene, so only it needs a depth buffer (3D meshes are depth-tested while the scene is drawn).
+        _targets = [new RenderTarget(gl, width, height, withDepth: true), new RenderTarget(gl, width, height)];
         _context = new PostProcessContext(gl, _quad, width, height);
     }
 
