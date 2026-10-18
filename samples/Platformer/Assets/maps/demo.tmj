@@ -58,6 +58,20 @@
                0,0,4,0,4,0,5,0,2147483653,0,1073741829,0,536870917,0,
                1,2,3,1,2,3,1,2,3,2147483649,1073741826,536870915,1,2,
                1,2,3,1,2,3,1,2,3,1,2,3,1,2]
+    },
+    {
+      "type": "objectgroup",
+      "name": "pickups",
+      "x": 0,
+      "y": 0,
+      "opacity": 1,
+      "visible": true,
+      "objects": [
+        { "id": 1, "name": "Gem A", "type": "Gem", "x": 40, "y": 40, "width": 0, "height": 0, "point": true, "visible": true },
+        { "id": 2, "name": "Gem B", "type": "Gem", "x": 104, "y": 40, "width": 0, "height": 0, "point": true, "visible": true },
+        { "id": 3, "name": "Gem C", "type": "Gem", "x": 168, "y": 40, "width": 0, "height": 0, "point": true, "visible": true },
+        { "id": 4, "name": "Start", "type": "PlayerStart", "x": 16, "y": 40, "width": 0, "height": 0, "point": true, "visible": true }
+      ]
     }
   ]
 }

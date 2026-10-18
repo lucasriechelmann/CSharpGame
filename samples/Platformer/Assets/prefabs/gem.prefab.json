@@ -1,0 +1,26 @@
+{
+  "components": {
+    "Name": { "value": "Gem" },
+    "Transform": {
+      "position": { "x": 0, "y": 0, "z": 13 },
+      "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 },
+      "scale": { "x": 1, "y": 1, "z": 1 }
+    },
+    "Sprite": {
+      "texture": "items.png",
+      "size": { "x": 32, "y": 32 },
+      "source": { "x": 0, "y": 0, "width": 16, "height": 16 },
+      "color": { "r": 0.5, "g": 1, "b": 0.9, "a": 1 },
+      "pivot": { "x": 0.5, "y": 0.5 },
+      "flip": "None"
+    },
+    "SpriteAnimator": {
+      "machine": "anim/coin.anim.json",
+      "currentState": 0,
+      "stateTime": 0,
+      "speed": 1,
+      "finished": false,
+      "parameters": []
+    }
+  }
+}
