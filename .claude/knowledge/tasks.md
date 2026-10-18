@@ -124,9 +124,10 @@ Problem: the editor and debug panels drew over the game window, and you could no
 - [ ] Key bindings in the settings file; a `--editor` flag; other platforms (the natives and RIDs are win-x64 only); a self-contained, published *editor* has not been tried (the engine folder layout is assumed).
 - [ ] Project templates beyond the empty 2D one (platformer starter, 3D starter); upgrade path when the engine changes (engine DLLs are referenced from the editor's folder).
 
-## Phase 23: Pick the next game or engine depth (decision for you)
+## Phase 23: Pick the next game or engine depth (3D game done; the rest is your decision)
 
-- [ ] A small playable 3D game on the character controller, PBR and physics (shows which engine pieces are missing).
+- [x] A small playable 3D game on the character controller, PBR and physics: **Orb Run** (`samples/Arena3D`, launcher + project file, 7 + 5 tests). Playable from `Arena3D.exe` and inside the editor; window-checked by `tools/drive-arena.ps1` (orb collected, platform jump, falling off the edge).
+- [ ] Gaps Orb Run showed in the engine (each worth its own task): there is no helper to find an entity by name or by component (the game wrote its own query), no cursor capture for mouse look (it needs the right button held), no third-person camera collision (it can clip through a platform), the player capsule has no facing, model or animation, no sounds or music in the game (positional `AudioSource`, a `WavStream` track), no pause/menu helper for 3D games, `World.Clear()` + `LoadFile` is the only way to restart a level, and a level made of boxes is typed by hand or generated (the editor has no box/prefab placement for 3D beyond dragging prefabs from the Assets window).
 - [ ] More platformer levels authored in Tiled with the new import and editor tools.
 - [ ] Engine depth candidates: soft light shadows, a shadow-casting polygon component, image-based lighting and a skybox, rigid-body rotation in 3D physics, Ogg/MP3 audio, per-camera effects.
 

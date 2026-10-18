@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Arena3D\Arena3D.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>Arena3D</AssemblyName>
+    <RootNamespace>Arena3D.Launcher</RootNamespace>
+  </PropertyGroup>
+
+</Project>

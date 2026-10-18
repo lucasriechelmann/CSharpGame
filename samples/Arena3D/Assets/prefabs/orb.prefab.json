@@ -1,0 +1,38 @@
+{
+  "components": {
+    "Name": {
+      "value": "Orb"
+    },
+    "Transform": {
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "scale": {
+        "x": 0.5,
+        "y": 0.5,
+        "z": 0.5
+      }
+    },
+    "MeshRenderer": {
+      "mesh": "meshes/sphere",
+      "material": "materials/orb.material.json"
+    },
+    "Orb": {
+      "radius": 0.9
+    },
+    "OrbBob": {
+      "amplitude": 0.18,
+      "speed": 2.2,
+      "spin": 1.6,
+      "phase": 0
+    }
+  }
+}

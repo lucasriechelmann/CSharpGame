@@ -1,5 +1,5 @@
 param(
-    [ValidateSet("Platformer", "Scene3D")] [string]$Game = "Platformer",
+    [ValidateSet("Platformer", "Scene3D", "Arena3D")] [string]$Game = "Platformer",
     [string]$Configuration = "Debug",
     [string]$Project = "",
     [switch]$Hub,

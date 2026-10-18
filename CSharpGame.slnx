@@ -1,5 +1,7 @@
 <Solution>
   <Folder Name="/samples/">
+    <Project Path="samples/Arena3D.Launcher/Arena3D.Launcher.csproj" />
+    <Project Path="samples/Arena3D/Arena3D.csproj" />
     <Project Path="samples/Platformer.Launcher/Platformer.Launcher.csproj" />
     <Project Path="samples/Platformer/Platformer.csproj" />
     <Project Path="samples/Scene3D.Launcher/Scene3D.Launcher.csproj" />
@@ -20,6 +22,7 @@
     <Project Path="src/Engine.Tilemaps/Engine.Tilemaps.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/Arena3D.Tests/Arena3D.Tests.csproj" />
     <Project Path="tests/Engine.Animation.Tests/Engine.Animation.Tests.csproj" />
     <Project Path="tests/Engine.Audio.Tests/Engine.Audio.Tests.csproj" />
     <Project Path="tests/Engine.Core.Tests/Engine.Core.Tests.csproj" />

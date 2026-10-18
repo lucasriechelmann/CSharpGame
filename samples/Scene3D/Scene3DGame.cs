@@ -74,7 +74,7 @@ public sealed class Scene3DGame : Game
         Assets.Add("meshes/sphere", new Mesh(Gl, MeshBuilder.Sphere(0.5f)));
         Assets.Add("meshes/capsule", new Mesh(Gl, MeshBuilder.Capsule(0.4f, 1.8f)));
         Assets.Add("meshes/floor", new Mesh(Gl, MeshBuilder.Plane(40f, 40f, uvRepeat: 20f)));
-        Assets.Add("checker", CreateChecker());
+        Assets.Add("checker", ProceduralTextures.Checker(Gl));
         Assets.Add("bump_normal", CreateBumpNormalMap());
 
         Scenes.LoadFile("scenes/room.scene.json");
@@ -285,29 +285,6 @@ public sealed class Scene3DGame : Game
                 pixels[i] = (byte)MathF.Round((normal.X * 0.5f + 0.5f) * 255f);
                 pixels[i + 1] = (byte)MathF.Round((normal.Y * 0.5f + 0.5f) * 255f);
                 pixels[i + 2] = (byte)MathF.Round((normal.Z * 0.5f + 0.5f) * 255f);
-                pixels[i + 3] = 255;
-            }
-        }
-
-        var texture = Engine.Rendering.Texture2D.FromPixels(Gl, size, size, pixels, TextureFilter.Trilinear);
-        texture.SetRepeat();
-        return texture;
-    }
-
-    /// <summary>A grey two-tone checker (64x64 pixels, 8-pixel squares) that tiles and is mipmapped so the far floor does not shimmer.</summary>
-    private Engine.Rendering.Texture2D CreateChecker()
-    {
-        const int size = 64;
-        const int square = 8;
-        var pixels = new byte[size * size * 4];
-        for (int y = 0; y < size; y++)
-        {
-            for (int x = 0; x < size; x++)
-            {
-                bool light = ((x / square) + (y / square)) % 2 == 0;
-                byte value = light ? (byte)230 : (byte)120;
-                int i = (y * size + x) * 4;
-                pixels[i] = pixels[i + 1] = pixels[i + 2] = value;
                 pixels[i + 3] = 255;
             }
         }

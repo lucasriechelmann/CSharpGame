@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Engine.Runtime\Engine.Runtime.csproj" />
+    <ProjectReference Include="..\..\src\Engine.Rendering\Engine.Rendering.csproj" />
+    <ProjectReference Include="..\..\src\Engine.Rendering3D\Engine.Rendering3D.csproj" />
+    <ProjectReference Include="..\..\src\Engine.Physics3D\Engine.Physics3D.csproj" />
+    <ProjectReference Include="..\..\src\Engine.Core\Engine.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Silk.NET.OpenGL" Version="2.23.0" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <AssemblyName>Arena3D.Game</AssemblyName>
+  </PropertyGroup>
+
+  <!-- The assets travel with the game library, so the launcher ships them. -->
+  <ItemGroup>
+    <Content Include="Assets\**\*" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

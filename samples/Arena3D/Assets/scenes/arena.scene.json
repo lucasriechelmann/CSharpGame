@@ -1,0 +1,718 @@
+{
+  "version": 1,
+  "entities": [
+    {
+      "components": {
+        "Name": {
+          "value": "Floor"
+        },
+        "Transform": {
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "scale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          }
+        },
+        "MeshRenderer": {
+          "mesh": "meshes/floor",
+          "material": "materials/floor.material.json"
+        },
+        "BoxCollider3D": {
+          "size": {
+            "x": 24,
+            "y": 1,
+            "z": 24
+          },
+          "offset": {
+            "x": 0,
+            "y": -0.5,
+            "z": 0
+          }
+        },
+        "StaticSolid3D": {}
+      }
+    },
+    {
+      "components": {
+        "Name": {
+          "value": "Sun"
+        },
+        "Transform": {
+          "position": {
+            "x": 0,
+            "y": 10,
+            "z": 0
+          },
+          "rotation": {
+            "x": -0.4215,
+            "y": 0.2228,
+            "z": 0.1076,
+            "w": 0.8724
+          },
+          "scale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          }
+        },
+        "DirectionalLight": {
+          "color": {
+            "r": 1,
+            "g": 0.96,
+            "b": 0.88,
+            "a": 1
+          },
+          "intensity": 0.95
+        }
+      }
+    },
+    {
+      "components": {
+        "Name": {
+          "value": "Platform 1"
+        },
+        "Transform": {
+          "position": {
+            "x": -5,
+            "y": 0.5,
+            "z": 4
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "scale": {
+            "x": 3,
+            "y": 1.0,
+            "z": 3
+          }
+        },
+        "MeshRenderer": {
+          "mesh": "meshes/cube",
+          "material": "materials/stone.material.json"
+        },
+        "BoxCollider3D": {
+          "size": {
+            "x": 3,
+            "y": 1.0,
+            "z": 3
+          },
+          "offset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "StaticSolid3D": {}
+      }
+    },
+    {
+      "components": {
+        "Name": {
+          "value": "Platform 2"
+        },
+        "Transform": {
+          "position": {
+            "x": -8,
+            "y": 1.0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "scale": {
+            "x": 3,
+            "y": 2.0,
+            "z": 3
+          }
+        },
+        "MeshRenderer": {
+          "mesh": "meshes/cube",
+          "material": "materials/stone.material.json"
+        },
+        "BoxCollider3D": {
+          "size": {
+            "x": 3,
+            "y": 2.0,
+            "z": 3
+          },
+          "offset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "StaticSolid3D": {}
+      }
+    },
+    {
+      "components": {
+        "Name": {
+          "value": "Platform 3"
+        },
+        "Transform": {
+          "position": {
+            "x": -5,
+            "y": 1.5,
+            "z": -4
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "scale": {
+            "x": 3,
+            "y": 3.0,
+            "z": 3
+          }
+        },
+        "MeshRenderer": {
+          "mesh": "meshes/cube",
+          "material": "materials/stone.material.json"
+        },
+        "BoxCollider3D": {
+          "size": {
+            "x": 3,
+            "y": 3.0,
+            "z": 3
+          },
+          "offset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "StaticSolid3D": {}
+      }
+    },
+    {
+      "components": {
+        "Name": {
+          "value": "Platform 4"
+        },
+        "Transform": {
+          "position": {
+            "x": 0,
+            "y": 1.0,
+            "z": -6
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "scale": {
+            "x": 3,
+            "y": 2.0,
+            "z": 3
+          }
+        },
+        "MeshRenderer": {
+          "mesh": "meshes/cube",
+          "material": "materials/stone.material.json"
+        },
+        "BoxCollider3D": {
+          "size": {
+            "x": 3,
+            "y": 2.0,
+            "z": 3
+          },
+          "offset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "StaticSolid3D": {}
+      }
+    },
+    {
+      "components": {
+        "Name": {
+          "value": "Platform 5"
+        },
+        "Transform": {
+          "position": {
+            "x": 5,
+            "y": 1.5,
+            "z": -4
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "scale": {
+            "x": 3,
+            "y": 3.0,
+            "z": 3
+          }
+        },
+        "MeshRenderer": {
+          "mesh": "meshes/cube",
+          "material": "materials/stone.material.json"
+        },
+        "BoxCollider3D": {
+          "size": {
+            "x": 3,
+            "y": 3.0,
+            "z": 3
+          },
+          "offset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "StaticSolid3D": {}
+      }
+    },
+    {
+      "components": {
+        "Name": {
+          "value": "Platform 6"
+        },
+        "Transform": {
+          "position": {
+            "x": 8,
+            "y": 2.0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "scale": {
+            "x": 3,
+            "y": 4.0,
+            "z": 3
+          }
+        },
+        "MeshRenderer": {
+          "mesh": "meshes/cube",
+          "material": "materials/stone.material.json"
+        },
+        "BoxCollider3D": {
+          "size": {
+            "x": 3,
+            "y": 4.0,
+            "z": 3
+          },
+          "offset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "StaticSolid3D": {}
+      }
+    },
+    {
+      "components": {
+        "Name": {
+          "value": "Platform 7"
+        },
+        "Transform": {
+          "position": {
+            "x": 5,
+            "y": 1.0,
+            "z": 4
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "scale": {
+            "x": 3,
+            "y": 2.0,
+            "z": 3
+          }
+        },
+        "MeshRenderer": {
+          "mesh": "meshes/cube",
+          "material": "materials/stone.material.json"
+        },
+        "BoxCollider3D": {
+          "size": {
+            "x": 3,
+            "y": 2.0,
+            "z": 3
+          },
+          "offset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "StaticSolid3D": {}
+      }
+    },
+    {
+      "components": {
+        "Name": {
+          "value": "Platform 8"
+        },
+        "Transform": {
+          "position": {
+            "x": 0,
+            "y": 0.6,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "scale": {
+            "x": 3,
+            "y": 1.2,
+            "z": 3
+          }
+        },
+        "MeshRenderer": {
+          "mesh": "meshes/cube",
+          "material": "materials/stone.material.json"
+        },
+        "BoxCollider3D": {
+          "size": {
+            "x": 3,
+            "y": 1.2,
+            "z": 3
+          },
+          "offset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "StaticSolid3D": {}
+      }
+    },
+    {
+      "prefab": "prefabs/orb.prefab.json",
+      "components": {
+        "Transform": {
+          "position": {
+            "x": -5,
+            "y": 1.9,
+            "z": 4
+          }
+        },
+        "OrbBob": {
+          "phase": 0.0
+        }
+      }
+    },
+    {
+      "prefab": "prefabs/orb.prefab.json",
+      "components": {
+        "Transform": {
+          "position": {
+            "x": -8,
+            "y": 2.9,
+            "z": 0
+          }
+        },
+        "OrbBob": {
+          "phase": 0.7
+        }
+      }
+    },
+    {
+      "prefab": "prefabs/orb.prefab.json",
+      "components": {
+        "Transform": {
+          "position": {
+            "x": -5,
+            "y": 3.9,
+            "z": -4
+          }
+        },
+        "OrbBob": {
+          "phase": 1.4
+        }
+      }
+    },
+    {
+      "prefab": "prefabs/orb.prefab.json",
+      "components": {
+        "Transform": {
+          "position": {
+            "x": 0,
+            "y": 2.9,
+            "z": -6
+          }
+        },
+        "OrbBob": {
+          "phase": 2.1
+        }
+      }
+    },
+    {
+      "prefab": "prefabs/orb.prefab.json",
+      "components": {
+        "Transform": {
+          "position": {
+            "x": 5,
+            "y": 3.9,
+            "z": -4
+          }
+        },
+        "OrbBob": {
+          "phase": 2.8
+        }
+      }
+    },
+    {
+      "prefab": "prefabs/orb.prefab.json",
+      "components": {
+        "Transform": {
+          "position": {
+            "x": 8,
+            "y": 4.9,
+            "z": 0
+          }
+        },
+        "OrbBob": {
+          "phase": 3.5
+        }
+      }
+    },
+    {
+      "prefab": "prefabs/orb.prefab.json",
+      "components": {
+        "Transform": {
+          "position": {
+            "x": 5,
+            "y": 2.9,
+            "z": 4
+          }
+        },
+        "OrbBob": {
+          "phase": 4.2
+        }
+      }
+    },
+    {
+      "prefab": "prefabs/orb.prefab.json",
+      "components": {
+        "Transform": {
+          "position": {
+            "x": 0,
+            "y": 2.1,
+            "z": 0
+          }
+        },
+        "OrbBob": {
+          "phase": 4.9
+        }
+      }
+    },
+    {
+      "prefab": "prefabs/orb.prefab.json",
+      "components": {
+        "Transform": {
+          "position": {
+            "x": -9,
+            "y": 0.9,
+            "z": 9
+          }
+        },
+        "OrbBob": {
+          "phase": 5.6
+        }
+      }
+    },
+    {
+      "prefab": "prefabs/orb.prefab.json",
+      "components": {
+        "Transform": {
+          "position": {
+            "x": 9,
+            "y": 0.9,
+            "z": 9
+          }
+        },
+        "OrbBob": {
+          "phase": 6.3
+        }
+      }
+    },
+    {
+      "prefab": "prefabs/orb.prefab.json",
+      "components": {
+        "Transform": {
+          "position": {
+            "x": 0,
+            "y": 0.9,
+            "z": -10
+          }
+        },
+        "OrbBob": {
+          "phase": 7.0
+        }
+      }
+    },
+    {
+      "prefab": "prefabs/orb.prefab.json",
+      "components": {
+        "Transform": {
+          "position": {
+            "x": -10,
+            "y": 0.9,
+            "z": -3
+          }
+        },
+        "OrbBob": {
+          "phase": 7.7
+        }
+      }
+    },
+    {
+      "components": {
+        "Name": {
+          "value": "Lamp"
+        },
+        "Transform": {
+          "position": {
+            "x": 0,
+            "y": 3.5,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "scale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          }
+        },
+        "PointLight3D": {
+          "color": {
+            "r": 1,
+            "g": 0.7,
+            "b": 0.35,
+            "a": 1
+          },
+          "intensity": 1.6,
+          "radius": 10
+        }
+      }
+    },
+    {
+      "components": {
+        "Name": {
+          "value": "Lamp"
+        },
+        "Transform": {
+          "position": {
+            "x": 0,
+            "y": 4,
+            "z": -6
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "scale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          }
+        },
+        "PointLight3D": {
+          "color": {
+            "r": 1,
+            "g": 0.7,
+            "b": 0.35,
+            "a": 1
+          },
+          "intensity": 1.6,
+          "radius": 10
+        }
+      }
+    },
+    {
+      "components": {
+        "Name": {
+          "value": "Player"
+        },
+        "Transform": {
+          "position": {
+            "x": 0,
+            "y": 1,
+            "z": 8
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "scale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          }
+        },
+        "MeshRenderer": {
+          "mesh": "meshes/capsule",
+          "material": "materials/player.material.json"
+        },
+        "CapsuleCollider3D": {
+          "radius": 0.4,
+          "height": 1.8,
+          "offset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "PhysicsBody3D": {
+          "gravityScale": 1,
+          "mass": 70
+        },
+        "CharacterController3D": {
+          "moveSpeed": 5,
+          "acceleration": 40,
+          "airAcceleration": 12,
+          "jumpSpeed": 5.5,
+          "coyoteTime": 0.1,
+          "jumpBufferTime": 0.12
+        },
+        "PreviousTransform": {}
+      }
+    }
+  ]
+}
