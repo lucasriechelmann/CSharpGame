@@ -1,4 +1,5 @@
 using Engine.Core;
+using Engine.Core.Ecs;
 using Engine.Platform;
 using ImGuiNET;
 using Silk.NET.Input;
@@ -26,6 +27,15 @@ public abstract class Game : IDisposable
         _window.Render += OnRender;
         _window.Gui += OnGui;
     }
+
+    /// <summary>The entity world for this game.</summary>
+    public World World { get; } = new();
+
+    /// <summary>Systems run once per fixed simulation step (physics, movement, game logic).</summary>
+    public SystemGroup FixedSystems { get; } = new();
+
+    /// <summary>Systems run once per frame (input handling, animation, camera smoothing).</summary>
+    public SystemGroup FrameSystems { get; } = new();
 
     protected GL Gl => _window.Gl;
     protected GameWindow Window => _window;
@@ -56,8 +66,14 @@ public abstract class Game : IDisposable
     private void OnUpdate(double dt)
     {
         int steps = _timestep.Advance(dt);
-        for (int i = 0; i < steps; i++) FixedUpdate(_timestep.Step);
+        for (int i = 0; i < steps; i++)
+        {
+            FixedSystems.Run(World, _timestep.Step);
+            FixedUpdate(_timestep.Step);
+        }
+
         _stats.Steps += steps;
+        FrameSystems.Run(World, dt);
         Update(dt);
     }
 
@@ -74,6 +90,7 @@ public abstract class Game : IDisposable
         ImGui.Text($"FPS: {_stats.Fps:F0}  ({_stats.FrameMs:F2} ms)");
         ImGui.Text($"Fixed steps: {_stats.Steps}  (step {_timestep.Step * 1000:F2} ms)");
         ImGui.Text($"Alpha: {_timestep.Alpha:F2}");
+        ImGui.Text($"Entities: {World.EntityCount}");
         ImGui.Text($"Window: {_window.Width}x{_window.Height}");
         bool vsync = _window.VSync;
         if (ImGui.Checkbox("VSync", ref vsync)) _window.VSync = vsync;
