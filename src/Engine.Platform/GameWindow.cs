@@ -16,6 +16,7 @@ public sealed class GameWindow : IDisposable
 {
     private readonly IWindow _window;
     private IInputContext? _silkInput;
+    private bool _cursorCaptured;
     private ImGuiController? _imgui;
 
     /// <summary>Configures a window requesting an OpenGL 3.3 core context. It opens when <see cref="Run"/> is called.</summary>
@@ -65,6 +66,24 @@ public sealed class GameWindow : IDisposable
     /// <summary>The window title; can be changed at any time.</summary>
     public string Title { get => _window.Title; set => _window.Title = value; }
 
+    /// <summary>
+    /// True while the mouse pointer is hidden and locked to the window, so a mouse-look game can turn forever without the pointer reaching an edge.
+    /// <see cref="InputState.MousePosition"/> keeps changing (as a virtual, unbounded position), so deltas still work. Needs the window to exist.
+    /// </summary>
+    public bool CursorCaptured
+    {
+        get => _cursorCaptured;
+        set
+        {
+            if (_cursorCaptured == value) return;
+
+            _cursorCaptured = value;
+            if (_silkInput == null) return;
+
+            foreach (var mouse in _silkInput.Mice) mouse.Cursor.CursorMode = value ? CursorMode.Disabled : CursorMode.Normal;
+        }
+    }
+
     /// <summary>Whether presentation is synchronised with the display refresh. Can be changed at runtime.</summary>
     public bool VSync { get => _window.VSync; set => _window.VSync = value; }
 
@@ -99,6 +118,7 @@ public sealed class GameWindow : IDisposable
     {
         Gl = _window.CreateOpenGL();
         _silkInput = _window.CreateInput();
+        if (_cursorCaptured) foreach (var mouse in _silkInput.Mice) mouse.Cursor.CursorMode = CursorMode.Disabled; // captured before the window existed
         // The configure callback runs after the ImGui context exists and before the font atlas is built: the place to add fonts and set the style.
         _imgui = new ImGuiController(Gl, _window, _silkInput, () => ConfigureImGui?.Invoke());
         if (DarkTitleBar) WindowChrome.UseDarkTitleBar(_window);

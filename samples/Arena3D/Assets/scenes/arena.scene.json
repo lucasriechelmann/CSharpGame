@@ -651,6 +651,7 @@
             "z": 1
           }
         },
+        "AudioSource": { "clip": "sounds/hum.wav", "volume": 0.6, "pitch": 1, "loop": true, "playOnStart": true, "group": "Ambient", "space": "Positional3D", "minDistance": 3, "maxDistance": 30, "rolloff": 1 },
         "PointLight3D": {
           "color": {
             "r": 1,
@@ -711,7 +712,24 @@
           "coyoteTime": 0.1,
           "jumpBufferTime": 0.12
         },
-        "PreviousTransform": {}
+        "PreviousTransform": {},
+        "AudioListener": {}
+      }
+    },
+    {
+      "parent": 24,
+      "components": {
+        "Name": { "value": "Eye" },
+        "Transform": { "position": { "x": -0.17, "y": 0.5, "z": -0.33 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.16, "y": 0.2, "z": 0.16 } },
+        "MeshRenderer": { "mesh": "meshes/sphere", "material": "materials/eye.material.json" }
+      }
+    },
+    {
+      "parent": 24,
+      "components": {
+        "Name": { "value": "Eye" },
+        "Transform": { "position": { "x": 0.17, "y": 0.5, "z": -0.33 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.16, "y": 0.2, "z": 0.16 } },
+        "MeshRenderer": { "mesh": "meshes/sphere", "material": "materials/eye.material.json" }
       }
     }
   ]

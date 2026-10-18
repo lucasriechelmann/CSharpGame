@@ -1,4 +1,5 @@
 using System.Numerics;
+using Engine.Runtime.Menus;
 using ImGuiNET;
 
 namespace Arena3D;
@@ -26,12 +27,13 @@ public sealed partial class Arena3DGame
         if (_session.Phase == OrbPhase.Playing)
         {
             ImGui.SetWindowFontScale(1.0f);
-            ImGui.TextColored(new Vector4(0.85f, 0.85f, 0.85f, 1f), "W/A/S/D walk, Space jump, right mouse + move turns the camera. Falling off costs 5 seconds.");
+            ImGui.TextColored(new Vector4(0.85f, 0.85f, 0.85f, 1f), "W/A/S/D walk, Space jump, mouse turns the camera, Esc pauses. Falling off costs 5 seconds.");
         }
 
         ImGui.End();
 
-        if (_session.Phase != OrbPhase.Playing) DrawEndMessage();
+        if (IsPaused) DrawPauseMenu();
+        else if (_session.Phase != OrbPhase.Playing) DrawEndMessage();
     }
 
     private void DrawEndMessage()
@@ -55,8 +57,8 @@ public sealed partial class Arena3DGame
         {
             ImGui.Text($"Meshes drawn: {_meshes.DrawnLastFrame} in {_meshes.DrawCallsLastFrame} draw calls  culled: {_meshes.CulledLastFrame}");
             ImGui.Text($"Phase {_session.Phase}   time left {_session.TimeLeft:F1}   falls {_session.Falls}");
-            float distance = _orbit.Distance;
-            if (ImGui.SliderFloat("Camera distance", ref distance, 3f, 14f)) _orbit.Distance = distance;
+            float distance = _zoom;
+            if (ImGui.SliderFloat("Camera distance", ref distance, MinZoom, MaxZoom)) _zoom = distance;
             bool shadows = _meshes.Lighting.ShadowsEnabled;
             if (ImGui.Checkbox("Sun shadows", ref shadows)) _meshes.Lighting.ShadowsEnabled = shadows;
         }

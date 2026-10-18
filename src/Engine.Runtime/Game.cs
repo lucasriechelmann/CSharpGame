@@ -141,6 +141,13 @@ public abstract class Game : IDisposable
     public bool IsPaused { get; set; }
 
     /// <summary>
+    /// Ask for the mouse pointer to be hidden and locked to the window (mouse look). It only takes effect while the game is running for real:
+    /// the pointer is free again while <see cref="IsPaused"/> (so a menu can be clicked) and whenever an editor is attached (it needs the pointer, even
+    /// while the game plays inside it), whatever this is set to.
+    /// </summary>
+    protected bool CaptureMouse { get; set; }
+
+    /// <summary>
     /// True while the scene editor (F2) is on and the game is not playing inside it. The simulation is frozen exactly as with
     /// <see cref="IsPaused"/>, so game code that advances its own clocks or reads gameplay input from <see cref="Update"/> should skip
     /// itself while this is true. It is false again between the editor's Play and Stop, when the game runs for real.
@@ -453,6 +460,7 @@ public abstract class Game : IDisposable
         Audio.Update();
 
         bool frozen = IsPaused || IsEditing;
+        _window.CursorCaptured = CaptureMouse && !frozen && _editor == null;
         if (!frozen) FrameSystems.Run(World, dt);
         long start = Profiler.Begin();
         Update(dt);

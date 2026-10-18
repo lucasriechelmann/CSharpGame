@@ -1,5 +1,5 @@
 using System.Numerics;
-using ImGuiNET;
+using Engine.Runtime.Menus;
 
 namespace Platformer;
 
@@ -46,25 +46,7 @@ public sealed partial class PlatformerGame
 
     private void DrawPauseMenu()
     {
-        const ImGuiWindowFlags flags = ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoSavedSettings | ImGuiWindowFlags.AlwaysAutoResize;
-        ImGui.SetNextWindowPos(ViewportOrigin + new Vector2(ViewportWidth / 2f, ViewportHeight / 2f), ImGuiCond.Always, new Vector2(0.5f, 0.5f));
-        ImGui.Begin("##pause", flags);
-        ImGui.SetWindowFontScale(3f);
-        ImGui.TextColored(new Vector4(1f, 0.85f, 0.3f, 1f), "PAUSED");
-        ImGui.SetWindowFontScale(1.8f);
-
-        PauseChoice? clicked = null;
-        foreach (var choice in _pauseMenu.Choices)
-        {
-            bool selected = choice == _pauseMenu.Selected;
-            if (ImGui.Selectable(PauseMenu.Label(choice), selected, ImGuiSelectableFlags.None, new Vector2(260f, 0f))) clicked = choice;
-            if (ImGui.IsItemHovered()) _pauseMenu.Select(choice);
-        }
-
-        ImGui.SetWindowFontScale(1f);
-        ImGui.TextDisabled("Up/Down + Enter, or click.  Esc / P resumes.");
-        ImGui.End();
-
+        var clicked = PauseMenuView.Draw(_pauseMenu, ViewportOrigin, new Vector2(ViewportWidth, ViewportHeight), "Up/Down + Enter, or click.  Esc / P resumes.");
         if (clicked is { } picked) Choose(picked);
     }
 }

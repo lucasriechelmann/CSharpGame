@@ -6,6 +6,8 @@ param([string]$OutDir = "$PSScriptRoot\..\samples\Arena3D\Assets\sounds")
 #   fall.wav - long falling tone
 #   win.wav  - rising arpeggio
 #   lose.wav - slow descending tone
+#   music.wav - 12 s looping arpeggio (streamed)
+#   hum.wav  - low seamless hum for a positional AudioSource
 
 $rate = 22050
 New-Item -ItemType Directory -Force $OutDir | Out-Null
@@ -67,3 +69,22 @@ $lose = New-Object double[] ([int]($rate * 1.0))
 $k = 0
 foreach ($f in 392.0, 329.63, 261.63) { Add-Note $lose ([int]($rate * 0.28 * $k)) $f 0.5 0.4; $k++ }
 Write-Wav "$OutDir\lose.wav" $lose
+
+# music.wav: a 12 second looping arpeggio over four chords (Am F C G), streamed by the game through WavStream.
+$music = New-Object double[] ([int]($rate * 12))
+$chords = @(@(220.0, 261.63, 329.63), @(174.61, 220.0, 261.63), @(196.0, 261.63, 329.63), @(196.0, 246.94, 293.66))
+for ($c = 0; $c -lt 4; $c++) {
+    for ($step = 0; $step -lt 12; $step++) {
+        $freq = $chords[$c][$step % 3] * $(if ($step -ge 6) { 2 } else { 1 })
+        Add-Note $music ([int]($rate * (3.0 * $c + 0.25 * $step))) $freq 0.9 0.16
+    }
+    Add-Note $music ([int]($rate * 3.0 * $c)) ($chords[$c][0] / 2) 3.0 0.12
+}
+Write-Wav "$OutDir\music.wav" $music
+
+# hum.wav: a 2 second low hum with whole cycles (110 and 165 Hz), so it loops without a click; the lamp plays it from its position.
+$n = [int]($rate * 2); $hum = New-Object double[] $n
+for ($i = 0; $i -lt $n; $i++) {
+    $hum[$i] = 0.3 * [Math]::Sin(2 * [Math]::PI * 110 * $i / $rate) + 0.15 * [Math]::Sin(2 * [Math]::PI * 165 * $i / $rate)
+}
+Write-Wav "$OutDir\hum.wav" $hum

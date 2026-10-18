@@ -1,4 +1,4 @@
-namespace Platformer;
+namespace Engine.Runtime.Menus;
 
 /// <summary>What a pause menu entry does when chosen.</summary>
 public enum PauseChoice

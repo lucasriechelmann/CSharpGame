@@ -2,7 +2,8 @@ param([string]$Exe, [string]$OutDir)
 
 # Plays a few seconds of Orb Run (the Arena3D sample): screenshots the start (arena_0_start.png), walks left along the bottom edge and a little
 # back to collect the orb at (-9, 9) (arena_1_orb.png: the HUD says Orbs 1/12), jumps onto the first platform (arena_2_platform.png) and walks
-# off the arena edge to fall (arena_3_fell.png: the clock lost 5 seconds and the player is back at the start). Keys are held for fixed times,
+# off the arena edge to fall (arena_3_fell.png: the clock lost 5 seconds and the player is back at the start) and presses Escape for the pause
+# menu (arena_4_paused.png). Escape opens the pause menu (arena_4_paused.png). Keys are held for fixed times,
 # so the exact positions can vary a little; look at the screenshots.
 
 Add-Type -AssemblyName System.Drawing
@@ -51,6 +52,10 @@ try {
     Hold 0x44 4500                         # D: all the way across and off the right edge
     Start-Sleep -Milliseconds 700
     Shot $proc "$OutDir\arena_3_fell.png"
+    Hold 0x1B 100                          # Escape: the pause menu and a free mouse
+    Start-Sleep -Milliseconds 500
+    Shot $proc "$OutDir\arena_4_paused.png"
+    Hold 0x1B 100                          # Escape again: resume
 }
 finally {
     if (-not $proc.HasExited) { Stop-Process -Id $proc.Id -Force }

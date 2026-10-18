@@ -13,8 +13,7 @@ using Silk.NET.OpenGL;
 namespace Arena3D;
 
 /// <summary>
-/// Orb Run, a small 3D game: collect every glowing orb in the arena before the clock runs out. Walk with W/A/S/D, jump with Space, hold the right mouse
-/// button and move the mouse to turn the camera around the player, scroll to zoom. Falling off the edge puts you back at the start and costs time.
+/// Orb Run, a small 3D game: collect every glowing orb in the arena before the clock runs out. Walk with W/A/S/D, jump with Space, move the mouse to turn the camera around the player (the pointer is captured; Escape pauses), scroll to zoom. Falling off the edge puts you back at the start and costs time.
 /// </summary>
 /// <remarks>
 /// Almost everything is data (<c>Assets/scenes/arena.scene.json</c>, the prefab and the materials). The rules live in <see cref="OrbGameSession"/> (plain
@@ -31,6 +30,7 @@ public sealed partial class Arena3DGame : Game
     private readonly Camera3D _camera = new();
     private OrbGameSession _session = new(1);
     private MeshRenderSystem _meshes = null!;
+    private PhysicsSystem3D _physics = null!;
     private Entity _player;
     private Vector3 _spawn;
     private AudioGroup _sfx = null!;
@@ -48,8 +48,13 @@ public sealed partial class Arena3DGame : Game
             .BindAxis(GameActions.MoveForward, KeyCode.S, KeyCode.W)
             .BindAxis(GameActions.MoveRight, KeyCode.A, KeyCode.D)
             .Bind(GameActions.Jump, KeyCode.Space)
-            .Bind(GameActions.LookHeld, MouseButton.Right)
-            .Bind(GameActions.Restart, KeyCode.Enter);
+            .Bind(GameActions.Restart, KeyCode.Enter)
+            .Bind(GameActions.Pause, KeyCode.Escape)
+            .Bind(GameActions.Pause, KeyCode.P)
+            .Bind(GameActions.MenuUp, KeyCode.Up)
+            .Bind(GameActions.MenuDown, KeyCode.Down)
+            .Bind(GameActions.MenuConfirm, KeyCode.Enter);
+        CaptureMouse = true;
 
         Components.Register<Orb>("Orb");
         Components.Register<OrbBob>("OrbBob");
@@ -81,9 +86,11 @@ public sealed partial class Arena3DGame : Game
 
         // Per frame the orbs bob; per fixed step: record positions, walk the player, let physics move everything, then look for pick-ups.
         FrameSystems.Add(new OrbBobSystem());
+        FrameSystems.Add(new AudioSourceSystem(Audio, Assets)); // the lamp's positional hum
         FixedSystems.Add(new PreviousTransformSystem());
         FixedSystems.Add(new CharacterControllerSystem3D()); // before physics: it sets the velocity physics then applies
-        FixedSystems.Add(new PhysicsSystem3D());
+        _physics = new PhysicsSystem3D();
+        FixedSystems.Add(_physics);
         FixedSystems.Add(new OrbCollectSystem(CollectOrb));
         _meshes = new MeshRenderSystem(Gl, Assets, _camera, RenderClock);
         RenderSystems.Add(_meshes);
@@ -108,17 +115,25 @@ public sealed partial class Arena3DGame : Game
     {
         if (IsEditing) return; // the editor owns the camera and the mouse
 
+        if (Actions.WasPressed(GameActions.Pause)) TogglePause();
+        if (IsPaused)
+        {
+            UpdatePauseMenu();
+            return;
+        }
+
         UpdateLook();
         AnnounceEnd(); // a run that ended in the last step plays its jingle now
         if (_session.Phase == OrbPhase.Playing)
         {
             _session.Tick(dt);
-            DrivePlayer();
+            DrivePlayer(dt);
             CheckFall();
         }
         else
         {
             StopPlayer();
+            AnimatePlayer(Vector3.Zero, dt);
             if (Actions.WasPressed(GameActions.Restart)) Restart();
         }
     }
@@ -157,12 +172,17 @@ public sealed partial class Arena3DGame : Game
     private void LoadSounds()
     {
         _sfx = Audio.Mixer.CreateGroup("Sfx");
+        var music = Audio.Mixer.CreateGroup("Music");
+        Audio.Mixer.CreateGroup("Ambient"); // the lamp's AudioSource names it in the scene
         _orbSound = Assets.Get(Assets.Load<AudioClip>("sounds/orb.wav"));
         _jumpSound = Assets.Get(Assets.Load<AudioClip>("sounds/jump.wav"));
         _fallSound = Assets.Get(Assets.Load<AudioClip>("sounds/fall.wav"));
         _winSound = Assets.Get(Assets.Load<AudioClip>("sounds/win.wav"));
         _loseSound = Assets.Get(Assets.Load<AudioClip>("sounds/lose.wav"));
         foreach (var clip in new[] { _orbSound, _jumpSound, _fallSound, _winSound, _loseSound }) Audio.Preload(clip);
+
+        // The music is long, so it is streamed from the file instead of being decoded whole; the device owns the stream from here.
+        Audio.PlayStream(WavStream.Open(Path.Combine(Launch.AssetRoot, "sounds", "music.wav")), music, 0.3f, loop: true);
     }
 
     /// <summary>Plays the win or lose jingle once, on the frame the run ends.</summary>
@@ -179,7 +199,7 @@ public sealed partial class Arena3DGame : Game
     /// Writes the walk keys into the player's <see cref="CharacterController3D"/> as a direction relative to where the camera looks (W walks away from
     /// the camera along the ground) and latches a jump press; the fixed step turns that into velocity.
     /// </summary>
-    private void DrivePlayer()
+    private void DrivePlayer(double dt)
     {
         var forward = _orbit.Forward with { Y = 0f };
         forward = forward.LengthSquared() > 1e-6f ? Vector3.Normalize(forward) : -Vector3.UnitZ;
@@ -188,6 +208,7 @@ public sealed partial class Arena3DGame : Game
 
         ref var controller = ref World.Get<CharacterController3D>(_player);
         controller.Move = new Vector2(wish.X, wish.Z);
+        AnimatePlayer(wish, dt);
         if (Actions.WasPressed(GameActions.Jump))
         {
             controller.JumpPressed = true;

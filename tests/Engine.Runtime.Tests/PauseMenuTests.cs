@@ -1,4 +1,6 @@
-namespace Platformer.Tests;
+using Engine.Runtime.Menus;
+
+namespace Engine.Runtime.Tests;
 
 public class PauseMenuTests
 {
