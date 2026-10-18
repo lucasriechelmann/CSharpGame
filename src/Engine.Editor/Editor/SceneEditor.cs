@@ -37,6 +37,9 @@ internal sealed partial class SceneEditor : IEditorShell
     private readonly AssetManager _assets;
     private readonly TilePainter _tiles;
     private readonly RenderedBoxes _boxes;
+    private readonly SceneViewport _viewport = new();
+    private bool _layoutPending = !File.Exists("imgui.ini"); // no saved layout yet: start from the default one (Reset layout asks for it again)
+    private readonly Game _game;
     private string? _playSnapshot;
 
     /// <summary>Creates the editor.</summary>
@@ -45,13 +48,15 @@ internal sealed partial class SceneEditor : IEditorShell
     /// <param name="inspector">Shows and edits the selected entity; also holds the selection.</param>
     /// <param name="log">Where file operations report to.</param>
     /// <param name="hooks">What the game provides: camera, scene file, save and load.</param>
-    public SceneEditor(World world, AssetManager assets, EntityInspector inspector, Logger log, EditorHooks hooks)
+    /// <param name="game">The game being edited: the editor shows it inside the scene panel and tells it how big that panel is.</param>
+    public SceneEditor(World world, AssetManager assets, EntityInspector inspector, Logger log, EditorHooks hooks, Game game)
     {
         _world = world;
         _assets = assets;
         _inspector = inspector;
         _log = log;
         _hooks = hooks;
+        _game = game;
         _history = new CommandStack(new EditContext(world));
         _tiles = new TilePainter(world, assets, inspector, _history);
         _boxes = new RenderedBoxes(world, assets);
@@ -120,12 +125,27 @@ internal sealed partial class SceneEditor : IEditorShell
         _log.Info("Editor", Active ? "Editor on (simulation frozen)" : "Editor off");
     }
 
+    /// <summary>
+    /// First thing in the GUI pass, before the game's own windows exist: builds the default dock layout when it is wanted (first run, or
+    /// View > Reset layout). It must come before those windows are drawn, because a window can only be docked by the layout builder on the frame it first appears.
+    /// </summary>
+    public void BeginFrame()
+    {
+        if (_layoutPending)
+        {
+            _layoutPending = false;
+            DockLayout.ApplyDefault(ImGui.GetMainViewport().WorkSize);
+        }
+
+        // The dock space comes first in the frame: a window can only be docked into a space submitted before it, and the game's own windows are drawn before the editor's.
+        ImGui.DockSpaceOverViewport(DockLayout.DockSpaceId, ImGui.GetMainViewport(), ImGuiDockNodeFlags.None);
+    }
+
     /// <summary>Draws the editor for one frame. Call between ImGui frame begin and render, only while <see cref="Active"/>.</summary>
     public void Draw()
     {
         DrawMenuBar();
         DrawPrefabPopup();
-        ImGui.DockSpaceOverViewport(0, ImGui.GetMainViewport(), ImGuiDockNodeFlags.PassthruCentralNode);
         _hierarchy.Draw();
         _historyPanel.Draw();
         _inspector.DrawDetailsWindow();
@@ -133,11 +153,7 @@ internal sealed partial class SceneEditor : IEditorShell
 
         _inspector.Selection.Prune(_world);
         HandleShortcuts();
-        if (Playing) return; // the game owns the mouse and camera while it plays
-
-        HandleViewport();
-        _inspector.CommitPendingEdit();
-        DrawSceneOverlay();
+        DrawScenePanel(); // the game's image; while editing it also handles the mouse and draws the selection and gizmo
     }
 
     private void DrawMenuBar()
@@ -165,6 +181,12 @@ internal sealed partial class SceneEditor : IEditorShell
             if (ImGui.MenuItem("Delete", "Del", false, !_inspector.Selected.IsNull)) DeleteSelected();
             ImGui.Separator();
             DrawPrefabMenuItems();
+            ImGui.EndMenu();
+        }
+
+        if (ImGui.BeginMenu("View"))
+        {
+            if (ImGui.MenuItem("Reset layout")) _layoutPending = true;
             ImGui.EndMenu();
         }
 

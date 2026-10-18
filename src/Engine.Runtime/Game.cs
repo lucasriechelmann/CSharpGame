@@ -255,6 +255,47 @@ public abstract class Game : IDisposable
     /// <summary>Asks the window to close; the game loop ends after the current frame and <see cref="Unload"/> runs as usual.</summary>
     public void Quit() => _window.Close();
 
+    private bool _viewportHosted;
+
+    /// <summary>Width in pixels of the area the game draws into: the window, or the editor's scene panel. Use it instead of the window's width for cameras and on-screen layout.</summary>
+    public int ViewportWidth { get; private set; }
+
+    /// <summary>Height in pixels of the area the game draws into. See <see cref="ViewportWidth"/>.</summary>
+    public int ViewportHeight { get; private set; }
+
+    /// <summary>Where the game's area starts in the window (zero unless an editor shows the game in a panel). Add it to ImGui window positions that should sit inside the game view, such as a HUD.</summary>
+    public System.Numerics.Vector2 ViewportOrigin { get; private set; }
+
+    /// <summary>Raised when <see cref="ViewportWidth"/> or <see cref="ViewportHeight"/> changes (window resized, or the editor's panel resized). Update cameras here.</summary>
+    public event Action<int, int>? ViewportResized;
+
+    /// <summary>
+    /// The editor tells the game where it is shown: the panel's position (so the mouse is read relative to it) and size. The first call makes the
+    /// editor the owner of the viewport: window resizes no longer change it, the game is drawn into <see cref="PostProcessChain.OutputTexture"/> instead of the window.
+    /// </summary>
+    internal void SetViewport(System.Numerics.Vector2 origin, int width, int height)
+    {
+        if (!_viewportHosted)
+        {
+            _viewportHosted = true;
+            PostProcess.UseOffscreenOutput(true);
+        }
+
+        ViewportOrigin = origin;
+        Input.SetMouseOffset(origin);
+        ApplyViewportSize(width, height);
+    }
+
+    private void ApplyViewportSize(int width, int height)
+    {
+        if (width <= 0 || height <= 0 || (width == ViewportWidth && height == ViewportHeight)) return;
+
+        ViewportWidth = width;
+        ViewportHeight = height;
+        PostProcess.Resize(width, height);
+        ViewportResized?.Invoke(width, height);
+    }
+
     /// <summary>
     /// Plugs an editor into this game (the editor program calls this once, after creating the game and before <see cref="Run"/>).
     /// The factory receives everything the editor needs and returns the shell the loop drives.
@@ -319,7 +360,12 @@ public abstract class Game : IDisposable
         PostProcess = new PostProcessChain(Gl, _window.Width, _window.Height);
         _postEffectsPanel = new PostEffectsPanel(PostProcess);
         _postProcessSection = Profiler.GetSection("Post process");
-        _window.Resized += PostProcess.Resize;
+        ViewportWidth = _window.Width;
+        ViewportHeight = _window.Height;
+        _window.Resized += (w, h) =>
+        {
+            if (!_viewportHosted) ApplyViewportSize(w, h); // an editor owns the size once it shows the game in a panel
+        };
         bool audioReady = OpenAlAudioDevice.TryCreate(out var device, out string reason);
         Audio = audioReady ? device! : new NullAudioDevice(reason);
         if (audioReady) Log.Info("Audio", Audio.Description);
@@ -388,11 +434,13 @@ public abstract class Game : IDisposable
         RenderSystems.Run(World, dt);
         start = Profiler.Begin();
         PostProcess.EndScene();
+        if (_viewportHosted) Gl.Viewport(0, 0, (uint)_window.Width, (uint)_window.Height); // the scene went to a texture; the editor's interface draws on the whole window next
         Profiler.End(_postProcessSection, start);
     }
 
     private void OnGui(double dt)
     {
+        if (_editor?.Active == true) _editor.BeginFrame();
         long start = Profiler.Begin();
         Hud();
         if (_overlay.Visible)

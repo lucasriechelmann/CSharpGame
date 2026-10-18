@@ -93,8 +93,34 @@ public sealed partial class PostProcessChain
         RebuildTargets();
     }
 
+    /// <summary>
+    /// The finished image when <see cref="UseOffscreenOutput"/> is on (an editor shows it inside a panel), else null. It has the size of the
+    /// last <see cref="Resize"/>, and its rows run bottom to top like any GL texture.
+    /// </summary>
+    public Texture2D? OutputTexture => _offscreen?.Texture;
+
+    /// <summary>
+    /// True sends the finished image into a texture (<see cref="OutputTexture"/>) instead of the window, so a tool can show the game inside
+    /// one of its own panels; the window is then free for the tool's interface. The chain keeps that texture the size given to <see cref="Resize"/>.
+    /// </summary>
+    /// <param name="on">Whether to draw to the texture instead of the window.</param>
+    public void UseOffscreenOutput(bool on)
+    {
+        if (on == (_offscreen != null)) return;
+
+        if (on)
+        {
+            _offscreen = new RenderTarget(_gl, _windowWidth, _windowHeight, RenderTargetFormat.Default);
+        }
+        else
+        {
+            _offscreen!.Dispose();
+            _offscreen = null;
+        }
+    }
+
     /// <summary>The scene must be drawn off-screen even with no effect enabled: HDR, multisampling and the low-resolution image all need a target.</summary>
-    private bool NeedsSceneTarget => _hdr || _samples > 1 || IsPixelPerfect;
+    private bool NeedsSceneTarget => _hdr || _samples > 1 || IsPixelPerfect || _offscreen != null;
 
     private void RebuildTargets()
     {
@@ -129,7 +155,8 @@ public sealed partial class PostProcessChain
     /// <summary>Draws a finished image to the window: stretched over it normally, or scaled by a whole number and centred in pixel-perfect mode.</summary>
     private void Present(Texture2D image)
     {
-        RenderTarget.BindScreen(_gl, _windowWidth, _windowHeight);
+        if (_offscreen != null) _offscreen.Bind();
+        else RenderTarget.BindScreen(_gl, _windowWidth, _windowHeight);
         _gl.Disable(EnableCap.Blend);
         _gl.Disable(EnableCap.DepthTest);
 

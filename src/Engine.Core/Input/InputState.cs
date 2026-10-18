@@ -23,8 +23,11 @@ public sealed class InputState
     private readonly bool[] _buttonPressed = new bool[ButtonCount];
     private readonly bool[] _buttonReleased = new bool[ButtonCount];
 
-    /// <summary>Mouse position in window pixels, origin at the top-left, Y pointing down.</summary>
-    public Vector2 MousePosition { get; private set; }
+    private Vector2 _rawMouse;
+    private Vector2 _mouseOffset;
+
+    /// <summary>Mouse position in window pixels (or relative to the game view when a host set <see cref="SetMouseOffset"/>), origin at the top-left, Y pointing down.</summary>
+    public Vector2 MousePosition => _rawMouse - _mouseOffset;
 
     /// <summary>Wheel movement accumulated this frame (positive = scrolled up/away from the user).</summary>
     public float ScrollDelta { get; private set; }
@@ -63,7 +66,14 @@ public sealed class InputState
         Apply(_buttonDown, _buttonPressed, _buttonReleased, (int)button, down);
 
     /// <summary>Records the latest mouse position in window pixels.</summary>
-    public void SetMousePosition(Vector2 position) => MousePosition = position;
+    public void SetMousePosition(Vector2 position) => _rawMouse = position;
+
+    /// <summary>
+    /// Makes <see cref="MousePosition"/> relative to a point in the window. A host that shows the game inside a panel (the editor) passes the panel's top-left corner,
+    /// so game code reads the mouse in the game's own pixels without knowing it is in a panel.
+    /// </summary>
+    /// <param name="origin">Window position of the game view's top-left corner.</param>
+    public void SetMouseOffset(Vector2 origin) => _mouseOffset = origin;
 
     /// <summary>Adds wheel movement for this frame.</summary>
     public void AddScroll(float amount) => ScrollDelta += amount;

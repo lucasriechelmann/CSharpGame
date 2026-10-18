@@ -165,7 +165,7 @@ internal sealed partial class SceneEditor
     }
 
     /// <summary>Draws the handles for the current mode behind the editor windows.</summary>
-    private void DrawGizmo(ImDrawListPtr draw, IGizmoView view)
+    private void DrawGizmo(ViewDraw draw, IGizmoView view)
     {
         if (!TryGetGizmoFrame(out var frame) || !view.TryProject(frame.Origin, out var origin)) return;
 
@@ -196,7 +196,7 @@ internal sealed partial class SceneEditor
         }
     }
 
-    private static void DrawArrowHead(ImDrawListPtr draw, Vector2 from, Vector2 tip, uint colour)
+    private static void DrawArrowHead(ViewDraw draw, Vector2 from, Vector2 tip, uint colour)
     {
         var offset = tip - from;
         if (offset.LengthSquared() < 16f) return; // foreshortened to a dot: nothing to point with

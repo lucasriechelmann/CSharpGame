@@ -23,6 +23,7 @@ public sealed partial class PostProcessChain : IDisposable
     private readonly List<IPostEffect> _active = new();
     private RenderTarget? _scene;
     private RenderTarget[] _pingPong = [];
+    private RenderTarget? _offscreen;
     private int _windowWidth;
     private int _windowHeight;
     private bool _hdr;
@@ -74,6 +75,7 @@ public sealed partial class PostProcessChain : IDisposable
 
         _windowWidth = width;
         _windowHeight = height;
+        _offscreen?.Resize(width, height);
         if (IsPixelPerfect) return; // the targets keep their game resolution; only where they are drawn changes
 
         _scene!.Resize(width, height);
@@ -108,7 +110,7 @@ public sealed partial class PostProcessChain : IDisposable
         {
             // The last effect draws straight to the window, unless the image still has to be scaled up into it.
             bool toWindow = i == _active.Count - 1 && !IsPixelPerfect;
-            var destination = toWindow ? null : _pingPong[next];
+            var destination = toWindow ? _offscreen : _pingPong[next];
             _active[i].Apply(_context, source, destination);
             if (destination == null) continue;
 
@@ -117,6 +119,15 @@ public sealed partial class PostProcessChain : IDisposable
         }
 
         if (_active.Count == 0 || IsPixelPerfect) Present(source);
+
+        if (_offscreen != null)
+        {
+            // The finished image is in the texture; hand the window back to whoever draws on it next (the editor's interface) with a clean slate.
+            _gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+            _gl.ClearColor(0.07f, 0.07f, 0.09f, 1f);
+            _gl.Clear(ClearBufferMask.ColorBufferBit);
+        }
+
         _gl.BindVertexArray(0);
         _sceneRedirected = false;
     }
@@ -126,6 +137,7 @@ public sealed partial class PostProcessChain : IDisposable
     {
         foreach (var effect in _effects) effect.Dispose();
         DisposeTargets();
+        _offscreen?.Dispose();
         _present.Dispose();
         _quad.Dispose();
     }

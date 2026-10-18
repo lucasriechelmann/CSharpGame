@@ -27,9 +27,11 @@ public static class EditorWin32 {
     [StructLayout(LayoutKind.Sequential)] public struct RECT { public int Left, Top, Right, Bottom; }
     [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr hWnd, out RECT rect);
     [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr hWnd);
+    [DllImport("user32.dll")] public static extern bool SetProcessDPIAware();
 }
 "@
 
+[EditorWin32]::SetProcessDPIAware() | Out-Null # without this the screenshot covers only 80% of a window on a 125% display
 $proc = Start-Process -FilePath $exe -ArgumentList @("--game", "`"$dll`"", "--project", "`"$project`"") -PassThru -RedirectStandardError "$Shot.err.txt"
 try {
     Start-Sleep -Seconds $WaitSeconds

@@ -37,7 +37,7 @@ internal sealed partial class SceneEditor
     {
         _orbit ??= OrbitCamera.From(camera, InitialOrbitDistance);
         var io = ImGui.GetIO();
-        var mouse = ImGui.GetMousePos();
+        var mouse = _viewport.ToView(ImGui.GetMousePos());
         var view = new PerspectiveGizmoView(camera);
 
         if (_gizmo.IsDragging)
@@ -48,7 +48,7 @@ internal sealed partial class SceneEditor
         }
 
         _hover = GizmoHandle.None;
-        if (!io.WantCaptureMouse)
+        if (_viewport.Hovered)
         {
             bool alt = ImGui.IsKeyDown(ImGuiKey.LeftAlt) || ImGui.IsKeyDown(ImGuiKey.RightAlt);
             bool shift = ImGui.IsKeyDown(ImGuiKey.LeftShift) || ImGui.IsKeyDown(ImGuiKey.RightShift);
@@ -131,7 +131,7 @@ internal sealed partial class SceneEditor
     {
         if (_inspector.Selection.Count == 0) return;
 
-        var draw = ImGui.GetBackgroundDrawList();
+        var draw = SceneDraw();
         Span<Vector3> corners = stackalloc Vector3[8];
         Span<Vector2> screen = stackalloc Vector2[8];
         Span<bool> visible = stackalloc bool[8];

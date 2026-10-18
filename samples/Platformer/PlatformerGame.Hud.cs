@@ -22,7 +22,7 @@ public sealed partial class PlatformerGame
 
     private void DrawStatusLine()
     {
-        ImGui.SetNextWindowPos(new Vector2(Window.Width / 2f, 12f), ImGuiCond.Always, new Vector2(0.5f, 0f));
+        ImGui.SetNextWindowPos(ViewportOrigin + new Vector2(ViewportWidth / 2f, 12f), ImGuiCond.Always, new Vector2(0.5f, 0f));
         ImGui.Begin("##hud", HudFlags);
         ImGui.SetWindowFontScale(1.6f);
 
@@ -62,7 +62,7 @@ public sealed partial class PlatformerGame
     {
         bool won = _session.Phase == GamePhase.Won;
 
-        ImGui.SetNextWindowPos(new Vector2(Window.Width / 2f, Window.Height / 2f - 150f), ImGuiCond.Always, new Vector2(0.5f, 0.5f));
+        ImGui.SetNextWindowPos(ViewportOrigin + new Vector2(ViewportWidth / 2f, ViewportHeight / 2f - 150f), ImGuiCond.Always, new Vector2(0.5f, 0.5f));
         ImGui.Begin("##endmessage", HudFlags);
         ImGui.SetWindowFontScale(3.5f);
         ImGui.TextColored(won ? new Vector4(0.4f, 1f, 0.5f, 1f) : new Vector4(1f, 0.4f, 0.4f, 1f), won ? "YOU WIN!" : "GAME OVER");

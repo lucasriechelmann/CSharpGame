@@ -47,7 +47,7 @@ public sealed partial class PlatformerGame
     private void DrawPauseMenu()
     {
         const ImGuiWindowFlags flags = ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoSavedSettings | ImGuiWindowFlags.AlwaysAutoResize;
-        ImGui.SetNextWindowPos(new Vector2(Window.Width / 2f, Window.Height / 2f), ImGuiCond.Always, new Vector2(0.5f, 0.5f));
+        ImGui.SetNextWindowPos(ViewportOrigin + new Vector2(ViewportWidth / 2f, ViewportHeight / 2f), ImGuiCond.Always, new Vector2(0.5f, 0.5f));
         ImGui.Begin("##pause", flags);
         ImGui.SetWindowFontScale(3f);
         ImGui.TextColored(new Vector4(1f, 0.85f, 0.3f, 1f), "PAUSED");

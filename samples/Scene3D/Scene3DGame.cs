@@ -79,8 +79,8 @@ public sealed class Scene3DGame : Game
 
         Scenes.LoadFile("scenes/room.scene.json");
 
-        _camera.ViewportSize = new Vector2(Window.Width, Window.Height);
-        Window.Resized += (w, h) => _camera.ViewportSize = new Vector2(w, h);
+        _camera.ViewportSize = new Vector2(ViewportWidth, ViewportHeight);
+        ViewportResized += (w, h) => _camera.ViewportSize = new Vector2(w, h);
 
         _marker = FindByName("Pick marker");
         _player = FindByName("Player");

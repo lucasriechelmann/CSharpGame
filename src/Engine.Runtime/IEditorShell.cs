@@ -12,6 +12,9 @@ public interface IEditorShell
     /// <summary>True while the game is frozen for editing, false while it plays inside the editor. Surfaces as <see cref="Game.IsEditing"/>.</summary>
     bool Editing { get; }
 
+    /// <summary>Called first in every GUI pass, before the game's own windows are drawn, so the editor can arrange the window layout before those windows first appear.</summary>
+    void BeginFrame();
+
     /// <summary>The F2 key: shows or hides the editor. A shell that is always on may ignore it.</summary>
     void Toggle();
 

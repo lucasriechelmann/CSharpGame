@@ -24,7 +24,7 @@ internal sealed partial class SceneEditor
         if (camera == null) return;
 
         var io = ImGui.GetIO();
-        var mouse = ImGui.GetMousePos();
+        var mouse = _viewport.ToView(ImGui.GetMousePos());
         var view = new OrthographicGizmoView(camera);
 
         if (_gizmo.IsDragging)
@@ -38,15 +38,15 @@ internal sealed partial class SceneEditor
         // Paint mode: the mouse paints tiles instead of selecting. A stroke keeps going when the mouse strays over a window.
         if (_tiles.IsPainting || _tiles.IsStroking)
         {
-            _tiles.HandleMouse(camera, mouse, io.WantCaptureMouse);
-            if (io.WantCaptureMouse) return;
+            _tiles.HandleMouse(camera, mouse, !_viewport.Hovered);
+            if (!_viewport.Hovered) return;
 
             ZoomAndPan(camera, io, mouse);
-            _tiles.DrawCursor(camera, mouse);
+            _tiles.DrawCursor(camera, mouse, SceneDraw());
             return;
         }
 
-        if (io.WantCaptureMouse) return; // over a window or menu
+        if (!_viewport.Hovered) return; // over another window or a menu
 
         ZoomAndPan(camera, io, mouse);
 
@@ -83,7 +83,7 @@ internal sealed partial class SceneEditor
         var camera = _hooks.Camera();
         if (camera == null || _inspector.Selection.Count == 0) return;
 
-        var draw = ImGui.GetBackgroundDrawList();
+        var draw = SceneDraw();
         Span<Vector2> corners = stackalloc Vector2[4];
         foreach (var entity in _inspector.Selection.Items)
         {

@@ -101,8 +101,8 @@ public sealed partial class PlatformerGame : Game
         PostProcess.Add(new ColorGradeEffect(Gl) { Enabled = false });
         _toneMap = PostProcess.Add(new ToneMapEffect(Gl) { Enabled = false, Exposure = 0.75f }); // last; used only while HDR is on
 
-        _camera.ViewportSize = new Vector2(Window.Width, Window.Height);
-        Window.Resized += (w, h) =>
+        _camera.ViewportSize = new Vector2(ViewportWidth, ViewportHeight);
+        ViewportResized += (w, h) =>
         {
             if (!PostProcess.IsPixelPerfect) _camera.ViewportSize = new Vector2(w, h); // pixel-perfect keeps its small game image
         };

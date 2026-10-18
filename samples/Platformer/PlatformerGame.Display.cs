@@ -46,7 +46,7 @@ public sealed partial class PlatformerGame
         else
         {
             PostProcess.ClearPixelPerfect();
-            _camera.ViewportSize = new Vector2(Window.Width, Window.Height);
+            _camera.ViewportSize = new Vector2(ViewportWidth, ViewportHeight);
         }
 
         _camera.PixelSnap = on;

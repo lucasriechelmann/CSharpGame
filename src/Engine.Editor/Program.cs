@@ -24,7 +24,7 @@ try
     using var game = module.CreateGame(GameLaunch.ForProject(projectPath));
     game.AttachEditor(context =>
     {
-        var editor = new SceneEditor(context.World, context.Assets, context.Inspector, context.Log, context.Hooks) { Pinned = true };
+        var editor = new SceneEditor(context.World, context.Assets, context.Inspector, context.Log, context.Hooks, context.Game) { Pinned = true };
         editor.Toggle(); // the standalone editor is always on
         return editor;
     });

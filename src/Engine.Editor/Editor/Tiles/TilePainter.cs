@@ -200,7 +200,7 @@ internal sealed class TilePainter(World world, AssetManager assets, EntityInspec
     /// <summary>Outlines the cell under the mouse so the artist sees where a click would paint.</summary>
     /// <param name="camera">The scene camera.</param>
     /// <param name="mouse">Mouse position in screen pixels.</param>
-    public void DrawCursor(Camera2D camera, Vector2 mouse)
+    public void DrawCursor(Camera2D camera, Vector2 mouse, ViewDraw draw)
     {
         if (!TryGetTarget(out var target)) return;
 
@@ -211,13 +211,13 @@ internal sealed class TilePainter(World world, AssetManager assets, EntityInspec
             var (lo2, hi2) = TileCells.Bounds(Math.Max(ax, x), Math.Max(ay, y), target.Origin, target.Layer.TileSize);
             var p = camera.WorldToScreen(Vector2.Min(lo, lo2));
             var q = camera.WorldToScreen(Vector2.Max(hi, hi2));
-            ImGui.GetBackgroundDrawList().AddRect(Vector2.Min(p, q), Vector2.Max(p, q), ImGui.GetColorU32(new Vector4(1f, 0.9f, 0.3f, 1f)), 0f, ImDrawFlags.None, 2f);
+            draw.AddRect(Vector2.Min(p, q), Vector2.Max(p, q), ImGui.GetColorU32(new Vector4(1f, 0.9f, 0.3f, 1f)), 2f);
         }
 
         var (min, max) = TileCells.Bounds(x, y, target.Origin, target.Layer.TileSize);
         var a = camera.WorldToScreen(min);
         var b = camera.WorldToScreen(max);
-        ImGui.GetBackgroundDrawList().AddRect(Vector2.Min(a, b), Vector2.Max(a, b), ImGui.GetColorU32(new Vector4(0.3f, 1f, 1f, 1f)), 0f, ImDrawFlags.None, 2f);
+        draw.AddRect(Vector2.Min(a, b), Vector2.Max(a, b), ImGui.GetColorU32(new Vector4(0.3f, 1f, 1f, 1f)), 2f);
     }
 
     private void BeginStroke(Target target, ImGuiMouseButton button)
