@@ -1,6 +1,7 @@
 using System.Numerics;
 using Engine.Core.Components;
 using Engine.Core.Ecs;
+using Engine.Runtime.Editor;
 using Engine.Runtime.Editor.Undo;
 using Engine.Scenes;
 using ImGuiNET;
@@ -21,14 +22,16 @@ internal sealed partial class EntityInspector(World world, ComponentRegistry reg
     private readonly List<Type> _componentTypes = new();
     private readonly List<Entity> _entities = new();
     private string _filter = string.Empty;
-    private Entity _selected = Entity.Null;
     private PendingEdit? _pendingEdit;
 
-    /// <summary>The entity whose components are shown; <see cref="Entity.Null"/> when nothing is selected or it was destroyed.</summary>
+    /// <summary>Everything the editor has selected; the inspector shows the <see cref="EditorSelection.Primary"/> one.</summary>
+    public EditorSelection Selection { get; } = new();
+
+    /// <summary>The entity whose components are shown (the primary of the selection); <see cref="Entity.Null"/> when nothing is selected or it was destroyed. Setting it selects just that entity.</summary>
     public Entity Selected
     {
-        get => world.IsAlive(_selected) ? _selected : Entity.Null;
-        set => _selected = value;
+        get => world.IsAlive(Selection.Primary) ? Selection.Primary : Entity.Null;
+        set => Selection.SetOnly(value);
     }
 
     /// <summary>

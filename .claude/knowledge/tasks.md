@@ -49,15 +49,13 @@ Small, about one session. Fixes known gaps that affect game feel and that the ed
 - [x] glTF keeps its node tree (`ModelData.Nodes`, `ModelPose`) for animation; drawing is still flattened.
 - [ ] Follow-ups: a cached world matrix if deep trees show up in the profiler; moving physics bodies as children; rotate/scale gizmos use the same world/local conversion; `ModelRenderer` instances that expose per-node entities.
 
-## Phase 15: 3D editor view (next)
+## Phase 15: 3D editor view (done)
 
-Depends on 14 (done). Order: viewport and orbit camera, picking, gizmos, multi-select, game view.
-
-- [ ] Docked viewport panel that renders the scene into a `RenderTarget` for a `Camera3D` (orbit/pan/zoom), keeping the 2D editor as it is.
-- [ ] 3D picking: `Camera3D.ScreenPointToRay` against mesh bounds (and physics boxes).
-- [ ] Move/rotate/scale gizmos (also for 2D), local/world toggle.
-- [ ] Multi-select.
-- [ ] Game view panel (render the game into a docked window).
+- [x] Orbit-camera 3D view (`OrbitCamera`, `Game.SceneCamera3D`), 3D picking by oriented mesh bounds (`EntityPicking3D`), selection outlines, F to frame.
+- [x] Move/rotate/scale gizmo for 2D and 3D (`TransformGizmo`, world or local axes, Ctrl snap), applied through `GizmoApply`, one undo step per gesture.
+- [x] Multi-select (`EditorSelection`): Ctrl+click, group gizmo, group duplicate and delete.
+- [ ] Not built: a docked viewport / game-view panel rendering into a `RenderTarget` (needs a viewport abstraction in `Game`; reasons in `architecture.md`).
+- [ ] Follow-ups: triangle-accurate picking, box-select (marquee), gizmo handles for planes, pivot/centre toggle, camera bookmarks, showing physics colliders as wire boxes.
 
 ## Phase 16: 3D physics stage 2
 

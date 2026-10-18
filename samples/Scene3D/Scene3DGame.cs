@@ -90,7 +90,36 @@ public sealed class Scene3DGame : Game
     }
 
     /// <inheritdoc />
+    protected override Camera3D? SceneCamera3D => _camera;
+
+    /// <inheritdoc />
+    protected override string? ScenePath => FindProjectScene();
+
+    /// <inheritdoc />
+    protected override void SceneReloaded()
+    {
+        // The world was rebuilt (editor Reload or Stop): every entity handle cached from the old one is stale.
+        _marker = FindByName("Pick marker");
+        _crates.Clear();
+    }
+
+    /// <inheritdoc />
     protected override void Unload() => _meshes.Dispose();
+
+    /// <summary>
+    /// The scene file in the project's <c>Assets</c> folder (not the copy beside the executable), found by walking up from the executable,
+    /// so the editor's Save changes something that can be committed. Null when the executable runs outside the project tree.
+    /// </summary>
+    private static string? FindProjectScene()
+    {
+        for (var dir = new DirectoryInfo(AppContext.BaseDirectory); dir != null; dir = dir.Parent)
+        {
+            string candidate = Path.Combine(dir.FullName, "samples", "Scene3D", "Assets", "scenes", "room.scene.json");
+            if (File.Exists(candidate)) return candidate;
+        }
+
+        return null;
+    }
 
     /// <inheritdoc />
     protected override void Update(double dt)
@@ -169,7 +198,9 @@ public sealed class Scene3DGame : Game
     protected override void Draw(double dt)
     {
         // Applied here, after Update, so the picture uses this frame's input; the depth buffer is cleared by the mesh system.
-        _fly.ApplyTo(_camera);
+        // While the editor is open it owns the camera (orbit view), so follow it instead: flying on afterwards starts where it ended.
+        if (IsEditing) _fly.CopyFrom(_camera);
+        else _fly.ApplyTo(_camera);
         Gl.ClearColor(0.45f, 0.62f, 0.85f, 1f);
         Gl.Clear(ClearBufferMask.ColorBufferBit);
     }

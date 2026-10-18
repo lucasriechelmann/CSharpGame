@@ -1,9 +1,11 @@
 using Engine.Rendering;
+using Engine.Rendering3D;
 
 namespace Engine.Runtime.Editor;
 
 /// <summary>What the editor needs from the game it edits. <c>Game</c> fills these in from its virtual members.</summary>
-/// <param name="Camera">The camera that draws the scene, or null when the game has none (then the editor has no scene view, only the panels).</param>
+/// <param name="Camera">The 2D camera that draws the scene, or null when the game has none.</param>
+/// <param name="Camera3D">The 3D camera that draws the scene, or null. When set, the editor gives the scene an orbit-camera 3D view instead of the 2D pan and zoom; with neither camera the editor has only its panels.</param>
 /// <param name="ScenePath">The scene file Save and Reload use, or null when the game names none.</param>
 /// <param name="Save">Writes the world to a scene file.</param>
 /// <param name="Load">Replaces the world with a scene file and lets the game re-establish what it cached from the old world.</param>
@@ -15,6 +17,7 @@ namespace Engine.Runtime.Editor;
 /// <param name="PlayStopped">Tells the game the editor stopped playing and the world was restored, so it can discard the run's state.</param>
 internal sealed record EditorHooks(
     Func<Camera2D?> Camera,
+    Func<Camera3D?> Camera3D,
     Func<string?> ScenePath,
     Action<string> Save,
     Action<string> Load,

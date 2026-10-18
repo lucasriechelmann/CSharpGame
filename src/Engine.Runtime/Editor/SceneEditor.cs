@@ -5,6 +5,7 @@ using Engine.Core.Ecs;
 using Engine.Core.Hierarchy;
 using Engine.Core.Logging;
 using Engine.Rendering;
+using Engine.Runtime.Editor.Gizmos;
 using Engine.Runtime.Editor.Tiles;
 using Engine.Runtime.Editor.Undo;
 using Engine.Runtime.Inspector;
@@ -33,6 +34,7 @@ internal sealed partial class SceneEditor
     private readonly CommandStack _history;
     private readonly AssetManager _assets;
     private readonly TilePainter _tiles;
+    private readonly RenderedBoxes _boxes;
     private string? _playSnapshot;
 
     /// <summary>Creates the editor.</summary>
@@ -50,6 +52,7 @@ internal sealed partial class SceneEditor
         _hooks = hooks;
         _history = new CommandStack(new EditContext(world));
         _tiles = new TilePainter(world, assets, inspector, _history);
+        _boxes = new RenderedBoxes(world, assets);
         _hierarchy = new HierarchyPanel(world, inspector, () => !Playing, NewEntity, NewChild, DuplicateSelected, DeleteSelected, Reparent);
     }
 
@@ -71,7 +74,7 @@ internal sealed partial class SceneEditor
         if (!Active || Playing) return;
 
         _playSnapshot = _hooks.Snapshot();
-        _gizmo.End();
+        AbortGizmoDrag();
         _tiles.Cancel();
         _history.Clear();
         _inspector.History = null; // edits made while playing are live tweaks that Stop discards, so they are not undo steps
@@ -100,7 +103,8 @@ internal sealed partial class SceneEditor
         if (Active) Stop();
 
         Active = !Active;
-        _gizmo.End();
+        _orbit = null; // a fresh orbit starts from wherever the game left its camera
+        AbortGizmoDrag();
         _tiles.Cancel();
 
         // History only means something against the world it was recorded on. The game runs freely while the editor is off, so start clean each time.
@@ -118,6 +122,7 @@ internal sealed partial class SceneEditor
         _inspector.DrawDetailsWindow();
         _tiles.DrawPanel();
 
+        _inspector.Selection.Prune(_world);
         HandleShortcuts();
         if (Playing) return; // the game owns the mouse and camera while it plays
 
@@ -152,13 +157,25 @@ internal sealed partial class SceneEditor
             ImGui.EndMenu();
         }
 
+        if (ImGui.BeginMenu("Gizmo"))
+        {
+            if (ImGui.MenuItem("Move", "W", _gizmo.Mode == GizmoMode.Translate)) SetGizmoMode(GizmoMode.Translate);
+            if (ImGui.MenuItem("Rotate", "E", _gizmo.Mode == GizmoMode.Rotate)) SetGizmoMode(GizmoMode.Rotate);
+            if (ImGui.MenuItem("Scale", "R", _gizmo.Mode == GizmoMode.Scale)) SetGizmoMode(GizmoMode.Scale);
+            ImGui.Separator();
+            if (ImGui.MenuItem("Local axes", "X", _gizmo.Space == GizmoSpace.Local)) ToggleGizmoSpace();
+            ImGui.EndMenu();
+        }
+
         ImGui.EndDisabled();
 
         if (ImGui.MenuItem(Playing ? "Stop" : "Play", "F3")) TogglePlay();
 
         ImGui.TextDisabled(Playing
             ? "  Playing: changes are discarded when you press Stop."
-            : "  Editor: simulation frozen. Middle-drag pans, wheel zooms, Ctrl snaps the gizmo to 8 units.");
+            : _hooks.Camera3D() != null
+                ? "  Editor: simulation frozen. Middle-drag orbits, Shift+middle pans, wheel zooms, F frames the selection."
+                : "  Editor: simulation frozen. Middle-drag pans, wheel zooms, Ctrl snaps the gizmo to 8 units.");
         ImGui.EndMainMenuBar();
     }
 
@@ -181,6 +198,11 @@ internal sealed partial class SceneEditor
         else if (ctrl && ImGui.IsKeyPressed(ImGuiKey.N, false)) NewEntity();
         else if (ImGui.IsKeyPressed(ImGuiKey.Delete, false)) DeleteSelected();
         else if (ImGui.IsKeyPressed(ImGuiKey.B, false)) _tiles.TogglePaintMode();
+        else if (ImGui.IsKeyPressed(ImGuiKey.F, false)) FocusSelected();
+        else if (ImGui.IsKeyPressed(ImGuiKey.W, false) && !editing) SetGizmoMode(GizmoMode.Translate);
+        else if (ImGui.IsKeyPressed(ImGuiKey.E, false) && !editing) SetGizmoMode(GizmoMode.Rotate);
+        else if (ImGui.IsKeyPressed(ImGuiKey.R, false) && !editing) SetGizmoMode(GizmoMode.Scale);
+        else if (ImGui.IsKeyPressed(ImGuiKey.X, false) && !editing) ToggleGizmoSpace();
     }
 
     /// <summary>
@@ -243,41 +265,57 @@ internal sealed partial class SceneEditor
         _log.Info("Editor", $"Created {entity} under {parent}");
     }
 
-    /// <summary>Copies the selected entity and everything below it, a little to the side, and selects the copy.</summary>
+    /// <summary>
+    /// Copies every selected entity (with everything below it), a little to the side, as one undo step, and selects the copies. An entity
+    /// whose ancestor is also selected is not copied separately: its ancestor's copy already contains it.
+    /// </summary>
     private void DuplicateSelected()
     {
-        var source = _inspector.Selected;
-        if (source.IsNull) return;
+        _inspector.Selection.GetTopLevel(_world, _topLevel);
+        if (_topLevel.Count == 0) return;
 
         float step = 16f / (_hooks.Camera()?.Zoom ?? 1f);
-        var copies = EntityCloner.DuplicateSubtree(_world, source, new Vector2(step, -step));
-        var commands = new List<IEditCommand>(copies.Count);
-        foreach (var copy in copies) commands.Add(EntityLifetimeCommand.ForCreated(_history.Context, copy, EntityLabel.Of(_world, copy)));
+        var offset = _hooks.Camera3D() != null ? new Vector3(1f, 0f, 1f) : new Vector3(step, -step, 0f); // 3D: a metre along the floor
+        var sources = _topLevel.ToArray(); // the scratch list is reused by the gizmo while the copies are made
+        var commands = new List<IEditCommand>();
+        var roots = new List<Entity>(sources.Length);
+        foreach (var source in sources)
+        {
+            var copies = EntityCloner.DuplicateSubtree(_world, source, offset);
+            roots.Add(copies[0]);
+            foreach (var copy in copies) commands.Add(EntityLifetimeCommand.ForCreated(_history.Context, copy, EntityLabel.Of(_world, copy)));
+        }
 
-        _history.Push(Group($"Create {EntityLabel.Of(_world, copies[0])}", commands, affectedIndex: 0));
-        _inspector.Selected = copies[0];
-        _log.Info("Editor", $"Duplicated {source} ({copies.Count} entities)");
+        string label = roots.Count == 1 ? EntityLabel.Of(_world, roots[0]) : $"{roots.Count} entities";
+        _history.Push(Group($"Create {label}", commands, affectedIndex: 0));
+        _inspector.Selected = roots[0];
+        for (int i = 1; i < roots.Count; i++) _inspector.Selection.Add(roots[i]);
+        _log.Info("Editor", $"Duplicated {sources.Length} selected ({commands.Count} entities)");
     }
 
-    /// <summary>Deletes the selected entity and everything below it as one undo step.</summary>
+    /// <summary>Deletes every selected entity and everything below it as one undo step.</summary>
     private void DeleteSelected()
     {
-        var entity = _inspector.Selected;
-        if (entity.IsNull) return;
+        _inspector.Selection.GetTopLevel(_world, _topLevel);
+        if (_topLevel.Count == 0) return;
 
         _inspector.CommitPendingEdit();
 
         // Children go before their parent, so undo (which runs in reverse) brings the parent back first and each child can re-link to it.
-        var subtree = new List<Entity>();
-        TransformHierarchy.GetSubtree(_world, entity, subtree);
-        var commands = new List<IEditCommand>(subtree.Count);
-        for (int i = subtree.Count - 1; i >= 0; i--)
-            commands.Add(EntityLifetimeCommand.ForDeleted(_history.Context, subtree[i], EntityLabel.Of(_world, subtree[i])));
+        var roots = _topLevel.ToArray();
+        var commands = new List<IEditCommand>();
+        foreach (var root in roots)
+        {
+            var subtree = new List<Entity>();
+            TransformHierarchy.GetSubtree(_world, root, subtree);
+            for (int i = subtree.Count - 1; i >= 0; i--)
+                commands.Add(EntityLifetimeCommand.ForDeleted(_history.Context, subtree[i], EntityLabel.Of(_world, subtree[i])));
+        }
 
-        string label = EntityLabel.Of(_world, entity);
+        string label = roots.Length == 1 ? EntityLabel.Of(_world, roots[0]) : $"{roots.Length} entities";
         _history.Execute(Group($"Delete {label}", commands, affectedIndex: commands.Count - 1));
-        _inspector.Selected = Entity.Null;
-        _log.Info("Editor", $"Deleted {entity} ({subtree.Count} entities)");
+        _inspector.Selection.Clear();
+        _log.Info("Editor", $"Deleted {roots.Length} selected ({commands.Count} entities)");
     }
 
     /// <summary>Makes <paramref name="child"/> a child of <paramref name="parent"/> (or a root when null), keeping its place in the world.</summary>

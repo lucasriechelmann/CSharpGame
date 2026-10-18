@@ -76,6 +76,13 @@ internal sealed class HierarchyPanel(
         ImGui.End();
     }
 
+    /// <summary>A click selects just the entity; Ctrl+click adds it to the selection or takes it out.</summary>
+    private void Select(Entity entity)
+    {
+        if (ImGui.IsKeyDown(ImGuiKey.LeftCtrl) || ImGui.IsKeyDown(ImGuiKey.RightCtrl)) selection.Selection.Toggle(entity);
+        else selection.Selected = entity;
+    }
+
     private void BuildTree()
     {
         _entities.Clear();
@@ -111,8 +118,8 @@ internal sealed class HierarchyPanel(
             string label = EntityLabel.Of(world, entity);
             if (!label.Contains(_filter, StringComparison.OrdinalIgnoreCase)) continue;
 
-            if (ImGui.Selectable($"{label}##{entity.Id}", entity == selection.Selected))
-                selection.Selected = entity;
+            if (ImGui.Selectable($"{label}##{entity.Id}", selection.Selection.Contains(entity)))
+                Select(entity);
         }
     }
 
@@ -121,10 +128,10 @@ internal sealed class HierarchyPanel(
         bool hasChildren = _childrenOf.TryGetValue(entity, out var children) && children.Count > 0;
         var flags = ImGuiTreeNodeFlags.OpenOnArrow | ImGuiTreeNodeFlags.SpanAvailWidth | ImGuiTreeNodeFlags.DefaultOpen;
         if (!hasChildren) flags |= ImGuiTreeNodeFlags.Leaf;
-        if (entity == selection.Selected) flags |= ImGuiTreeNodeFlags.Selected;
+        if (selection.Selection.Contains(entity)) flags |= ImGuiTreeNodeFlags.Selected;
 
         bool open = ImGui.TreeNodeEx($"{EntityLabel.Of(world, entity)}##{entity.Id}", flags);
-        if (ImGui.IsItemClicked(ImGuiMouseButton.Left) && !ImGui.IsItemToggledOpen()) selection.Selected = entity;
+        if (ImGui.IsItemClicked(ImGuiMouseButton.Left) && !ImGui.IsItemToggledOpen()) Select(entity);
 
         if (editable) HandleDragAndDrop(entity);
 

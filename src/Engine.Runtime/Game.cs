@@ -58,7 +58,7 @@ public abstract class Game : IDisposable
         var logHistory = new MemoryLogSink();
         Log.AddSink(new ConsoleLogSink()).AddSink(logHistory);
         _logPanel = new LogPanel(logHistory, Log);
-        _editor = new SceneEditor(World, Assets, _inspector, Log, new EditorHooks(() => SceneCamera, () => ScenePath, path => Scenes.SaveToFile(path), LoadSceneFromEditor, EditableAssetPath, path => _hotReloader?.Ignore(path),
+        _editor = new SceneEditor(World, Assets, _inspector, Log, new EditorHooks(() => SceneCamera, () => SceneCamera3D, () => ScenePath, path => Scenes.SaveToFile(path), LoadSceneFromEditor, EditableAssetPath, path => _hotReloader?.Ignore(path),
             () => Scenes.Save(), RestoreSceneFromEditor, PlayStarted, PlayStopped));
         FixedSystems.Profile(Profiler, "Fixed");
         FrameSystems.Profile(Profiler, "Frame");
@@ -176,6 +176,14 @@ public abstract class Game : IDisposable
     /// camera should stop while <see cref="IsEditing"/>.
     /// </summary>
     protected virtual Camera2D? SceneCamera => null;
+
+    /// <summary>
+    /// The 3D camera that draws the scene. Return it and the editor (F2) gives the scene an orbit camera (middle-drag orbits, Shift +
+    /// middle-drag pans, wheel zooms, F frames the selection), click-to-select by mesh bounds and a transform gizmo. The editor writes
+    /// this camera every frame while <see cref="IsEditing"/>, so a game that also moves it (a fly camera) must stop while editing and
+    /// take the camera's view back when editing ends (<c>FlyCamera.CopyFrom</c>). When both cameras are returned the 3D one wins.
+    /// </summary>
+    protected virtual Camera3D? SceneCamera3D => null;
 
     /// <summary>The scene file the editor saves to and reloads from, as a full path; null disables those menu items.</summary>
     protected virtual string? ScenePath => null;

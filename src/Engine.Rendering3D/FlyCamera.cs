@@ -32,13 +32,22 @@ public sealed class FlyCamera
     /// <summary>Starts from an existing camera: copies its position and works out the angles that reproduce its view direction.</summary>
     public static FlyCamera From(Camera3D camera)
     {
+        var fly = new FlyCamera();
+        fly.CopyFrom(camera);
+        return fly;
+    }
+
+    /// <summary>
+    /// Takes over a camera's current view: position, and the yaw and pitch that reproduce its view direction. Call it when something else
+    /// (the scene editor's orbit camera) moved the camera, so flying on continues from where it was left instead of snapping back.
+    /// </summary>
+    /// <param name="camera">The camera to copy.</param>
+    public void CopyFrom(Camera3D camera)
+    {
         var forward = camera.Forward;
-        return new FlyCamera
-        {
-            Position = camera.Position,
-            Yaw = MathF.Atan2(-forward.X, -forward.Z),
-            Pitch = MathF.Asin(Math.Clamp(forward.Y, -1f, 1f)),
-        };
+        Position = camera.Position;
+        Yaw = MathF.Atan2(-forward.X, -forward.Z);
+        Pitch = MathF.Asin(Math.Clamp(forward.Y, -1f, 1f));
     }
 
     /// <summary>Turns the view by the given amounts in radians.</summary>

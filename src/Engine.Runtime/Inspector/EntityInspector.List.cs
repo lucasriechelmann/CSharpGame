@@ -12,14 +12,14 @@ internal sealed partial class EntityInspector
         ImGui.BeginChild("entities", new Vector2(190f, 0f), ImGuiChildFlags.Border);
 
         if (ImGui.Button("+ Entity"))
-            _selected = world.CreateEntity();
+            Selected = world.CreateEntity();
 
         ImGui.SameLine();
         ImGui.BeginDisabled(Selected.IsNull);
         if (ImGui.Button("Destroy"))
         {
-            world.DestroyEntity(_selected);
-            _selected = Entity.Null;
+            world.DestroyEntity(Selected);
+            Selected = Entity.Null;
         }
 
         ImGui.EndDisabled();
@@ -38,7 +38,7 @@ internal sealed partial class EntityInspector
             if (_filter.Length > 0 && !label.Contains(_filter, StringComparison.OrdinalIgnoreCase)) continue;
 
             if (ImGui.Selectable($"{label}##{entity.Id}", entity == Selected))
-                _selected = entity;
+                Selected = entity;
         }
 
         ImGui.EndChild();
