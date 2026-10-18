@@ -16,6 +16,12 @@ public sealed class Material
     /// <summary>Optional colour texture; the default (invalid) handle means a plain colour.</summary>
     public AssetHandle<Texture2D> Texture { get; set; }
 
+    /// <summary>
+    /// A texture the material owns itself, such as an image embedded in a model file. Takes precedence over <see cref="Texture"/>; not
+    /// saved in material files (a loader sets it) and disposed by whoever created it (the <see cref="Model"/>), not by the asset manager.
+    /// </summary>
+    public Texture2D? OwnedTexture { get; set; }
+
     /// <summary>Sharpness of the specular highlight (Blinn-Phong exponent): 8 is rough, 128 is polished.</summary>
     public float Shininess { get; set; } = 32f;
 

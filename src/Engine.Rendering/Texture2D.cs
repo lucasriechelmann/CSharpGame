@@ -71,6 +71,16 @@ public sealed class Texture2D : IDisposable
         return FromPixels(gl, image.Width, image.Height, image.Data, filter);
     }
 
+    /// <summary>Decodes an encoded image (PNG, JPEG, BMP, TGA) held in memory, such as one embedded in a model file.</summary>
+    /// <param name="gl">The GL context that will own the texture.</param>
+    /// <param name="encoded">The file bytes, not raw pixels.</param>
+    /// <param name="filter">How the texture is sampled when scaled.</param>
+    public static Texture2D FromImageBytes(GL gl, byte[] encoded, TextureFilter filter = TextureFilter.Nearest)
+    {
+        var image = ImageResult.FromMemory(encoded, ColorComponents.RedGreenBlueAlpha);
+        return FromPixels(gl, image.Width, image.Height, image.Data, filter);
+    }
+
     /// <summary>
     /// Allocates an uninitialised RGBA texture to render into (the colour attachment of a <see cref="RenderTarget"/>). Linear
     /// filtering so a target drawn smaller or larger than its size still looks smooth.

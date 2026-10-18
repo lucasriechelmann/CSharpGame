@@ -37,7 +37,7 @@ Small, about one session. Fixes known gaps that affect game feel and that the ed
 
 - [x] Mesh and material system, depth buffer, `Camera3D` (13a: `Engine.Rendering3D`, `samples/Scene3D`). Follow-ups: draw sorting and transparency, instancing, a 3D editor view with picking and gizmo, transform parents.
 - [x] Basic lighting (13b: ambient, one sun, point lights). Follow-ups: shadows (shadow maps), normal maps, spot lights.
-- [ ] Model loading (glTF).
+- [x] Model loading (glTF, 13c): `.gltf`/`.glb` import with node hierarchy, materials and embedded textures; follow-ups: skins and animation, sparse accessors, KHR extensions, normal/metallic-roughness maps, instancing identical models, a model hot-reload check.
 - [ ] 3D physics decision: write our own or integrate one.
 
 ## Alternatives (pick when they pay off sooner than the main path)

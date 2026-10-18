@@ -284,6 +284,7 @@ public abstract class Game : IDisposable
         Assets.Register(new TextureLoader(Gl));
         Assets.Register(new TileSetLoader(Assets));
         Assets.Register(new MaterialLoader(Assets));
+        Assets.Register(new ModelLoader(Gl));
         Assets.Register(new TileLayerLoader());
         Assets.Register(new AnimationStateMachineLoader());
         Assets.Register(new PrefabLoader());

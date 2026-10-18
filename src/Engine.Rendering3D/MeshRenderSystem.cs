@@ -27,6 +27,7 @@ public sealed partial class MeshRenderSystem : ISystem, IDisposable
     private readonly Shader _shader;
     private readonly Texture2D _white;
     private readonly EntityAction<Transform, MeshRenderer> _drawEntity;
+    private readonly EntityAction<Transform, ModelRenderer> _drawModelEntity;
     private readonly EntityAction<Transform, DirectionalLight> _collectSun;
     private readonly EntityAction<Transform, PointLight3D> _collectPoint;
     private readonly int[] _chosen = new int[MeshShaderSource.MaxPointLights];
@@ -50,6 +51,7 @@ public sealed partial class MeshRenderSystem : ISystem, IDisposable
         _shader = new Shader(gl, MeshShaderSource.Vertex, MeshShaderSource.Fragment);
         _white = Texture2D.CreateWhite(gl);
         _drawEntity = DrawEntity; // created once so the per-frame queries do not allocate delegates
+        _drawModelEntity = DrawModelEntity;
         _collectSun = CollectSun;
         _collectPoint = CollectPoint;
         InitialiseLights();
@@ -92,6 +94,7 @@ public sealed partial class MeshRenderSystem : ISystem, IDisposable
         _boundMaterial = null;
         _cullEnabled = false;
         world.Query(_drawEntity);
+        world.Query(_drawModelEntity);
 
         _gl.Disable(EnableCap.CullFace);
         _gl.Disable(EnableCap.DepthTest);
@@ -109,11 +112,31 @@ public sealed partial class MeshRenderSystem : ISystem, IDisposable
     {
         if (!renderer.Mesh.IsValid || !_assets.TryGet(renderer.Mesh, out var mesh)) return;
 
+        var material = renderer.Material.IsValid && _assets.TryGet(renderer.Material, out var found) ? found : DefaultMaterial;
+        DrawMesh(mesh, material, EntityMatrix(entity, simulated));
+    }
+
+    private void DrawModelEntity(Entity entity, ref Transform simulated, ref ModelRenderer renderer)
+    {
+        if (!renderer.Model.IsValid || !_assets.TryGet(renderer.Model, out var model)) return;
+
+        var entityMatrix = EntityMatrix(entity, simulated);
+        var parts = model.Parts;
+        for (int i = 0; i < parts.Count; i++)
+            DrawMesh(parts[i].Mesh, parts[i].Material, parts[i].Local * entityMatrix); // piece into model space, then the entity places the model
+    }
+
+    /// <summary>The entity's local-to-world matrix, drawn between its last two fixed steps when it has a <see cref="PreviousTransform"/>.</summary>
+    private Matrix4x4 EntityMatrix(Entity entity, in Transform simulated)
+    {
         var transform = simulated;
         if (_clock != null && _world.TryGet<PreviousTransform>(entity, out var previous))
             transform = PreviousTransform.Interpolate(simulated, previous, _clock.Alpha);
+        return ModelMatrix.From(transform);
+    }
 
-        var model = ModelMatrix.From(transform);
+    private void DrawMesh(Mesh mesh, Material material, in Matrix4x4 model)
+    {
         var centre = Vector3.Transform(mesh.BoundsCenter, model);
         float radius = mesh.BoundsRadius * ModelMatrix.MaxScale(model);
         if (!_frustum.IntersectsSphere(centre, radius))
@@ -122,7 +145,6 @@ public sealed partial class MeshRenderSystem : ISystem, IDisposable
             return;
         }
 
-        var material = renderer.Material.IsValid && _assets.TryGet(renderer.Material, out var found) ? found : DefaultMaterial;
         BindMaterial(material);
 
         _shader.SetUniform("uModel", model);
@@ -139,7 +161,8 @@ public sealed partial class MeshRenderSystem : ISystem, IDisposable
         if (ReferenceEquals(material, _boundMaterial)) return;
         _boundMaterial = material;
 
-        var texture = material.Texture.IsValid && _assets.TryGet(material.Texture, out var found) ? found : _white;
+        var texture = material.OwnedTexture
+            ?? (material.Texture.IsValid && _assets.TryGet(material.Texture, out var found) ? found : _white);
         texture.Bind(0);
         var color = material.BaseColor;
         _shader.SetUniform("uBaseColor", new Vector4(color.R, color.G, color.B, color.A));

@@ -54,6 +54,13 @@
     },
     {
       "components": {
+        "Name": { "value": "House (glTF)" },
+        "Transform": { "position": { "x": -6.5, "y": 0, "z": -4 }, "rotation": { "x": 0, "y": 0.2474, "z": 0, "w": 0.9689 }, "scale": { "x": 1, "y": 1, "z": 1 } },
+        "ModelRenderer": { "model": "models/house.glb" }
+      }
+    },
+    {
+      "components": {
         "Name": { "value": "Lamp (warm)" },
         "Transform": { "position": { "x": 1.5, "y": 2.2, "z": 2.5 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.3, "y": 0.3, "z": 0.3 } },
         "MeshRenderer": { "mesh": "meshes/sphere", "material": "materials/glow.material.json" },
