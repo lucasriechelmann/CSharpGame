@@ -49,7 +49,7 @@ try {
     [PrefabDrive]::SetForegroundWindow($proc.MainWindowHandle) | Out-Null
     Start-Sleep -Milliseconds 600
 
-    Click $proc 872 165       # a coin in the scene
+    Click $proc 873 180       # a coin in the scene
     Click $proc 66 52         # the Edit menu
     Shot $proc "$OutDir\prefab_0_menu.png"
     Click $proc 100 207       # Save as prefab...
@@ -60,9 +60,9 @@ try {
 
     # Drag the coin 40 pixels to the right with the gizmo's free-move handle, then revert it to the prefab.
     $r = WindowRect $proc
-    [PrefabDrive]::SetCursorPos($r.Left + 870, $r.Top + 166) | Out-Null; Start-Sleep -Milliseconds 400; [PrefabDrive]::SetCursorPos($r.Left + 872, $r.Top + 165) | Out-Null; Start-Sleep -Milliseconds 700
+    [PrefabDrive]::SetCursorPos($r.Left + 872, $r.Top + 181) | Out-Null; Start-Sleep -Milliseconds 400; [PrefabDrive]::SetCursorPos($r.Left + 873, $r.Top + 180) | Out-Null; Start-Sleep -Milliseconds 700
     [PrefabDrive]::mouse_event(0x0002, 0, 0, 0, [UIntPtr]::Zero); Start-Sleep -Milliseconds 200
-    for ($i = 1; $i -le 12; $i++) { [PrefabDrive]::SetCursorPos($r.Left + 872 + 4 * $i, $r.Top + 165) | Out-Null; Start-Sleep -Milliseconds 120 }
+    for ($i = 1; $i -le 12; $i++) { [PrefabDrive]::SetCursorPos($r.Left + 873 + 4 * $i, $r.Top + 180) | Out-Null; Start-Sleep -Milliseconds 120 }
     [PrefabDrive]::mouse_event(0x0004, 0, 0, 0, [UIntPtr]::Zero); Start-Sleep -Milliseconds 600
     Shot $proc "$OutDir\prefab_3_moved.png"
     Click $proc 66 52
