@@ -168,6 +168,9 @@ public sealed partial class PlatformerGame
     /// <inheritdoc />
     protected override string EditableAssetPath(string assetName) => EditableAsset(assetName);
 
+    /// <inheritdoc />
+    protected override string? HotReloadRoot => Path.GetDirectoryName(EditableAsset("x"));
+
     /// <summary>The project's copy of an asset when the game runs from a build inside the project tree, otherwise the copy next to the executable.</summary>
     private static string EditableAsset(string assetName)
     {

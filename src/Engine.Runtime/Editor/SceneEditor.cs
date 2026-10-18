@@ -270,6 +270,7 @@ internal sealed partial class SceneEditor
             string file = _hooks.AssetPath(name);
             Directory.CreateDirectory(Path.GetDirectoryName(file)!);
             File.WriteAllText(file, TileLayerJson.Write(_assets.Get(handle)));
+            _hooks.AssetWritten(file);
             _log.Info("Editor", $"Saved tile layer {name} to {file}");
         }
 

@@ -1,7 +1,7 @@
 # CSharpGame: a learning-oriented 2D game engine in C# (3D-ready)
 
 Windows, .NET 10, Silk.NET (OpenGL 3.3 core), custom sparse-set ECS, Dear ImGui debug UI.
-Goal: learn how engines work, so write core systems from scratch and use libraries only for plumbing. First game: a platformer. Status: phases 1-11 done (the 10-phase engine roadmap plus the phase 11 polish pass; next is an editor and 3D, see `.claude/knowledge/tasks.md`) (see `.claude/knowledge/features.md`).
+Goal: learn how engines work, so write core systems from scratch and use libraries only for plumbing. First game: a platformer. Status: phases 1-12 done (the 10-phase engine roadmap, the phase 11 polish pass and the phase 12 editor; next is 3D, see `.claude/knowledge/tasks.md`) (see `.claude/knowledge/features.md`).
 
 ## Projects
 
@@ -45,6 +45,7 @@ Dependency direction: samples -> Runtime -> (Core, Platform, Rendering, Scenes, 
 - **Shutdown**: free GPU resources in `Unload`/the window `Closing` event, while the GL context still exists (`Game` then disposes `Audio`, the `PostProcess` chain, then `Assets`). Never touch GL from `Dispose` or after `Run()` returns.
 - **Render stats**: call `SpriteBatch.ResetStats()` once per frame (in `Draw`) because a frame has several batch passes.
 - **GPU resources** are `IDisposable`, owned by exactly one object; create in `Load`, dispose in `Unload`; `Game.Assets` disposes loaded assets.
+- **Asset hot-reload**: look assets up through their `AssetHandle<T>` at the time of use (do not cache the loaded object across frames), or they will not see a reload; override `Game.HotReloadRoot` to watch the project asset folder.
 - **Scene editor**: F2 (`Game.IsEditing`) freezes the game like pause; override `Game.SceneCamera`, `ScenePath` and `SceneReloaded` to give the editor a scene view and Save/Reload, and make the game's own update (and camera follow) stop while `IsEditing`. Every editor change goes through a command (`Editor/Undo`: `Execute` to do-and-record, `Push` for a live gesture recorded when it ends) and refers to entities by tracked id, never by `Entity`; anything that moves an entity must clear its `PreviousTransform` (`EditContext.SetComponent` does). Editor logic that can be pure (picking, gizmo maths, camera controls, cloning) stays free of ImGui and is unit-tested.
 - **Pause**: `Game.IsPaused` freezes `FrameSystems`, `FixedSystems` and the timestep, while `Update`, drawing and `Hud()` keep running; game code that advances its own clocks (`GameSession.Tick`) must skip itself while paused. `Game.Quit()` closes the window.
 - **Logging**: record events through `Game.Log` (`Logger`: `Info`/`Warning`/`Error`, short category), never `Console.WriteLine`; it also feeds the in-game Log window. Never in per-frame/per-entity paths, and logging does not replace throwing.

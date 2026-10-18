@@ -54,6 +54,33 @@ public sealed class AssetManager : IDisposable
     }
 
     /// <summary>
+    /// Reads an already loaded asset from disk again and replaces it in place: every handle to it now yields the new contents, and the
+    /// old object is disposed. Use it when the file was edited while the game runs (hot-reload). If the new file cannot be loaded the
+    /// loader's exception propagates and the old asset stays.
+    /// </summary>
+    /// <param name="path">The asset name or path, as passed to <see cref="Load{T}"/>.</param>
+    /// <param name="fullPath">Where to read the new contents from; defaults to the file under <see cref="RootDirectory"/>.</param>
+    /// <returns>How many assets were reloaded (one per type that has an asset of that name); 0 when nothing by that name is loaded.</returns>
+    /// <exception cref="FileNotFoundException">Something by that name is loaded but the file does not exist.</exception>
+    public int Reload(string path, string? fullPath = null)
+    {
+        string name = NormalizeName(path);
+        string file = fullPath ?? Path.GetFullPath(Path.Combine(RootDirectory, name));
+
+        int reloaded = 0;
+        foreach (var (type, store) in _stores)
+        {
+            if (!_loaders.TryGetValue(type, out var loader)) continue;
+            if (!store.TryGetId(name, out _)) continue;
+
+            if (!File.Exists(file)) throw new FileNotFoundException($"Cannot reload asset '{name}': the file is gone.", file);
+            if (store.Reload(name, loader, file)) reloaded++;
+        }
+
+        return reloaded;
+    }
+
+    /// <summary>
     /// Adds an asset created in code (for example a procedural texture) under a unique name. The manager takes
     /// ownership and will dispose it.
     /// </summary>

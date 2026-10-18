@@ -37,6 +37,19 @@ internal sealed class AssetStore<T> : IAssetStore
     public string NameOf(int id) => _names[id - 1];
 
     /// <inheritdoc />
+    public bool Reload(string name, object loader, string fullPath)
+    {
+        if (!_idsByName.TryGetValue(name, out int id)) return false;
+
+        // Load first: if the new file is broken the loader throws and the old asset stays in place.
+        var fresh = ((IAssetLoader<T>)loader).Load(fullPath);
+        var old = _assets[id - 1];
+        _assets[id - 1] = fresh;
+        if (!ReferenceEquals(old, fresh)) (old as IDisposable)?.Dispose();
+        return true;
+    }
+
+    /// <inheritdoc />
     public void DisposeAll()
     {
         foreach (var asset in _assets)

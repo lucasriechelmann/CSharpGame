@@ -8,6 +8,7 @@ namespace Engine.Runtime.Editor;
 /// <param name="Save">Writes the world to a scene file.</param>
 /// <param name="Load">Replaces the world with a scene file and lets the game re-establish what it cached from the old world.</param>
 /// <param name="AssetPath">The file to write an asset (a tile layer) to, given its asset name such as <c>levels/ground.layer.json</c>.</param>
+/// <param name="AssetWritten">Tells the game the editor wrote an asset file, so its file watcher does not reload what the editor just saved.</param>
 /// <param name="Snapshot">The whole world as scene JSON text, taken when Play starts.</param>
 /// <param name="Restore">Replaces the world with scene JSON text (a <see cref="Snapshot"/>) and lets the game re-establish what it cached.</param>
 /// <param name="PlayStarted">Tells the game the editor started playing, so it can begin a fresh run from the edited world.</param>
@@ -18,6 +19,7 @@ internal sealed record EditorHooks(
     Action<string> Save,
     Action<string> Load,
     Func<string, string> AssetPath,
+    Action<string> AssetWritten,
     Func<string> Snapshot,
     Action<string> Restore,
     Action PlayStarted,

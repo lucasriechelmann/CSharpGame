@@ -30,6 +30,7 @@ public abstract class Game : IDisposable
     private readonly ProfilerPanel _profilerPanel;
     private readonly LogPanel _logPanel;
     private readonly SceneEditor _editor;
+    private AssetHotReloader? _hotReloader;
     private PostEffectsPanel _postEffectsPanel = null!;
     private int _postProcessSection;
     private readonly int _frameSection;
@@ -56,7 +57,7 @@ public abstract class Game : IDisposable
         var logHistory = new MemoryLogSink();
         Log.AddSink(new ConsoleLogSink()).AddSink(logHistory);
         _logPanel = new LogPanel(logHistory, Log);
-        _editor = new SceneEditor(World, Assets, _inspector, Log, new EditorHooks(() => SceneCamera, () => ScenePath, path => Scenes.SaveToFile(path), LoadSceneFromEditor, EditableAssetPath,
+        _editor = new SceneEditor(World, Assets, _inspector, Log, new EditorHooks(() => SceneCamera, () => ScenePath, path => Scenes.SaveToFile(path), LoadSceneFromEditor, EditableAssetPath, path => _hotReloader?.Ignore(path),
             () => Scenes.Save(), RestoreSceneFromEditor, PlayStarted, PlayStopped));
         FixedSystems.Profile(Profiler, "Fixed");
         FrameSystems.Profile(Profiler, "Frame");
@@ -187,6 +188,14 @@ public abstract class Game : IDisposable
     protected virtual string EditableAssetPath(string assetName) => Path.Combine(Assets.RootDirectory, assetName);
 
     /// <summary>
+    /// A folder to watch for edited asset files, laid out like <see cref="Assets"/> (usually your project's source <c>Assets</c> folder,
+    /// which is not the copy next to the executable). While the game runs, a changed texture, tile layer, tile set, prefab, animation or
+    /// sound that is already loaded is reloaded in place (see <see cref="AssetHotReloader"/> for what that cannot update). Null, the
+    /// default, turns hot-reload off.
+    /// </summary>
+    protected virtual string? HotReloadRoot => null;
+
+    /// <summary>
     /// Called after the editor replaced the world with a scene file (Reload). Re-find whatever you cached from the old world
     /// (the hero entity, counts) here, as you do after a quick-load.
     /// </summary>
@@ -263,6 +272,7 @@ public abstract class Game : IDisposable
     private void OnClosing()
     {
         Unload();
+        _hotReloader?.Dispose();
         Audio.Dispose();
         PostProcess.Dispose();
         Assets.Dispose();
@@ -286,6 +296,22 @@ public abstract class Game : IDisposable
         else Log.Warning("Audio", $"No sound: {reason}");
         Log.Info("Engine", $"Window {_window.Width}x{_window.Height}, fixed step {_timestep.Step * 1000:F2} ms");
         Load();
+        StartHotReload();
+    }
+
+    private void StartHotReload()
+    {
+        string? root = HotReloadRoot;
+        if (root == null) return;
+        if (!Directory.Exists(root))
+        {
+            Log.Warning("Assets", $"Hot-reload is off: '{root}' does not exist");
+            return;
+        }
+
+        _hotReloader = new AssetHotReloader(Assets, root, Log);
+        _hotReloader.Start();
+        Log.Info("Assets", $"Hot-reload watching {root}");
     }
 
     /// <summary>
@@ -296,6 +322,7 @@ public abstract class Game : IDisposable
     {
         Profiler.BeginFrame();
         _frameStart = Profiler.Begin();
+        _hotReloader?.Poll();
         if (Input.WasPressed(KeyCode.F1)) _overlay.Toggle();
         if (Input.WasPressed(KeyCode.F2)) _editor.Toggle();
         Audio.Update();

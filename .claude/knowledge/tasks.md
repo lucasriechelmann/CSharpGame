@@ -13,7 +13,7 @@ Small, about one session. Fixes known gaps that affect game feel and that the ed
 - [x] **Checkpoints.** Respawn at the last checkpoint instead of restarting the level; rules stay in `GameSession`.
 - [x] **Saved high scores.** Persist to a JSON file; unit-test the load/save path.
 
-## Phase 12: Editor (largest piece, three sub-phases)
+## Phase 12: Editor (done: 12a, 12b, 12c)
 
 ### 12a. Editor foundation (done)
 - [x] Dockable ImGui layout (docking on; windows dock by dragging; the game still draws behind them to the whole window).
@@ -31,7 +31,7 @@ Small, about one session. Fixes known gaps that affect game feel and that the ed
 - [x] Tile painting (palette, stroke undo, layer save; single-tile brush only: no fill, rectangle or multi-tile brushes yet).
 - [x] Prefab-aware saving: instances are saved as prefab + overrides (`PrefabLink`, `JsonMerge.Diff`). Still open: "Save entity as prefab", revert-to-prefab, and showing which fields are overridden in the inspector.
 - [x] Play/stop that snapshots and restores the scene (F3).
-- [ ] Hot-reload of assets.
+- [x] Hot-reload of assets (`AssetHotReloader`; consumers that keep the old object are not refreshed).
 
 ## Phase 13: 3D (after the editor, so 3D scenes can be inspected while built)
 
