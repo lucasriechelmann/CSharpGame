@@ -33,12 +33,18 @@ Small, about one session. Fixes known gaps that affect game feel and that the ed
 - [x] Play/stop that snapshots and restores the scene (F3).
 - [x] Hot-reload of assets (`AssetHotReloader`; consumers that keep the old object are not refreshed).
 
-## Phase 13: 3D (after the editor, so 3D scenes can be inspected while built)
+## Phase 13: 3D (done: 13a-d; follow-ups listed per item and below)
 
 - [x] Mesh and material system, depth buffer, `Camera3D` (13a: `Engine.Rendering3D`, `samples/Scene3D`). Follow-ups: draw sorting and transparency, instancing, a 3D editor view with picking and gizmo, transform parents.
 - [x] Basic lighting (13b: ambient, one sun, point lights). Follow-ups: shadows (shadow maps), normal maps, spot lights.
 - [x] Model loading (glTF, 13c): `.gltf`/`.glb` import with node hierarchy, materials and embedded textures; follow-ups: skins and animation, sparse accessors, KHR extensions, normal/metallic-roughness maps, instancing identical models, a model hot-reload check.
-- [ ] 3D physics decision: write our own or integrate one.
+- [x] 3D physics decision (13d): write our own, as `Engine.Physics3D`, in stages (reasons in `architecture.md`). Stage 1 built: boxes against static boxes, friction, raycasts. Next stages: body-vs-body, capsule and sphere colliders, oriented boxes, mesh colliders, rigid-body rotation.
+
+### What to do after phase 13 (pick by what the next game needs)
+
+- [ ] **3D editor view**: render the scene in a docked viewport with an orbit camera, 3D picking (`Camera3D.ScreenPointToRay` + `Raycast` or mesh bounds), and move/rotate/scale gizmos. Needs transform parents for a useful hierarchy.
+- [ ] **3D rendering depth**: shadow maps for the sun, normal maps, transparency with sorted draws, instancing, skinned animation and glTF animation, PBR shading.
+- [ ] **3D physics stage 2**: dynamic-vs-dynamic boxes, then a capsule character controller.
 
 ## Alternatives (pick when they pay off sooner than the main path)
 

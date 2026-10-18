@@ -10,6 +10,7 @@
     <ProjectReference Include="..\Engine.Tilemaps\Engine.Tilemaps.csproj" />
     <ProjectReference Include="..\Engine.Animation\Engine.Animation.csproj" />
     <ProjectReference Include="..\Engine.Physics2D\Engine.Physics2D.csproj" />
+    <ProjectReference Include="..\Engine.Physics3D\Engine.Physics3D.csproj" />
   </ItemGroup>
 
   <ItemGroup>

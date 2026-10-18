@@ -1,6 +1,7 @@
 using Engine.Animation;
 using Engine.Core.Components;
 using Engine.Physics2D;
+using Engine.Physics3D;
 using Engine.Rendering;
 using Engine.Rendering3D;
 using Engine.Scenes;
@@ -32,6 +33,9 @@ public static class EngineComponents
         .Register<StaticSolid>("StaticSolid")
         .Register<MovingPlatform>("MovingPlatform")
         .Register<PhysicsBody>("PhysicsBody")
+        .Register<BoxCollider3D>("BoxCollider3D")
+        .Register<StaticSolid3D>("StaticSolid3D")
+        .Register<PhysicsBody3D>("PhysicsBody3D")
         .Register<PlatformerController>("PlatformerController")
         .Register<PlatformerIntent>("PlatformerIntent");
 }

@@ -1,7 +1,7 @@
 using System.Numerics;
-using Engine.Rendering3D;
+using Engine.Core;
 
-namespace Engine.Rendering3D.Tests;
+namespace Engine.Core.Tests;
 
 public class RayTests
 {

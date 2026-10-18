@@ -8,6 +8,7 @@
     <Project Path="src/Engine.Audio/Engine.Audio.csproj" />
     <Project Path="src/Engine.Core/Engine.Core.csproj" />
     <Project Path="src/Engine.Physics2D/Engine.Physics2D.csproj" />
+    <Project Path="src/Engine.Physics3D/Engine.Physics3D.csproj" />
     <Project Path="src/Engine.Platform/Engine.Platform.csproj" />
     <Project Path="src/Engine.Rendering/Engine.Rendering.csproj" />
     <Project Path="src/Engine.Rendering3D/Engine.Rendering3D.csproj" />
@@ -20,6 +21,7 @@
     <Project Path="tests/Engine.Audio.Tests/Engine.Audio.Tests.csproj" />
     <Project Path="tests/Engine.Core.Tests/Engine.Core.Tests.csproj" />
     <Project Path="tests/Engine.Physics2D.Tests/Engine.Physics2D.Tests.csproj" />
+    <Project Path="tests/Engine.Physics3D.Tests/Engine.Physics3D.Tests.csproj" />
     <Project Path="tests/Engine.Rendering.Tests/Engine.Rendering.Tests.csproj" />
     <Project Path="tests/Engine.Rendering3D.Tests/Engine.Rendering3D.Tests.csproj" />
     <Project Path="tests/Engine.Runtime.Tests/Engine.Runtime.Tests.csproj" />

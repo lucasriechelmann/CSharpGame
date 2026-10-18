@@ -1,8 +1,8 @@
 using System.Numerics;
 
-namespace Engine.Rendering3D;
+namespace Engine.Core;
 
-/// <summary>A half-line: an origin and a unit direction. The basis of picking and, later, raycasts against physics shapes.</summary>
+/// <summary>A half-line: an origin and a unit direction. Shared by 3D picking (the camera ray) and 3D physics (raycasts), so it lives in Core.</summary>
 /// <param name="Origin">Where the ray starts.</param>
 /// <param name="Direction">Unit-length direction.</param>
 public readonly record struct Ray(Vector3 Origin, Vector3 Direction)

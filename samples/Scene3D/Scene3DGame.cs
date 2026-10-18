@@ -1,5 +1,9 @@
 using System.Numerics;
+using Engine.Core;
+using Engine.Core.Components;
+using Engine.Core.Ecs;
 using Engine.Core.Input;
+using Engine.Physics3D;
 using Engine.Rendering;
 using Engine.Rendering3D;
 using Engine.Runtime;
@@ -15,16 +19,25 @@ namespace Scene3D;
 /// <remarks>
 /// The content is data (<c>Assets/scenes/room.scene.json</c> and the <c>.material.json</c> files); the code only creates what
 /// a file cannot hold, the procedural meshes and the checker texture, and registers them under the names the scene uses.
+/// Space throws a crate (a <see cref="PhysicsBody3D"/> that falls onto the floor and the platform); the left mouse button casts a
+/// ray from the cursor, moves a marker to where it hits a static solid and logs what was hit.
 /// </remarks>
 public sealed class Scene3DGame : Game
 {
     private const float LookSensitivity = 0.0035f; // radians per pixel of mouse movement
     private const float FlySpeed = 5f;
     private const float FastMultiplier = 3f;
+    private const float ThrowSpeed = 7f;
+    private const int MaxCrates = 30;
 
     private readonly Camera3D _camera = new();
     private readonly FlyCamera _fly;
+    private readonly Queue<Entity> _crates = new();
     private MeshRenderSystem _meshes = null!;
+    private PhysicsSystem3D _physics = null!;
+    private Entity _marker;
+    private int _thrown;
+    private string _lastPick = "(left-click the world)";
     private Vector2 _lastMouse;
     private bool _wasLooking;
 
@@ -36,6 +49,8 @@ public sealed class Scene3DGame : Game
             .BindAxis(GameActions.MoveRight, KeyCode.A, KeyCode.D)
             .BindAxis(GameActions.MoveUp, KeyCode.Q, KeyCode.E)
             .Bind(GameActions.LookHeld, MouseButton.Right)
+            .Bind(GameActions.Drop, KeyCode.Space)
+            .Bind(GameActions.Pick, MouseButton.Left)
             .Bind(GameActions.Fast, KeyCode.ShiftLeft);
 
         Components.Register<Spin>("Spin");
@@ -59,7 +74,13 @@ public sealed class Scene3DGame : Game
         _camera.ViewportSize = new Vector2(Window.Width, Window.Height);
         Window.Resized += (w, h) => _camera.ViewportSize = new Vector2(w, h);
 
+        _marker = FindByName("Pick marker");
         FrameSystems.Add(new SpinSystem());
+
+        // Fixed step: record where everything was (for render interpolation), then let physics move the crates.
+        _physics = new PhysicsSystem3D();
+        FixedSystems.Add(new PreviousTransformSystem());
+        FixedSystems.Add(_physics);
         _meshes = new MeshRenderSystem(Gl, Assets, _camera, RenderClock);
         RenderSystems.Add(_meshes);
 
@@ -88,12 +109,60 @@ public sealed class Scene3DGame : Game
         _wasLooking = looking;
         _lastMouse = mouse;
 
+        if (Actions.WasPressed(GameActions.Drop)) ThrowCrate();
+        if (Actions.WasPressed(GameActions.Pick)) PickWithRay();
+
         float speed = FlySpeed * (Actions.IsDown(GameActions.Fast) ? FastMultiplier : 1f);
         _fly.Move(
             Actions.GetAxis(GameActions.MoveForward),
             Actions.GetAxis(GameActions.MoveRight),
             Actions.GetAxis(GameActions.MoveUp),
             speed * (float)dt);
+    }
+
+    /// <summary>Spawns a crate just in front of the camera and throws it along the view direction with a little lift.</summary>
+    private void ThrowCrate()
+    {
+        var crate = Scenes.Instantiate("prefabs/crate.prefab.json");
+        var forward = _camera.Forward;
+        var transform = World.Get<Transform>(crate);
+        transform.Position = _camera.Position + forward * 1.5f;
+        World.Set(crate, transform);
+        // Each crate is thrown a little to the side of the last, so they do not land in the same spot (bodies do not collide with each other yet).
+        var sideways = _camera.Right * (_thrown++ % 3 - 1) * 1.5f;
+        World.Set(crate, new PhysicsBody3D { Velocity = forward * ThrowSpeed + sideways + Vector3.UnitY * 2f, GravityScale = 1f });
+
+        _crates.Enqueue(crate);
+        if (_crates.Count > MaxCrates) World.DestroyEntity(_crates.Dequeue()); // keep the pile bounded
+    }
+
+    /// <summary>Casts a ray through the cursor, moves the marker to the hit point and remembers a description for the panel and the log.</summary>
+    private void PickWithRay()
+    {
+        var ray = _camera.ScreenPointToRay(Input.MousePosition);
+        if (!_physics.Raycast(ray, 100f, out var hit, out var entity))
+        {
+            _lastPick = "Ray hit nothing";
+            return;
+        }
+
+        string name = World.TryGet<Name>(entity, out var label) ? label.Value : "(unnamed)";
+        _lastPick = $"Ray hit {name} at {hit.Distance:F1} m, face normal ({hit.Normal.X:F0}, {hit.Normal.Y:F0}, {hit.Normal.Z:F0})";
+        Log.Info("Game", _lastPick);
+
+        var marker = World.Get<Transform>(_marker);
+        marker.Position = hit.Point;
+        World.Set(_marker, marker);
+    }
+
+    private Entity FindByName(string name)
+    {
+        Entity found = Entity.Null;
+        World.Query((Entity entity, ref Name label) =>
+        {
+            if (label.Value == name) found = entity;
+        });
+        return found.IsNull ? throw new InvalidOperationException($"The scene has no entity named '{name}'.") : found;
     }
 
     /// <inheritdoc />
@@ -117,7 +186,9 @@ public sealed class Scene3DGame : Game
             if (ImGui.ColorEdit3("Ambient", ref ambient)) _meshes.Lighting.Ambient = new Color(ambient.X, ambient.Y, ambient.Z);
             float fovDegrees = _camera.FovY * 180f / MathF.PI;
             if (ImGui.SliderFloat("Field of view", ref fovDegrees, 20f, 110f)) _camera.FovY = fovDegrees * MathF.PI / 180f;
+            ImGui.Text($"Crates: {_crates.Count}   {_lastPick}");
             ImGui.TextDisabled("Right mouse + move: look.  W/A/S/D: fly.  Q/E: down/up.  Shift: fast.");
+            ImGui.TextDisabled("Space: throw a crate.  Left click: cast a ray.");
         }
 
         ImGui.End();

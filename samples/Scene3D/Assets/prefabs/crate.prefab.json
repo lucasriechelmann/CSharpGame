@@ -1,0 +1,10 @@
+{
+  "components": {
+    "Name": { "value": "Crate" },
+    "Transform": { "position": { "x": 0, "y": 5, "z": 0 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.8, "y": 0.8, "z": 0.8 } },
+    "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/red.material.json" },
+    "BoxCollider3D": { "size": { "x": 0.8, "y": 0.8, "z": 0.8 }, "offset": { "x": 0, "y": 0, "z": 0 } },
+    "PhysicsBody3D": { "gravityScale": 1 },
+    "PreviousTransform": {}
+  }
+}

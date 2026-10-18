@@ -5,7 +5,9 @@
       "components": {
         "Name": { "value": "Floor" },
         "Transform": { "position": { "x": 0, "y": 0, "z": 0 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 1, "y": 1, "z": 1 } },
-        "MeshRenderer": { "mesh": "meshes/floor", "material": "materials/floor.material.json" }
+        "MeshRenderer": { "mesh": "meshes/floor", "material": "materials/floor.material.json" },
+        "BoxCollider3D": { "size": { "x": 40, "y": 1, "z": 40 }, "offset": { "x": 0, "y": -0.5, "z": 0 } },
+        "StaticSolid3D": {}
       }
     },
     {
@@ -49,7 +51,25 @@
       "components": {
         "Name": { "value": "Back wall" },
         "Transform": { "position": { "x": 0, "y": 1.5, "z": -9 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 16, "y": 3, "z": 0.5 } },
-        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/floor.material.json" }
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/floor.material.json" },
+        "BoxCollider3D": { "size": { "x": 16, "y": 3, "z": 0.5 }, "offset": { "x": 0, "y": 0, "z": 0 } },
+        "StaticSolid3D": {}
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Platform" },
+        "Transform": { "position": { "x": -1.5, "y": 0.5, "z": -5.5 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 3, "y": 1, "z": 3 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/gold.material.json" },
+        "BoxCollider3D": { "size": { "x": 3, "y": 1, "z": 3 }, "offset": { "x": 0, "y": 0, "z": 0 } },
+        "StaticSolid3D": {}
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Pick marker" },
+        "Transform": { "position": { "x": 0, "y": -100, "z": 0 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.18, "y": 0.18, "z": 0.18 } },
+        "MeshRenderer": { "mesh": "meshes/sphere", "material": "materials/glow.material.json" }
       }
     },
     {
