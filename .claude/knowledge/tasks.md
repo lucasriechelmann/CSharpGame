@@ -88,45 +88,47 @@ Small, about one session. Fixes known gaps that affect game feel and that the ed
 - [x] Audio: streaming (`WavStream`), positional audio, `AudioSource`/`AudioListener` + `AudioSourceSystem`, mixer groups (`AudioMixer`). Follow-ups: Ogg/MP3 decoding, effects (reverb, low-pass), doppler, ducking, a settings panel for the mixer, an audible check by ear (verified by tests and silent device runs only).
 
 
-## Phase 20: Verify and finish (next)
+## Phase 20: Verify and finish (mostly done)
 
-- [ ] Window-check the phase 18 editor extras by hand: History window, rectangle/fill tile brushes with flip flags, Save as prefab, Revert to prefab (undo it too).
-- [ ] Add a demo Tiled map (flip, animated and parallax tiles) to the Platformer and look at it in a window.
-- [ ] Listen to the audio: mixer groups, a positioned `AudioSource` with an `AudioListener`, a streamed music track; add a mixer volume panel to the Platformer.
-- [ ] Cached chunk meshes for tile layers (one buffer per chunk, rebuilt when the chunk changes).
-- [ ] Per-camera effects (a camera with its own effect list and viewport).
+- [x] Window-checked the editor extras on the Platformer: Save as prefab (found and fixed: the default name was `coin__#29`, and an existing prefab could be overwritten silently; the popup now proposes a free name and says "Replace" when the file exists; `tools/drive-prefab.ps1`). Not window-verified: dragging the gizmo with synthetic mouse input (the script's drag did not move the entity, probably the way the mouse is injected, not the editor), so Revert to prefab is only unit-tested, as are the rectangle/fill tile brushes and the History window clicks.
+- [x] Tiled demo map (`Assets/maps/demo.tmj`, F11 in the Platformer): flipped and diagonal tiles, an animated tile and a parallax backdrop import and draw correctly (`tools/drive-demomap.ps1`).
+- [x] Mixer panel in the editor (`Mixer` window: device volume, per-group volume and mute, live). Not done: listening to the audio by ear, positional audio in the Platformer, a streamed music track.
+- [x] Cached chunk meshes for tile layers (`TileMeshCache`, `TileChunkMesh`, `TileChunkMeshBuilder`): one GPU mesh per visible chunk, rebuilt when the chunk, the tile set or the atlas changes, animated tiles still through the batch, systems that are `IDisposable` are disposed by `Game`. Window-checked: the level and the demo map look identical.
+- [ ] Per-camera effects (a camera with its own effect list and viewport). Deferred: the render systems each hold one `Camera2D`, so several views need either a camera set per pass or systems that take the camera as an argument, plus a viewport rectangle per view and one effect chain per view.
+- [ ] Listen to the audio by ear; add a positional `AudioSource` and music to the Platformer.
 
-## Phase 21: A standalone editor (mostly done; design and decisions in `architecture.md`)
+## Phase 21: A standalone editor (done; design and decisions in `architecture.md`)
 
-Problem: the editor and debug panels drew over the game window, and you could not open the editor without starting the game. Decision: the editor is its **own executable** (like Unity, Godot, Unreal): you edit a scene there and press Play to run the game inside the editor's Scene panel. Reason: editing and playing are different jobs; a shipped game must not contain editor code; one editor can open any game. The cost is that game code is loaded as a library (a code change needs a rebuild, and at first an editor restart).
-- [x] Split each game into a library plus a launcher (`Platformer`/`Platformer.Launcher`, `Scene3D`/`Scene3D.Launcher`); the launcher is what ships and references no editor code.
-- [x] `IGameModule` + `GameLaunch` in Runtime. Changed from the first plan: the module only creates the game with the given folders; `Game` stays the composition root (a registration-only module would have meant rewriting every game's start-up for no benefit yet).
-- [x] `src/Engine.Editor` (`Editor.exe`): `--game <dll> --project <folder>`, loads the module by path (`GameLibrary`), plugs in through `Game.AttachEditor`/`IEditorShell`.
-- [x] Scene panel: the game renders into a texture (`PostProcessChain.UseOffscreenOutput`), shown in a docked panel; picking, gizmo and camera controls work in view coordinates (`SceneViewport`, `ViewDraw`); the game reads the mouse relative to the panel; works for the 2D and the 3D sample.
-- [x] Default dock layout (`DockLayout`, built with the native dock-builder functions): Hierarchy left, Scene centre, Inspector/Tiles right, Log/History/Profiler/Engine/Post effects/game panels as bottom tabs; View > Reset layout.
-- [x] Play / Pause / Stop toolbar in the Scene panel (Play snapshots the scene, Stop restores it).
-- [x] Editor classes moved out of Runtime into `Engine.Editor` (shared edit state and undo moved to `Engine.Runtime/Editing`); old in-window F2 editor and its three drive scripts removed.
-- [x] Window-verified with `tools/drive-editor-app.ps1` (select a coin in the panel, Play, Stop) and `tools/run-editor.ps1` for both samples.
-- [x] Asset browser panel (`Assets` window): the asset tree, drag a prefab onto the Scene to place it (undoable); window-verified with `tools/drive-assets.ps1`.
+Problem: the editor and debug panels drew over the game window, and you could not open the editor without starting the game. Decision: the editor is its **own executable** (like Unity, Godot, Unreal): you edit a scene there and press Play to run the game inside the editor's Scene panel. Reason: editing and playing are different jobs; a shipped game must not contain editor code; one editor can open any game. Game code is loaded as a library from a shadow copy, so the editor can rebuild it while it is open.
+- [x] Split each game into a library plus a launcher; the launcher is what ships and references no editor code.
+- [x] `IGameModule` + `GameLaunch` in Runtime (the module only creates the game; `Game` stays the composition root).
+- [x] `src/Engine.Editor` (`Editor.exe`): project files, the hub, `Game.AttachEditor`/`IEditorShell`.
+- [x] Scene panel (game rendered into a texture), default dock layout (native dock-builder), Play/Pause/Stop toolbar, Assets window with prefab drag-and-drop, Mixer window.
+- [x] Editor classes in `Engine.Editor`; shared edit state in `Engine.Runtime/Editing`.
+- [x] Open dialog and recent projects: the hub (`Editor.exe` with no arguments) and Project > Open another project.
+- [x] Game code reload: Project > Build and reload game code (builds, then restarts the editor on the project, asking to save first).
+- [x] Windows 11 look: Segoe UI + Segoe Fluent Icons, dark Fluent palette with the system blue accent, rounded controls, dark title bar (`Win11Theme`).
 - [ ] Asset browser follow-ups: thumbnails for textures, drag an entity into the browser to Save as prefab, open a scene or tile layer by double-click, create/rename/delete files.
-- [ ] File > Open game / project dialog (today the game and project are command-line arguments) and a recent-projects list.
-- [ ] Game code reload: today you rebuild and restart the editor; later reload the assembly (collectible load context) and keep the open scene.
-- [ ] A drive script for the 3D editor view (orbit, select, gizmo drag in the Scene panel); the old `drive-viewport3d`/`drive-hierarchy` scripts died with the in-window editor.
-- [ ] Game-specific debug panels (`DebugGui`) dock by title in `DockLayout`; let a game register its panel titles (and let the shipped game run without the F1 overlay in a Release build).
-- [ ] Tidy: the Post effects panel lists non-simple properties (`ShadowSources`) read-only; the Scene toolbar needs the mouse hint per camera type kept in sync; save the layout per project instead of `imgui.ini` in the working folder.
+- [ ] A drive script for the 3D editor view (orbit, select, gizmo drag in the Scene panel) and a way to inject mouse drags the editor accepts.
+- [ ] Game-specific debug panels (`DebugGui`) dock by title in `DockLayout`; let a game register its panel titles.
+- [ ] Tidy: the Post effects panel lists non-simple properties (`ShadowSources`) read-only; toolbar buttons overflow in a narrow Hierarchy panel; per-project instead of per-user saved layout.
+- [ ] Mica/rounded window backdrop (needs the window handle and a Windows 11 build check), more icons in menus and the toolbar.
 
-## Phase 22: Building and shipping a game
+## Phase 22: Building and shipping a game (done for Windows)
 
-- [x] (done in phase 21) The shipped exe is the launcher, which references no editor code; the in-game debug overlay, inspector and profiler are optional and off in Release (`#if DEBUG` or a compile-time option).
-- [ ] `tools/publish.ps1`: `dotnet publish -c Release -r win-x64 --self-contained` for a sample, copies `Assets/`, trims or leaves out the editor, produces a folder or zip ready to run.
-- [ ] Asset packing/validation step: check every scene, prefab and material loads and every referenced file exists before shipping.
-- [ ] Settings file for the shipped game (window size, fullscreen, volume, key bindings) and a command-line `--editor` flag in Debug.
+- [x] The shipped exe is the launcher, which references no editor code; the debug overlay is hidden until F1.
+- [x] Project > Publish game (and `Editor --publish <project> [folder]`): self-contained `dotnet publish` of the launcher for win-x64 into `Build/win-x64`, with the assets, the engine assemblies and the native libraries; checked by running the published exe.
+- [x] Project > Validate assets: loads every scene, prefab, tile layer, tile set, animation graph, material, texture, sound and model through the game's loaders and lists the failures (`AssetValidator`).
+- [x] Settings file for the shipped game (`game.settings.json`: window size, full screen, vsync, master volume; `GameSettings`).
+- [x] New projects from the editor: `ProjectTemplate` creates the library, launcher, assets and `Directory.Build.props`; `Editor --new <folder> <name>` does it from the command line.
+- [ ] Key bindings in the settings file; a `--editor` flag; other platforms (the natives and RIDs are win-x64 only); a self-contained, published *editor* has not been tried (the engine folder layout is assumed).
+- [ ] Project templates beyond the empty 2D one (platformer starter, 3D starter); upgrade path when the engine changes (engine DLLs are referenced from the editor's folder).
 
-## Phase 23: Pick the next game or engine depth
+## Phase 23: Pick the next game or engine depth (decision for you)
 
 - [ ] A small playable 3D game on the character controller, PBR and physics (shows which engine pieces are missing).
 - [ ] More platformer levels authored in Tiled with the new import and editor tools.
-- [ ] Engine depth candidates: soft light shadows, a shadow-casting polygon component, image-based lighting and a skybox, rigid-body rotation in 3D physics, Ogg/MP3 audio.
+- [ ] Engine depth candidates: soft light shadows, a shadow-casting polygon component, image-based lighting and a skybox, rigid-body rotation in 3D physics, Ogg/MP3 audio, per-camera effects.
 
 ## Smaller known gaps (from `features.md`, no owner yet)
 
