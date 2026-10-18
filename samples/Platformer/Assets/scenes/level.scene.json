@@ -63,7 +63,8 @@
             "b": 1,
             "a": 1
           },
-          "foreground": false
+          "foreground": false,
+          "castsShadows": true
         }
       }
     },

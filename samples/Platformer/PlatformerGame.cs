@@ -54,6 +54,7 @@ public sealed partial class PlatformerGame : Game
             .Bind(GameActions.TogglePixelPerfect, KeyCode.F6)
             .Bind(GameActions.ToggleHdr, KeyCode.F7)
             .Bind(GameActions.CycleMsaa, KeyCode.F8)
+            .Bind(GameActions.ToggleShadows, KeyCode.F10)
             .Bind(GameActions.Restart, KeyCode.Enter)
             .Bind(GameActions.Pause, KeyCode.Escape)
             .Bind(GameActions.Pause, KeyCode.P)
@@ -93,7 +94,8 @@ public sealed partial class PlatformerGame : Game
 
         // Full-screen effects, in order: lights first (so the glow can bloom), then bloom, vignette and an off-by-default colour grade.
         // Lights themselves are Light2D components in the scene file (the hero carries a lantern); tune everything live in the "Post effects" window.
-        PostProcess.Add(new LightingEffect(Gl, World, _camera, RenderClock) { Ambient = new Vector3(0.38f, 0.4f, 0.55f), Exposure = 1.5f });
+        _lighting = PostProcess.Add(new LightingEffect(Gl, World, _camera, RenderClock) { Ambient = new Vector3(0.38f, 0.4f, 0.55f), Exposure = 1.5f });
+        _lighting.ShadowSources.Add(new TileShadowCasterSource(World, Assets, RenderClock)); // solid tiles of layers marked castsShadows block the lights
         PostProcess.Add(new BloomEffect(Gl));
         PostProcess.Add(new VignetteEffect(Gl));
         PostProcess.Add(new ColorGradeEffect(Gl) { Enabled = false });

@@ -12,6 +12,7 @@ public sealed partial class PlatformerGame
     private static readonly int[] MsaaSteps = [1, 2, 4, 8];
 
     private ToneMapEffect? _toneMap;
+    private LightingEffect _lighting = null!;
 
     /// <summary>The mouse position in the camera's own pixels: the window position, or the position inside the scaled game image in pixel-perfect mode.</summary>
     private Vector2 MouseOnCamera() =>
@@ -21,6 +22,11 @@ public sealed partial class PlatformerGame
     {
         if (Actions.WasPressed(GameActions.TogglePixelPerfect)) SetPixelPerfect(!PostProcess.IsPixelPerfect);
         if (Actions.WasPressed(GameActions.ToggleHdr)) SetHdr(!PostProcess.Hdr);
+        if (Actions.WasPressed(GameActions.ToggleShadows))
+        {
+            _lighting.CastShadows = !_lighting.CastShadows;
+            Log.Info("Game", _lighting.CastShadows ? "Light shadows on" : "Light shadows off");
+        }
         if (Actions.WasPressed(GameActions.CycleMsaa))
         {
             int next = MsaaSteps[(Array.IndexOf(MsaaSteps, PostProcess.Samples) + 1) % MsaaSteps.Length];

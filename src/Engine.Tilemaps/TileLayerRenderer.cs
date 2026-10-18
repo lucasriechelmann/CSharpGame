@@ -27,6 +27,9 @@ public struct TileLayerRenderer
     /// <summary>False draws behind sprites (ground, background); true draws in front of them (foreground decoration).</summary>
     public bool Foreground;
 
+    /// <summary>True makes the layer's solid tiles block light: the walls between a solid tile and an empty neighbour become shadow edges for <see cref="TileShadowCasterSource"/>.</summary>
+    public bool CastsShadows;
+
     /// <summary>Creates a white-tinted renderer.</summary>
     /// <param name="layer">The layer to draw.</param>
     /// <param name="tileSet">The tile set that supplies the art.</param>

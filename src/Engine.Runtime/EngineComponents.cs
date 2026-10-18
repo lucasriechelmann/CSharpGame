@@ -43,5 +43,6 @@ public static class EngineComponents
         .Register<PlatformerController>("PlatformerController")
         .Register<PlatformerIntent>("PlatformerIntent")
         .Register("AudioSource", AudioSource.Create(default))
-        .Register<AudioListener>("AudioListener");
+        .Register<AudioListener>("AudioListener")
+        .Register("ShadowCaster2D", ShadowCaster2D.Box(new System.Numerics.Vector2(32f, 32f)));
 }

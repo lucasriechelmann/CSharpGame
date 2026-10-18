@@ -30,6 +30,9 @@ public static class GameActions
     /// <summary>Switches HDR rendering with tone mapping on or off (F7).</summary>
     public const string ToggleHdr = "ToggleHdr";
 
+    /// <summary>Switches light shadows on or off (F10).</summary>
+    public const string ToggleShadows = "ToggleShadows";
+
     /// <summary>Cycles multisampling off, 2x, 4x, 8x (F8).</summary>
     public const string CycleMsaa = "CycleMsaa";
 

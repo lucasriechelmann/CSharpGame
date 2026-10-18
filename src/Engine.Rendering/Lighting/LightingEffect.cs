@@ -14,9 +14,10 @@ namespace Engine.Rendering;
 /// </summary>
 /// <remarks>
 /// Why a light map multiply and not per-sprite lighting: lights cost the same however many sprites there are, and the sprite
-/// renderer needs no changes. Limits: no shadows (light passes through walls) and no normal maps.
+/// renderer needs no changes. Shadows are optional (<see cref="CastShadows"/>, walls from <see cref="ShadowSources"/>): each light that has walls in
+/// reach stamps their shadows into the light map's stencil buffer and draws only where the stencil is clear. Limits: hard-edged shadows and no normal maps.
 /// </remarks>
-public sealed class LightingEffect : IPostEffect
+public sealed partial class LightingEffect : IPostEffect
 {
     private const int GradientSize = 128;
 
@@ -46,10 +47,15 @@ public sealed class LightingEffect : IPostEffect
     private readonly Texture2D _gradient;
     private readonly Shader _composite;
     private readonly EntityAction<Transform, Light2D> _collect;
+    private readonly ShadowVolumeRenderer _volumes;
+    private readonly List<ShadowEdge> _edges = new();
+    private readonly List<Vector2> _shadowTriangles = new();
+    private Matrix4x4 _viewProjection;
     private RenderTarget? _lightMap;
     private Vector2 _visibleMin;
     private Vector2 _visibleMax;
     private int _lightsDrawn;
+    private int _shadowedLights;
 
     /// <summary>Creates the effect. Needs a current GL context.</summary>
     /// <param name="gl">The GL context that will own the effect's resources.</param>
@@ -66,6 +72,8 @@ public sealed class LightingEffect : IPostEffect
         _gradient = Texture2D.FromPixels(gl, GradientSize, GradientSize, LightMath.BuildGradientPixels(GradientSize), TextureFilter.Linear);
         _composite = new Shader(gl, FullscreenQuad.VertexSource, CompositeFragment);
         _collect = Collect; // Created once so the per-frame query does not allocate a delegate.
+        _volumes = new ShadowVolumeRenderer(gl);
+        ShadowSources.Add(new BoxShadowCasterSource(world, clock));
     }
 
     /// <inheritdoc />
@@ -80,6 +88,21 @@ public sealed class LightingEffect : IPostEffect
     /// <summary>Multiplies the whole light map after it is built; a global brightness control for the lights.</summary>
     public float Exposure { get; set; } = 1f;
 
+    /// <summary>
+    /// True lets walls block light: for every light, the walls from the <see cref="ShadowSources"/> that face away from it throw a shadow
+    /// behind them, and that area gets none of the light. Off, light passes through everything (and no extra work is done).
+    /// </summary>
+    public bool CastShadows { get; set; } = true;
+
+    /// <summary>
+    /// Where walls come from. It starts with a <see cref="BoxShadowCasterSource"/> for <see cref="ShadowCaster2D"/> entities; add more, for
+    /// example one that turns the solid tiles of a tile layer into walls.
+    /// </summary>
+    public IList<IShadowCasterSource> ShadowSources { get; } = new List<IShadowCasterSource>();
+
+    /// <summary>How many lights had a shadow pass last frame (a light with no wall in reach costs nothing extra).</summary>
+    public int ShadowedLights => _shadowedLights;
+
     /// <summary>How many lights were drawn last frame (those outside the view are skipped); shown by tools.</summary>
     public int LightsDrawn => _lightsDrawn;
 
@@ -90,7 +113,7 @@ public sealed class LightingEffect : IPostEffect
         if (_lightMap == null || _lightMap.Format.Hdr != context.IsHdr)
         {
             _lightMap?.Dispose();
-            _lightMap = new RenderTarget(_gl, source.Width, source.Height, new RenderTargetFormat(Hdr: context.IsHdr));
+            _lightMap = new RenderTarget(_gl, source.Width, source.Height, new RenderTargetFormat(Hdr: context.IsHdr, Stencil: true));
         }
 
         _lightMap.Resize(source.Width, source.Height);
@@ -116,17 +139,20 @@ public sealed class LightingEffect : IPostEffect
         _gradient.Dispose();
         _batch.Dispose();
         _composite.Dispose();
+        _volumes.Dispose();
     }
 
     private void BuildLightMap()
     {
         _lightMap!.Bind();
         _gl.ClearColor(Ambient.X, Ambient.Y, Ambient.Z, 1f);
-        _gl.Clear(ClearBufferMask.ColorBufferBit);
+        _gl.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.StencilBufferBit);
 
         _camera.GetVisibleBounds(out _visibleMin, out _visibleMax);
         _lightsDrawn = 0;
-        _batch.Begin(_camera.GetViewProjection(), SpriteBlend.Additive);
+        _shadowedLights = 0;
+        _viewProjection = _camera.GetViewProjection();
+        _batch.Begin(_viewProjection, SpriteBlend.Additive);
         _world.Query(_collect);
         _batch.End();
     }
@@ -142,7 +168,8 @@ public sealed class LightingEffect : IPostEffect
 
         var draw = SpriteDraw.At(transform.Position, new Vector2(light.Radius * 2f));
         draw.Color = new Color(light.Color.R * light.Intensity, light.Color.G * light.Intensity, light.Color.B * light.Intensity);
-        _batch.Draw(_gradient, draw);
+        if (CastShadows && BuildShadows(centre, light.Radius)) DrawShadowed(draw);
+        else _batch.Draw(_gradient, draw);
         _lightsDrawn++;
     }
 }
