@@ -1,4 +1,5 @@
 using System.Numerics;
+using Engine.Audio;
 using Engine.Core;
 using Engine.Core.Components;
 using Engine.Core.Ecs;
@@ -32,6 +33,13 @@ public sealed partial class Arena3DGame : Game
     private MeshRenderSystem _meshes = null!;
     private Entity _player;
     private Vector3 _spawn;
+    private AudioGroup _sfx = null!;
+    private AudioClip _orbSound = null!;
+    private AudioClip _jumpSound = null!;
+    private AudioClip _fallSound = null!;
+    private AudioClip _winSound = null!;
+    private AudioClip _loseSound = null!;
+    private OrbPhase _lastPhase = OrbPhase.Playing;
 
     /// <summary>Registers input bindings and the game's own components for scene files.</summary>
     public Arena3DGame(GameLaunch? launch = null) : base("Orb Run", launch: launch)
@@ -63,6 +71,7 @@ public sealed partial class Arena3DGame : Game
         Assets.Add("meshes/floor", new Mesh(Gl, MeshBuilder.Plane(24f, 24f, uvRepeat: 12f)));
         Assets.Add("checker", ProceduralTextures.Checker(Gl));
 
+        LoadSounds();
         Scenes.LoadFile(ArenaScene);
         BindWorld();
 
@@ -100,6 +109,7 @@ public sealed partial class Arena3DGame : Game
         if (IsEditing) return; // the editor owns the camera and the mouse
 
         UpdateLook();
+        AnnounceEnd(); // a run that ended in the last step plays its jingle now
         if (_session.Phase == OrbPhase.Playing)
         {
             _session.Tick(dt);
@@ -142,6 +152,7 @@ public sealed partial class Arena3DGame : Game
         _player = player;
         _spawn = spawn;
         _session.Reset(Math.Max(orbs, 1));
+        _lastPhase = OrbPhase.Playing;
     }
 
     /// <summary>Starts the run over: the arena is loaded afresh so every orb is back.</summary>
@@ -153,7 +164,33 @@ public sealed partial class Arena3DGame : Game
         SnapCamera();
     }
 
-    private void CollectOrb() => _session.CollectOrb();
+    private void CollectOrb()
+    {
+        _session.CollectOrb();
+        if (_session.Phase == OrbPhase.Playing) Audio.PlayIn(_orbSound, _sfx, 0.8f);
+    }
+
+    /// <summary>Loads the sound effects and puts them in a mixer group the player could turn down.</summary>
+    private void LoadSounds()
+    {
+        _sfx = Audio.Mixer.CreateGroup("Sfx");
+        _orbSound = Assets.Get(Assets.Load<AudioClip>("sounds/orb.wav"));
+        _jumpSound = Assets.Get(Assets.Load<AudioClip>("sounds/jump.wav"));
+        _fallSound = Assets.Get(Assets.Load<AudioClip>("sounds/fall.wav"));
+        _winSound = Assets.Get(Assets.Load<AudioClip>("sounds/win.wav"));
+        _loseSound = Assets.Get(Assets.Load<AudioClip>("sounds/lose.wav"));
+        foreach (var clip in new[] { _orbSound, _jumpSound, _fallSound, _winSound, _loseSound }) Audio.Preload(clip);
+    }
+
+    /// <summary>Plays the win or lose jingle once, on the frame the run ends.</summary>
+    private void AnnounceEnd()
+    {
+        if (_session.Phase == _lastPhase) return;
+
+        _lastPhase = _session.Phase;
+        if (_lastPhase == OrbPhase.Won) Audio.PlayIn(_winSound, _sfx);
+        else if (_lastPhase == OrbPhase.Lost) Audio.PlayIn(_loseSound, _sfx);
+    }
 
     /// <summary>
     /// Writes the walk keys into the player's <see cref="CharacterController3D"/> as a direction relative to where the camera looks (W walks away from
@@ -168,7 +205,11 @@ public sealed partial class Arena3DGame : Game
 
         ref var controller = ref World.Get<CharacterController3D>(_player);
         controller.Move = new Vector2(wish.X, wish.Z);
-        if (Actions.WasPressed(GameActions.Jump)) controller.JumpPressed = true;
+        if (Actions.WasPressed(GameActions.Jump))
+        {
+            controller.JumpPressed = true;
+            if (World.Get<PhysicsBody3D>(_player).IsGrounded) Audio.PlayIn(_jumpSound, _sfx, 0.7f);
+        }
     }
 
     /// <summary>After the run ends the player stands still.</summary>
@@ -188,6 +229,7 @@ public sealed partial class Arena3DGame : Game
         World.Get<PreviousTransform>(_player) = default; // so the camera and the picture do not streak from the pit to the start
         World.Get<PhysicsBody3D>(_player).Velocity = Vector3.Zero;
         _session.PlayerFell();
+        Audio.PlayIn(_fallSound, _sfx, 0.7f);
         Log.Info("Game", $"Fell off the arena (time left {_session.TimeLeft:F0} s)");
     }
 }
