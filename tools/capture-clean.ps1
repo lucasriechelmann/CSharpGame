@@ -1,6 +1,6 @@
 param([string]$Exe, [string]$Out, [string]$Keys = "", [double]$HoldSeconds = 1.0, [switch]$KeepUi, [string]$Then = "")
 
-# Launches the exe, hides the debug UI with F1, optionally holds extra keys (virtual-key codes, comma separated, e.g. "0x44" for D)
+# Launches the exe, leaves the debug UI hidden (it is hidden at start; -KeepUi shows it with F1), optionally holds extra keys (virtual-key codes, comma separated, e.g. "0x44" for D)
 # for -HoldSeconds (default 1), optionally taps one more key (-Then, e.g. "0x0D" for Enter), then screenshots just the scene. Use it to judge rendering effects (lighting, bloom) that the debug panels cover.
 
 Add-Type -AssemblyName System.Drawing
@@ -23,7 +23,7 @@ try {
     [Win32]::SetForegroundWindow($proc.MainWindowHandle) | Out-Null
     Start-Sleep -Milliseconds 500
 
-    if (-not $KeepUi) {
+    if ($KeepUi) {
         [Win32]::keybd_event(0x70, 0, 0, [UIntPtr]::Zero); Start-Sleep -Milliseconds 80   # F1 down
         [Win32]::keybd_event(0x70, 0, 2, [UIntPtr]::Zero); Start-Sleep -Milliseconds 400  # F1 up
     }

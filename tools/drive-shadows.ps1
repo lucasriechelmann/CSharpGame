@@ -40,7 +40,7 @@ try {
     if ($proc.HasExited) { Write-Output "EXITED code=$($proc.ExitCode)"; Get-Content "$OutDir\err.txt" | Select-Object -First 20; return }
     [Win32]::SetForegroundWindow($proc.MainWindowHandle) | Out-Null
     Start-Sleep -Milliseconds 1200
-    [Win32]::keybd_event(0x12, 0, 0, [UIntPtr]::Zero); [Win32]::keybd_event(0x12, 0, 2, [UIntPtr]::Zero); [Win32]::SetForegroundWindow($proc.MainWindowHandle) | Out-Null; Start-Sleep -Milliseconds 600; Tap 0x70; Start-Sleep -Milliseconds 400   # F1: hide the debug UI
+    [Win32]::keybd_event(0x12, 0, 0, [UIntPtr]::Zero); [Win32]::keybd_event(0x12, 0, 2, [UIntPtr]::Zero); [Win32]::SetForegroundWindow($proc.MainWindowHandle) | Out-Null; Start-Sleep -Milliseconds 600
 
     Shot $proc "$OutDir\shadow_on.png" | Out-Null
     Tap 0x79   # F10 shadows off

@@ -10,8 +10,8 @@ namespace Engine.Runtime;
 /// <summary>The built-in "Engine" debug panel: timing, fixed-step info, entity count and window settings.</summary>
 internal sealed class DebugOverlay(GameWindow window, FixedTimestep timestep, FrameStats stats, World world, AssetManager assets, Func<IAudioDevice> audio)
 {
-    /// <summary>Whether the overlay (and the game's own debug panels) are drawn. Toggled with F1.</summary>
-    public bool Visible { get; private set; } = true;
+    /// <summary>Whether the overlay (and the game's own debug panels) are drawn. Hidden when a game starts, so players see only the game; F1 toggles it, and the editor turns it on for its docked panels.</summary>
+    public bool Visible { get; private set; }
 
     /// <summary>Whether the entity inspector window is open.</summary>
     public bool ShowInspector { get; private set; } = true;

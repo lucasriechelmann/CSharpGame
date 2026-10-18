@@ -23,13 +23,15 @@ public sealed class GameWindow : IDisposable
     /// <param name="width">Initial width in pixels.</param>
     /// <param name="height">Initial height in pixels.</param>
     /// <param name="vsync">Whether to synchronise presentation with the display refresh.</param>
-    public GameWindow(string title, int width, int height, bool vsync = true)
+    /// <param name="fullscreen">True opens the window full screen.</param>
+    public GameWindow(string title, int width, int height, bool vsync = true, bool fullscreen = false)
     {
         var options = WindowOptions.Default with
         {
             Title = title,
             Size = new Vector2D<int>(width, height),
             VSync = vsync,
+            WindowState = fullscreen ? WindowState.Fullscreen : WindowState.Normal,
             PreferredDepthBufferBits = 24, // 3D meshes are depth-tested when no post effect redirects the scene into a target
             API = new GraphicsAPI(ContextAPI.OpenGL, ContextProfile.Core, ContextFlags.ForwardCompatible, new APIVersion(3, 3)),
         };

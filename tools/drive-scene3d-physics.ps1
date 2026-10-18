@@ -46,8 +46,6 @@ try {
     if ($proc.HasExited) { Write-Output "EXITED code=$($proc.ExitCode)"; Get-Content "$OutDir\err.txt" | Select-Object -First 20; return }
     [Win32]::SetForegroundWindow($proc.MainWindowHandle) | Out-Null
     Start-Sleep -Milliseconds 800
-
-    Tap 0x70           # F1: hide the debug panels
     Shot $proc "$OutDir\K0_start.png"
 
     Hold 0x26 0x48 1.0   # Up arrow: walk away from the camera

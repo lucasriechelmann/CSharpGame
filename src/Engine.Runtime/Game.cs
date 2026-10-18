@@ -51,7 +51,8 @@ public abstract class Game : IDisposable
         Launch = launch ?? GameLaunch.Default;
         Assets = new AssetManager(Launch.AssetRoot);
         _timestep = new FixedTimestep(1.0 / fixedHz);
-        _window = new GameWindow(title, width, height);
+        var settings = Launch.Settings ?? GameSettings.Default;
+        _window = new GameWindow(title, settings.WindowWidth ?? width, settings.WindowHeight ?? height, settings.VSync, settings.Fullscreen);
         Actions = new ActionMap(_window.Input);
         Scenes = new SceneSerializer(World, Assets, Components);
         _overlay = new DebugOverlay(_window, _timestep, _stats, World, Assets, () => Audio);
@@ -336,6 +337,7 @@ public abstract class Game : IDisposable
         var hooks = new EditorHooks(() => SceneCamera, () => SceneCamera3D, () => ScenePath, path => Scenes.SaveToFile(path), LoadSceneFromEditor, EditableAssetPath, path => _hotReloader?.Ignore(path),
             () => Scenes.Save(), RestoreSceneFromEditor, PlayStarted, PlayStopped,
             e => World.TryGet<PrefabLink>(e, out var link) && !string.IsNullOrEmpty(link.Prefab) ? link.Prefab : null, Scenes.Instantiate, Scenes.SaveAsPrefab, Scenes.RevertToPrefab);
+        if (!_overlay.Visible) _overlay.Toggle(); // an editor shows the debug panels (Engine, Profiler, Log...) as docked tabs
         _editor = create(new EditorContext(World, Assets, _inspector, Log, hooks, this));
     }
 
@@ -395,6 +397,7 @@ public abstract class Game : IDisposable
         };
         bool audioReady = OpenAlAudioDevice.TryCreate(out var device, out string reason);
         Audio = audioReady ? device! : new NullAudioDevice(reason);
+        Audio.MasterVolume = (Launch.Settings ?? GameSettings.Default).MasterVolume;
         if (audioReady) Log.Info("Audio", Audio.Description);
         else Log.Warning("Audio", $"No sound: {reason}");
         Log.Info("Engine", $"Window {_window.Width}x{_window.Height}, fixed step {_timestep.Step * 1000:F2} ms");

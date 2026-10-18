@@ -37,7 +37,7 @@ public static class EditorApp
         game.ImGuiSetup = () =>
         {
             Win11Theme.Configure();
-            Win11Theme.UseLayoutFile(null); // the hub has no layout to remember
+            Win11Theme.DisableLayoutAutoSave(); // the hub has no layout to remember
         };
         game.DarkTitleBar = true;
         game.AttachEditor(context => new HubShell(context.Game, new RecentProjects(RecentProjects.DefaultFile)));
@@ -79,13 +79,14 @@ public static class EditorApp
         game.ImGuiSetup = () =>
         {
             Win11Theme.Configure(); // Windows 11 look: Segoe UI, Fluent colours, rounded controls
-            Win11Theme.UseLayoutFile(EditorPaths.LayoutFile);
+            Win11Theme.DisableLayoutAutoSave();
+            Win11Theme.LoadLayout(EditorPaths.LayoutFile); // only a layout the user saved on purpose
         };
         game.DarkTitleBar = true;
         game.WindowTitle = $"{project.Name} - Game Editor";
         game.AttachEditor(context =>
         {
-            var editor = new SceneEditor(context.World, context.Assets, context.Inspector, context.Log, context.Hooks, context.Game) { Pinned = true };
+            var editor = new SceneEditor(context.World, context.Assets, context.Inspector, context.Log, context.Hooks, context.Game) { Pinned = true, Project = new ProjectSession(project) };
             editor.Toggle(); // the standalone editor is always on
             return editor;
         });

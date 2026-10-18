@@ -42,7 +42,6 @@ try {
     if ($proc.HasExited) { Write-Output "EXITED code=$($proc.ExitCode)"; Get-Content "$OutDir\err.txt" | Select-Object -First 20; return }
     [Win32]::SetForegroundWindow($proc.MainWindowHandle) | Out-Null
     Start-Sleep -Milliseconds 500
-    Tap 0x70   # F1: hide the debug UI
 
     Shot $proc "$OutDir\disp_0_baseline.png" | Out-Null
     Tap 0x75   # F6 pixel-perfect on

@@ -7,10 +7,11 @@ namespace Engine.Runtime;
 /// <param name="AssetRoot">The <c>Assets</c> folder: textures, scenes, prefabs, sounds. Everything is loaded by name relative to it.</param>
 /// <param name="DataRoot">A writable folder for the game's own files (quick-saves, high scores).</param>
 /// <param name="EditsSource">True when <paramref name="AssetRoot"/> is the project's source folder, so saving a scene or tile layer changes files you can commit.</param>
-public sealed record GameLaunch(string AssetRoot, string DataRoot, bool EditsSource = false)
+/// <param name="Settings">The player-facing settings (window size, volume); null means the game's own defaults.</param>
+public sealed record GameLaunch(string AssetRoot, string DataRoot, bool EditsSource = false, GameSettings? Settings = null)
 {
     /// <summary>The shipped layout: <c>Assets</c> and the data files next to the executable.</summary>
-    public static GameLaunch Default => new(Path.Combine(AppContext.BaseDirectory, "Assets"), AppContext.BaseDirectory);
+    public static GameLaunch Default => new(Path.Combine(AppContext.BaseDirectory, "Assets"), AppContext.BaseDirectory, Settings: GameSettings.Load(Path.Combine(AppContext.BaseDirectory, GameSettings.FileName)));
 
     /// <summary>Opens a project folder (one that has an <c>Assets</c> folder): assets are edited in place, other files go to a <c>.local</c> folder inside it.</summary>
     /// <param name="projectFolder">The folder containing the assets folder.</param>

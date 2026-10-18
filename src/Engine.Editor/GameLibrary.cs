@@ -19,6 +19,9 @@ public static class GameLibrary
     {
         string full = Path.GetFullPath(dllPath);
         if (!File.Exists(full)) throw new FileNotFoundException($"Game library '{dllPath}' not found.", full);
+        // A loaded assembly cannot be overwritten on Windows, so the game is loaded from a private copy: the editor can then rebuild the
+        // original while the game is open.
+        full = ShadowCopy(full);
 
         var resolver = new AssemblyDependencyResolver(full);
         AssemblyLoadContext.Default.Resolving += (context, name) =>
@@ -28,6 +31,39 @@ public static class GameLibrary
         };
 
         return CreateModule(Assembly.LoadFrom(full));
+    }
+
+    /// <summary>
+    /// Copies the files next to a game library (its own assemblies, symbols and <c>.deps.json</c>, but not the asset folders) into a fresh folder under the
+    /// user's local application data and returns the path of the library inside it. Copies left by earlier runs are removed when they are not in use.
+    /// </summary>
+    /// <param name="library">Full path of the library.</param>
+    public static string ShadowCopy(string library)
+    {
+        string shadowRoot = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Game Editor", "shadow");
+        Directory.CreateDirectory(shadowRoot);
+        foreach (string old in Directory.GetDirectories(shadowRoot))
+        {
+            try
+            {
+                Directory.Delete(old, recursive: true);
+            }
+            catch (IOException)
+            {
+                // another editor is still running from this copy
+            }
+            catch (UnauthorizedAccessException)
+            {
+                // same: files in use cannot be deleted
+            }
+        }
+
+        string target = Path.Combine(shadowRoot, Environment.ProcessId + "-" + Path.GetFileNameWithoutExtension(library));
+        Directory.CreateDirectory(target);
+        foreach (string file in Directory.GetFiles(Path.GetDirectoryName(library)!))
+            File.Copy(file, Path.Combine(target, Path.GetFileName(file)), overwrite: true);
+
+        return Path.Combine(target, Path.GetFileName(library));
     }
 
     /// <summary>Creates the one <see cref="IGameModule"/> an assembly contains.</summary>

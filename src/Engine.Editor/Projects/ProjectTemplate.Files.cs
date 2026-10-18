@@ -161,17 +161,34 @@ public static partial class ProjectTemplate
 
               <ItemGroup>
                 <ProjectReference Include="..\Game\__NAME__.Game.csproj" />
+                <!-- Player-facing settings (window size, volume) sit beside the program. -->
+                <None Include="game.settings.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
                 <!-- The engine assemblies are copied next to the program. -->
                 <Reference Include="@(EngineAssembly)" />
               </ItemGroup>
 
-              <!-- Native libraries (window, ImGui, audio) and two small helpers live beside the engine assemblies. -->
+              <!-- Native libraries (window, ImGui, audio) and two small helpers live beside the engine assemblies (a development build keeps the natives in
+                   runtimes\win-x64\native, a published editor beside the program). They go next to the game's program, where .NET looks for them. -->
               <ItemGroup>
-                <None Include="$(EngineDir)runtimes\**\*" Link="runtimes\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+                <NativeLibrary Include="$(EngineDir)runtimes\win-x64\native\*.dll" />
+                <NativeLibrary Include="$(EngineDir)cimgui.dll" Condition="Exists('$(EngineDir)cimgui.dll')" />
+                <NativeLibrary Include="$(EngineDir)glfw3.dll" Condition="Exists('$(EngineDir)glfw3.dll')" />
+                <NativeLibrary Include="$(EngineDir)soft_oal.dll" Condition="Exists('$(EngineDir)soft_oal.dll')" />
+                <None Include="@(NativeLibrary)" Link="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
                 <None Include="$(EngineDir)Microsoft.DotNet.PlatformAbstractions.dll;$(EngineDir)Microsoft.Extensions.DependencyModel.dll" Link="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
               </ItemGroup>
 
             </Project>
+            """),
+
+        ("Launcher/game.settings.json", """
+            {
+              "windowWidth": 1280,
+              "windowHeight": 720,
+              "fullscreen": false,
+              "vSync": true,
+              "masterVolume": 1.0
+            }
             """),
 
         ("Launcher/Program.cs", """

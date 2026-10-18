@@ -133,6 +133,7 @@ internal sealed partial class SceneEditor : IEditorShell
     /// </summary>
     public void BeginFrame()
     {
+        PumpProject();
         if (_layoutPending)
         {
             _layoutPending = false;
@@ -148,6 +149,7 @@ internal sealed partial class SceneEditor : IEditorShell
     {
         DrawMenuBar();
         DrawPrefabPopup();
+        DrawReloadConfirm();
         _hierarchy.Draw();
         _assetBrowser.Draw();
         _historyPanel.Draw();
@@ -170,7 +172,7 @@ internal sealed partial class SceneEditor : IEditorShell
             if (ImGui.MenuItem("Save scene", "Ctrl+S", false, path != null)) SaveScene();
             if (ImGui.MenuItem("Reload scene from disk", null, false, path != null)) ReloadScene();
             ImGui.Separator();
-            if (ImGui.MenuItem("Close editor", "F2")) Toggle();
+            if (ImGui.MenuItem("Exit")) _game.Quit();
             ImGui.EndMenu();
         }
 
@@ -187,8 +189,11 @@ internal sealed partial class SceneEditor : IEditorShell
             ImGui.EndMenu();
         }
 
+        DrawProjectMenu();
+
         if (ImGui.BeginMenu("View"))
         {
+            if (ImGui.MenuItem("Save layout")) Theme.Win11Theme.SaveLayout(EditorPaths.LayoutFile);
             if (ImGui.MenuItem("Reset layout")) _layoutPending = true;
             ImGui.EndMenu();
         }
@@ -230,6 +235,7 @@ internal sealed partial class SceneEditor : IEditorShell
         if (ctrl && ImGui.IsKeyPressed(ImGuiKey.Z, false) && !editing) { if (shift) Redo(); else Undo(); }
         else if (ctrl && ImGui.IsKeyPressed(ImGuiKey.Y, false) && !editing) Redo();
         else if (ctrl && ImGui.IsKeyPressed(ImGuiKey.S, false)) SaveScene();
+        else if (ctrl && ImGui.IsKeyPressed(ImGuiKey.B, false)) BuildProject();
         else if (ctrl && ImGui.IsKeyPressed(ImGuiKey.D, false)) DuplicateSelected();
         else if (ctrl && ImGui.IsKeyPressed(ImGuiKey.N, false)) NewEntity();
         else if (ImGui.IsKeyPressed(ImGuiKey.Delete, false)) DeleteSelected();

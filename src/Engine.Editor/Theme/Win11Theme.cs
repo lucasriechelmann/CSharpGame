@@ -160,20 +160,23 @@ public static class Win11Theme
     private static Vector4 Rgba(byte r, byte g, byte b, float a) => new(r / 255f, g / 255f, b / 255f, a);
 
     /// <summary>
-    /// Chooses the file ImGui keeps its window layout in (ImGui otherwise writes <c>imgui.ini</c> into the working folder, shared by every program and project
-    /// started from there), or turns saving off when <paramref name="path"/> is null. Call it from the same setup callback as <see cref="Configure"/>.
+    /// Stops ImGui from writing its settings file on its own (it would otherwise save into <c>imgui.ini</c> in the working folder, and save whatever state the
+    /// windows happen to be in when the program is closed or killed). The editor saves its layout only when asked, with <see cref="SaveLayout"/>.
     /// </summary>
-    /// <param name="path">The layout file, or null for none.</param>
-    public static unsafe void UseLayoutFile(string? path)
-    {
-        var io = ImGui.GetIO();
-        if (path is null)
-        {
-            io.NativePtr->IniFilename = null;
-            return;
-        }
+    public static unsafe void DisableLayoutAutoSave() => ImGui.GetIO().NativePtr->IniFilename = null;
 
+    /// <summary>Loads a layout saved earlier with <see cref="SaveLayout"/>. Call it from the setup callback. Does nothing when the file does not exist.</summary>
+    /// <param name="path">The layout file.</param>
+    public static void LoadLayout(string path)
+    {
+        if (File.Exists(path)) ImGui.LoadIniSettingsFromDisk(path);
+    }
+
+    /// <summary>Saves where every window and dock is now.</summary>
+    /// <param name="path">The layout file.</param>
+    public static void SaveLayout(string path)
+    {
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        io.NativePtr->IniFilename = (byte*)Marshal.StringToHGlobalAnsi(path); // ImGui keeps the pointer for the life of the program
+        ImGui.SaveIniSettingsToDisk(path);
     }
 }
