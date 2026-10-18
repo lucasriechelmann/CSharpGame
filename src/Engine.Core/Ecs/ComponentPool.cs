@@ -42,6 +42,14 @@ internal sealed class ComponentPool<T> : IComponentPool
         return ref Components[Count - 1];
     }
 
+    /// <inheritdoc />
+    public void Clear()
+    {
+        Array.Clear(Components, 0, Count); // release any references held by components
+        Array.Clear(_sparse);
+        Count = 0;
+    }
+
     /// <summary>Swap-removes the component, keeping the dense arrays gap-free.</summary>
     public bool Remove(int entityId)
     {

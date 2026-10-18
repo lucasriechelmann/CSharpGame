@@ -1,9 +1,12 @@
+using Engine.Animation;
 using Engine.Core;
 using Engine.Core.Assets;
 using Engine.Core.Ecs;
 using Engine.Core.Input;
 using Engine.Platform;
 using Engine.Rendering;
+using Engine.Scenes;
+using Engine.Tilemaps;
 using Silk.NET.OpenGL;
 
 namespace Engine.Runtime;
@@ -29,8 +32,10 @@ public abstract class Game : IDisposable
         _timestep = new FixedTimestep(1.0 / fixedHz);
         _window = new GameWindow(title, width, height);
         Actions = new ActionMap(_window.Input);
+        Scenes = new SceneSerializer(World, Assets, Components);
         _overlay = new DebugOverlay(_window, _timestep, _stats, World, Assets);
         _window.Load += OnLoad;
+        _window.Closing += OnClosing;
         _window.Update += OnUpdate;
         _window.Render += OnRender;
         _window.Gui += OnGui;
@@ -44,6 +49,18 @@ public abstract class Game : IDisposable
     /// automatically once the window is ready; everything it owns is disposed on shutdown.
     /// </summary>
     public AssetManager Assets { get; } = new(Path.Combine(AppContext.BaseDirectory, "Assets"));
+
+    /// <summary>
+    /// The components that may appear in scene and prefab files. The engine's own are registered already; register your game's
+    /// components (<c>Components.Register&lt;Patrol&gt;("Patrol")</c>) in the constructor, before loading any scene.
+    /// </summary>
+    public ComponentRegistry Components { get; } = EngineComponents.RegisterAll(new ComponentRegistry());
+
+    /// <summary>
+    /// Saves the world to JSON and loads scenes and prefabs into it. Prefab, tile layer, tile set and animation loaders are
+    /// registered automatically once the window is ready, so scenes can refer to those files by name from <see cref="Load"/> onwards.
+    /// </summary>
+    public SceneSerializer Scenes { get; }
 
     /// <summary>Raw keyboard and mouse state. Prefer <see cref="Actions"/> for game logic.</summary>
     public InputState Input => _window.Input;
@@ -75,7 +92,7 @@ public abstract class Game : IDisposable
     /// <summary>Called once after the window and OpenGL context exist. Create GPU resources here.</summary>
     protected virtual void Load() { }
 
-    /// <summary>Called once when the game shuts down, before the GL context is destroyed. Dispose GPU resources created in <see cref="Load"/> here.</summary>
+    /// <summary>Called once when the window closes, while the GL context still exists. Dispose GPU resources created in <see cref="Load"/> here.</summary>
     protected virtual void Unload() { }
 
     /// <summary>Called once per fixed simulation step, after <see cref="FixedSystems"/> have run.</summary>
@@ -96,17 +113,26 @@ public abstract class Game : IDisposable
     /// <summary>Opens the window and runs the game loop until the window closes.</summary>
     public void Run() => _window.Run();
 
-    /// <summary>Releases game resources (<see cref="Unload"/>, then every asset) and finally the window and GPU context.</summary>
-    public void Dispose()
+    /// <summary>
+    /// Releases the window. GPU resources (<see cref="Unload"/> and every asset) are freed earlier, when the window closes,
+    /// because OpenGL calls only work while the context exists.
+    /// </summary>
+    public void Dispose() => _window.Dispose();
+
+    /// <summary>Frees the game's GPU resources and every loaded asset while the OpenGL context still exists.</summary>
+    private void OnClosing()
     {
         Unload();
         Assets.Dispose();
-        _window.Dispose();
     }
 
     private void OnLoad()
     {
         Assets.Register(new TextureLoader(Gl));
+        Assets.Register(new TileSetLoader(Assets));
+        Assets.Register(new TileLayerLoader());
+        Assets.Register(new AnimationStateMachineLoader());
+        Assets.Register(new PrefabLoader());
         Load();
     }
 

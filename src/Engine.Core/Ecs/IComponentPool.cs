@@ -14,4 +14,7 @@ internal interface IComponentPool
 
     /// <summary>Removes the entity's component if present; returns whether anything was removed.</summary>
     bool Remove(int entityId);
+
+    /// <summary>Removes every component from the pool.</summary>
+    void Clear();
 }

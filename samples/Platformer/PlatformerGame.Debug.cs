@@ -16,6 +16,8 @@ public sealed partial class PlatformerGame
         ImGui.Begin("Sample");
         ImGui.Text("A/D or arrows: move   Space/W/Up: jump");
         ImGui.Text("Left click: spawn 5   Q/E or scroll: zoom   R: reset camera");
+        ImGui.Text("F5: quick-save the whole world   F9: quick-load");
+        if (_statusSecondsLeft > 0) ImGui.TextColored(new Vector4(0.5f, 1f, 0.5f, 1f), _status);
         ImGui.Text($"Sprites: {_batch.Stats.Sprites}   Draw calls: {_batch.Stats.DrawCalls}");
 
         var mouseWorld = _camera.ScreenToWorld(Input.MousePosition);

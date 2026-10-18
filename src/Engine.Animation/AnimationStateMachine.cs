@@ -15,6 +15,12 @@ public sealed class AnimationStateMachine
     /// <summary>Index of the state new animators start in.</summary>
     public int DefaultState { get; set; }
 
+    /// <summary>The parameter names in index order.</summary>
+    public IReadOnlyList<string> ParameterNames => _parameterNames;
+
+    /// <summary>The transitions in priority order (used to write the machine back to a file).</summary>
+    public IReadOnlyList<AnimationTransition> Transitions => _transitions;
+
     /// <summary>Number of parameters; an animator's parameter array must be at least this long.</summary>
     public int ParameterCount => _parameterNames.Count;
 

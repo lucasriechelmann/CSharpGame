@@ -38,7 +38,7 @@ public sealed class GameWindow : IDisposable
         _window.Render += OnRender;
         _window.FramebufferResize += size => { Gl?.Viewport(size); Resized?.Invoke(size.X, size.Y); };
         _window.FocusChanged += focused => { if (!focused) Input.ReleaseAll(); };
-        _window.Closing += () => Closing?.Invoke();
+        _window.Closing += OnClosing;
     }
 
     /// <summary>The OpenGL API. Only valid once <see cref="Load"/> has been raised.</summary>
@@ -71,7 +71,10 @@ public sealed class GameWindow : IDisposable
     /// <summary>Raised when the framebuffer is resized, with the new width and height in pixels.</summary>
     public event Action<int, int>? Resized;
 
-    /// <summary>Raised when the window is about to close.</summary>
+    /// <summary>
+    /// Raised when the window is closing, <b>while the OpenGL context still exists</b>. This is the place to delete GPU
+    /// resources; after <see cref="Run"/> returns the context is gone and GL calls fail.
+    /// </summary>
     public event Action? Closing;
 
     /// <summary>Requests the window to close, ending <see cref="Run"/>.</summary>
@@ -102,11 +105,23 @@ public sealed class GameWindow : IDisposable
         _imgui.Render();
     }
 
-    /// <summary>Releases the ImGui renderer, input, GL context and window, in that order.</summary>
+    /// <summary>
+    /// Runs while the context still exists: lets the game free its GPU resources first, then frees the ImGui renderer
+    /// (which owns GL objects) and the input context.
+    /// </summary>
+    private void OnClosing()
+    {
+        Closing?.Invoke();
+
+        _imgui?.Dispose();
+        _imgui = null;
+        _silkInput?.Dispose();
+        _silkInput = null;
+    }
+
+    /// <summary>Releases the GL bindings and the window. GPU resources have already been freed when the window closed.</summary>
     public void Dispose()
     {
-        _imgui?.Dispose();
-        _silkInput?.Dispose();
         Gl?.Dispose();
         _window.Dispose();
     }

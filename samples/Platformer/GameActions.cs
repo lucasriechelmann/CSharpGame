@@ -17,4 +17,10 @@ public static class GameActions
 
     /// <summary>Snaps the camera back to the hero at zoom 1 (R).</summary>
     public const string ResetCamera = "ResetCamera";
+
+    /// <summary>Saves the whole world to a scene file (F5).</summary>
+    public const string QuickSave = "QuickSave";
+
+    /// <summary>Replaces the world with the last quick-save (F9).</summary>
+    public const string QuickLoad = "QuickLoad";
 }

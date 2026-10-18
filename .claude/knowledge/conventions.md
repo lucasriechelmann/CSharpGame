@@ -22,6 +22,8 @@ XML `<summary>` on every public/protected type and member (build error via CS159
 - **Cached query callbacks**: a system whose query callback needs per-run values keeps them in fields and a delegate created in the constructor (no per-frame closure). Reference: `samples/Platformer/PlayerInputSystem.cs`, `src/Engine.Physics2D/PhysicsSystem.cs`. Non-capturing lambdas are fine inline (`FaceVelocitySystem.cs`).
 - **Systems that write what the next step reads** (controller to physics to controller via `PhysicsBody.Contacts`) rely on fixed order in `FixedSystems`; document the required order in the system's `<summary>`. Reference: `PlatformerControllerSystem.cs`.
 - **Content as assets**: shared, non-trivial runtime objects (tile layers, tile sets, animation state machines) are registered in `Assets` under a path-like name and referenced from components by `AssetHandle<T>`. Reference: `samples/Platformer/PlatformerGame.Spawning.cs` (`SpawnTileLayers`).
+- **Content is data, behaviour is code**: levels, prefabs, tile sets and animation graphs live as JSON under the game's `Assets/`; code loads them by name (`Scenes.LoadFile`, `Scenes.Instantiate`, `Assets.Load<T>`) and then varies instances through component refs. Reference: `samples/Platformer/PlatformerGame.Scene.cs` (`SpawnCreature` instantiates a prefab then tweaks it).
+- **Making a component saveable**: public-field struct, a static factory if `default` is invalid, registered by name in the registry. Reference: `src/Engine.Runtime/EngineComponents.cs`.
 - **Per-game id/name constants** live in a static class (`TileIds.cs`, `GameActions.cs`, parameter names on `HeroAnimations`); no magic numbers or strings at call sites.
 - **Data-driven animation**: build a state machine in a small factory (`HeroAnimations.Create`), cache parameter indices in the system constructor, write parameters per frame. Reference: `samples/Platformer/HeroAnimationSystem.cs`.
 - **System placement:** per-frame/input systems in `FrameSystems`, simulation in `FixedSystems`, drawing in `RenderSystems`. Reference: `samples/Platformer/PlatformerGame.cs` constructor.
@@ -45,6 +47,7 @@ Fail loudly with guard clauses and specific exceptions and messages naming the o
 - One test class per topic, shared fixtures in `tests/*/Fixtures/` (own files). Reference: `tests/Engine.Core.Tests/Fixtures/`.
 - Timing/float tests use binary-exact values (powers of two) to avoid rounding flakiness. Reference: `tests/Engine.Core.Tests/FixedTimestepTests.cs`.
 - Simulation tests (physics, controller) run the real systems in a small fixture level at a power-of-two timestep and assert behaviour over steps. Reference: `tests/Engine.Physics2D.Tests/Fixtures/PlatformerSim.cs`.
+- JSON/format tests cover: happy path, round trip (write then read), defaults when keys are omitted, and every rejection path with the exception type (`InvalidOperationException` for bad data, `FileNotFoundException` for missing files). Reference: `tests/Engine.Scenes.Tests/SceneLoadFailureTests.cs` (also asserts the world is unchanged on failure).
 - Filesystem tests use a unique temp directory and clean up in `Dispose`. Reference: `tests/Engine.Core.Tests/Assets/AssetManagerTests.cs`.
 - GPU code (`Shader`, `Texture2D`, `SpriteBatch`) has no unit tests; verify it visually with `tools/` (see `tools/README.md`).
 

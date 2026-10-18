@@ -9,6 +9,9 @@ internal sealed class EntityAllocator
     // Slot 0 is unused so Entity.Null (id 0, generation 0) can never alias a real entity.
     private readonly List<int> _generations = new() { 0 };
 
+    // Parallel to _generations: whether the slot currently holds a live entity (needed to enumerate them).
+    private readonly List<bool> _alive = new() { false };
+
     private readonly Stack<int> _freeIds = new();
 
     /// <summary>Number of entities currently alive.</summary>
@@ -26,8 +29,10 @@ internal sealed class EntityAllocator
         {
             id = _generations.Count;
             _generations.Add(1);
+            _alive.Add(false);
         }
 
+        _alive[id] = true;
         AliveCount++;
         return new Entity(id, _generations[id]);
     }
@@ -41,11 +46,33 @@ internal sealed class EntityAllocator
     /// <summary>Frees the entity's slot and bumps its generation so old handles go stale. The caller checks liveness first.</summary>
     public void Destroy(Entity entity)
     {
-        _generations[entity.Id]++;
-        _freeIds.Push(entity.Id);
+        Release(entity.Id);
         AliveCount--;
+    }
+
+    /// <summary>Destroys every live entity at once; all outstanding handles go stale.</summary>
+    public void DestroyAll()
+    {
+        for (int id = 1; id < _alive.Count; id++)
+            if (_alive[id]) Release(id);
+
+        AliveCount = 0;
     }
 
     /// <summary>Builds the current handle for a live slot id (used when iterating packed component arrays).</summary>
     public Entity HandleFor(int id) => new(id, _generations[id]);
+
+    /// <summary>Yields every live entity in ascending id order.</summary>
+    public IEnumerable<Entity> Enumerate()
+    {
+        for (int id = 1; id < _alive.Count; id++)
+            if (_alive[id]) yield return new Entity(id, _generations[id]);
+    }
+
+    private void Release(int id)
+    {
+        _generations[id]++;
+        _alive[id] = false;
+        _freeIds.Push(id);
+    }
 }

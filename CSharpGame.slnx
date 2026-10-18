@@ -9,6 +9,7 @@
     <Project Path="src/Engine.Platform/Engine.Platform.csproj" />
     <Project Path="src/Engine.Rendering/Engine.Rendering.csproj" />
     <Project Path="src/Engine.Runtime/Engine.Runtime.csproj" />
+    <Project Path="src/Engine.Scenes/Engine.Scenes.csproj" />
     <Project Path="src/Engine.Tilemaps/Engine.Tilemaps.csproj" />
   </Folder>
   <Folder Name="/tests/">
@@ -16,6 +17,8 @@
     <Project Path="tests/Engine.Core.Tests/Engine.Core.Tests.csproj" />
     <Project Path="tests/Engine.Physics2D.Tests/Engine.Physics2D.Tests.csproj" />
     <Project Path="tests/Engine.Rendering.Tests/Engine.Rendering.Tests.csproj" />
+    <Project Path="tests/Engine.Runtime.Tests/Engine.Runtime.Tests.csproj" />
+    <Project Path="tests/Engine.Scenes.Tests/Engine.Scenes.Tests.csproj" />
     <Project Path="tests/Engine.Tilemaps.Tests/Engine.Tilemaps.Tests.csproj" />
   </Folder>
 </Solution>

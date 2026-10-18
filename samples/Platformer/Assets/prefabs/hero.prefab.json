@@ -1,0 +1,99 @@
+{
+  "components": {
+    "Name": { "value": "Hero" },
+    "Transform": {
+      "position": {
+        "x": -528,
+        "y": -234,
+        "z": 10
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      }
+    },
+    "Sprite": {
+      "texture": "hero.png",
+      "size": {
+        "x": 40,
+        "y": 40
+      },
+      "source": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0
+      },
+      "color": {
+        "r": 1,
+        "g": 1,
+        "b": 1,
+        "a": 1
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "flip": "None"
+    },
+    "SpriteAnimator": {
+      "machine": "anim/hero.anim.json",
+      "currentState": 0,
+      "stateTime": 0,
+      "speed": 1,
+      "finished": false,
+      "parameters": [
+        0,
+        0,
+        0
+      ]
+    },
+    "BoxCollider": {
+      "size": {
+        "x": 24,
+        "y": 30
+      },
+      "offset": {
+        "x": 0,
+        "y": -2.5
+      }
+    },
+    "PhysicsBody": {
+      "velocity": {
+        "x": 0,
+        "y": 0
+      },
+      "gravityScale": 1,
+      "contacts": "None"
+    },
+    "PlatformerController": {
+      "tuning": {
+        "moveSpeed": 220,
+        "groundAcceleration": 2200,
+        "groundDeceleration": 2600,
+        "airAcceleration": 1500,
+        "airDeceleration": 900,
+        "jumpSpeed": 640,
+        "coyoteTime": 0.1,
+        "jumpBufferTime": 0.1,
+        "jumpCutMultiplier": 0.5,
+        "fallGravityMultiplier": 1.6
+      },
+      "coyoteTimer": 0,
+      "jumpBufferTimer": 0,
+      "isJumping": false
+    },
+    "PlatformerIntent": {
+      "moveX": 0,
+      "jumpHeld": false,
+      "jumpPressedPending": false
+    }
+  }
+}

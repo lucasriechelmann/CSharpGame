@@ -1,0 +1,6 @@
+{
+  "texture": "tiles.png",
+  "tileWidth": 16,
+  "tileHeight": 16,
+  "solid": [1, 2, 3]
+}

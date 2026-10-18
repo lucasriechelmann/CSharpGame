@@ -14,11 +14,12 @@ namespace Platformer;
 
 /// <summary>
 /// The sample game: an animated hero you steer through a tilemap level with run, jump (coyote time, jump buffering, variable
-/// height) and gravity, plus patrolling creatures. Click to spawn more, scroll or Q/E to zoom. It exercises the ECS, fixed
-/// loop, input actions, asset handles, tilemap layers, sprite animation state machines, tile collision and the camera.
+/// height) and gravity, plus patrolling creatures. The level, hero, creatures, tiles and animations are all data files
+/// loaded through the scene system; F5 and F9 quick-save and quick-load the whole world.
 /// </summary>
 /// <remarks>
-/// Split by topic: this file (setup, loop hooks), <c>PlatformerGame.Spawning.cs</c> and <c>PlatformerGame.Debug.cs</c>.
+/// Split by topic: this file (setup, loop hooks), <c>PlatformerGame.Scene.cs</c> (loading, saving, spawning) and
+/// <c>PlatformerGame.Debug.cs</c>.
 /// </remarks>
 public sealed partial class PlatformerGame : Game
 {
@@ -29,13 +30,8 @@ public sealed partial class PlatformerGame : Game
     private SpriteBatch _batch = null!;
     private TileGrid _grid = null!;
     private Entity _hero;
-    private AssetHandle<Texture2D> _tilesTexture;
-    private AssetHandle<Texture2D> _heroSheet;
-    private AssetHandle<Texture2D> _creatureSheet;
-    private AssetHandle<AnimationStateMachine> _heroMachine;
-    private AssetHandle<AnimationStateMachine>[] _creatureMachines = [];
 
-    /// <summary>Registers input bindings. Systems are added in <see cref="Load"/>, once the assets they need exist.</summary>
+    /// <summary>Registers input bindings and the game's own components for scene files. Systems are added in <see cref="Load"/>.</summary>
     public PlatformerGame() : base("Platformer")
     {
         Actions
@@ -46,24 +42,33 @@ public sealed partial class PlatformerGame : Game
             .Bind(GameActions.Jump, KeyCode.Up)
             .BindAxis(GameActions.Zoom, KeyCode.Q, KeyCode.E)
             .Bind(GameActions.Spawn, MouseButton.Left)
-            .Bind(GameActions.ResetCamera, KeyCode.R);
+            .Bind(GameActions.ResetCamera, KeyCode.R)
+            .Bind(GameActions.QuickSave, KeyCode.F5)
+            .Bind(GameActions.QuickLoad, KeyCode.F9);
+
+        // The engine's components are registered already; scenes need the game's own too.
+        Components.Register<Patrol>("Patrol");
     }
 
     /// <inheritdoc />
     protected override void Load()
     {
         _batch = new SpriteBatch(Gl);
-        LoadAssets();
-        SpawnTileLayers();
-        _hero = SpawnHero(column: 3, row: 1);
-        SpawnInitialCreatures();
+
+        Scenes.LoadFile(LevelScene);
+        _hero = FindHero();
+        _grid = BuildCollisionGrid();
+        _creatureMachines = Enumerable.Range(0, CreatureTypeCount)
+            .Select(type => Assets.Load<AnimationStateMachine>($"anim/creature{type}.anim.json"))
+            .ToArray();
 
         _camera.ViewportSize = new Vector2(Window.Width, Window.Height);
         Window.Resized += (w, h) => _camera.ViewportSize = new Vector2(w, h);
+        SnapCameraToHero();
 
         // Per frame: input -> animation parameters -> animation, then facing.
         FrameSystems.Add(new PlayerInputSystem(Actions));
-        FrameSystems.Add(new HeroAnimationSystem(Assets.Get(_heroMachine)));
+        FrameSystems.Add(new HeroAnimationSystem(Assets.Get(Assets.Load<AnimationStateMachine>(HeroAnimation))));
         FrameSystems.Add(new AnimationSystem(Assets));
         FrameSystems.Add(new FaceVelocitySystem());
 
@@ -85,6 +90,10 @@ public sealed partial class PlatformerGame : Game
     protected override void Update(double dt)
     {
         UpdateCamera(dt);
+        UpdateStatusMessage(dt);
+
+        if (Actions.WasPressed(GameActions.QuickSave)) QuickSave();
+        else if (Actions.WasPressed(GameActions.QuickLoad)) QuickLoad();
 
         if (Actions.WasPressed(GameActions.Spawn))
             SpawnCreaturesAt(_camera.ScreenToWorld(Input.MousePosition), 5);
@@ -96,18 +105,6 @@ public sealed partial class PlatformerGame : Game
         _batch.ResetStats(); // render systems add to the totals; the debug UI reads them after all passes
         Gl.ClearColor(_clear.X, _clear.Y, _clear.Z, 1f);
         Gl.Clear(ClearBufferMask.ColorBufferBit);
-    }
-
-    private void LoadAssets()
-    {
-        _tilesTexture = Assets.Load<Texture2D>("tiles.png");
-        _heroSheet = Assets.Load<Texture2D>("hero.png");
-        _creatureSheet = Assets.Load<Texture2D>("creatures.png");
-
-        _heroMachine = Assets.Add("anim/hero", HeroAnimations.Create());
-        _creatureMachines = Enumerable.Range(0, CreatureAnimations.TypeCount)
-            .Select(type => Assets.Add($"anim/creature{type}", CreatureAnimations.Create(type)))
-            .ToArray();
     }
 
     private void UpdateCamera(double dt)
@@ -127,5 +124,11 @@ public sealed partial class PlatformerGame : Game
             _camera.Zoom = 1f;
             _camera.Position = target;
         }
+    }
+
+    private void SnapCameraToHero()
+    {
+        var position = World.Get<Transform>(_hero).Position;
+        _camera.Position = new Vector2(position.X, position.Y);
     }
 }

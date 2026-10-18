@@ -1,0 +1,168 @@
+{
+  "parameters": [
+    "Speed",
+    "VelocityY",
+    "Grounded"
+  ],
+  "default": "Idle",
+  "states": [
+    {
+      "name": "Idle",
+      "clip": {
+        "fps": 2.5,
+        "loop": "PingPong",
+        "frames": [
+          {
+            "x": 0,
+            "y": 0,
+            "width": 16,
+            "height": 16,
+            "isEmpty": false
+          },
+          {
+            "x": 16,
+            "y": 0,
+            "width": 16,
+            "height": 16,
+            "isEmpty": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "Run",
+      "clip": {
+        "fps": 12,
+        "loop": "Loop",
+        "frames": [
+          {
+            "x": 32,
+            "y": 0,
+            "width": 16,
+            "height": 16,
+            "isEmpty": false
+          },
+          {
+            "x": 48,
+            "y": 0,
+            "width": 16,
+            "height": 16,
+            "isEmpty": false
+          },
+          {
+            "x": 64,
+            "y": 0,
+            "width": 16,
+            "height": 16,
+            "isEmpty": false
+          },
+          {
+            "x": 80,
+            "y": 0,
+            "width": 16,
+            "height": 16,
+            "isEmpty": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "Jump",
+      "clip": {
+        "fps": 1,
+        "loop": "Once",
+        "frames": [
+          {
+            "x": 96,
+            "y": 0,
+            "width": 16,
+            "height": 16,
+            "isEmpty": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "Fall",
+      "clip": {
+        "fps": 1,
+        "loop": "Once",
+        "frames": [
+          {
+            "x": 112,
+            "y": 0,
+            "width": 16,
+            "height": 16,
+            "isEmpty": false
+          }
+        ]
+      }
+    }
+  ],
+  "transitions": [
+    {
+      "to": "Jump",
+      "requiresFinished": false,
+      "conditions": [
+        {
+          "parameter": "Grounded",
+          "comparison": "Equal",
+          "value": 0
+        },
+        {
+          "parameter": "VelocityY",
+          "comparison": "Greater",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "to": "Fall",
+      "requiresFinished": false,
+      "conditions": [
+        {
+          "parameter": "Grounded",
+          "comparison": "Equal",
+          "value": 0
+        },
+        {
+          "parameter": "VelocityY",
+          "comparison": "LessOrEqual",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "to": "Run",
+      "requiresFinished": false,
+      "conditions": [
+        {
+          "parameter": "Grounded",
+          "comparison": "Equal",
+          "value": 1
+        },
+        {
+          "parameter": "Speed",
+          "comparison": "Greater",
+          "value": 10
+        }
+      ]
+    },
+    {
+      "to": "Idle",
+      "requiresFinished": false,
+      "conditions": [
+        {
+          "parameter": "Grounded",
+          "comparison": "Equal",
+          "value": 1
+        },
+        {
+          "parameter": "Speed",
+          "comparison": "LessOrEqual",
+          "value": 10
+        }
+      ]
+    }
+  ]
+}

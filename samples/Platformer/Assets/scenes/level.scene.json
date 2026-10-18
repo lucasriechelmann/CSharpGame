@@ -1,0 +1,347 @@
+{
+  "version": 1,
+  "entities": [
+    {
+      "components": {
+        "Transform": {
+          "position": {
+            "x": -640,
+            "y": -288,
+            "z": -8
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "scale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          }
+        },
+        "TileLayerRenderer": {
+          "layer": "levels/background.layer.json",
+          "tileSet": "tilesets/world.tileset.json",
+          "tint": {
+            "r": 1,
+            "g": 1,
+            "b": 1,
+            "a": 1
+          },
+          "foreground": false
+        }
+      }
+    },
+    {
+      "components": {
+        "Transform": {
+          "position": {
+            "x": -640,
+            "y": -288,
+            "z": -5
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "scale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          }
+        },
+        "TileLayerRenderer": {
+          "layer": "levels/ground.layer.json",
+          "tileSet": "tilesets/world.tileset.json",
+          "tint": {
+            "r": 1,
+            "g": 1,
+            "b": 1,
+            "a": 1
+          },
+          "foreground": false
+        }
+      }
+    },
+    {
+      "components": {
+        "Transform": {
+          "position": {
+            "x": -640,
+            "y": -288,
+            "z": 20
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "scale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          }
+        },
+        "TileLayerRenderer": {
+          "layer": "levels/foreground.layer.json",
+          "tileSet": "tilesets/world.tileset.json",
+          "tint": {
+            "r": 1,
+            "g": 1,
+            "b": 1,
+            "a": 1
+          },
+          "foreground": true
+        }
+      }
+    },
+    {
+      "prefab": "prefabs/hero.prefab.json"
+    },
+    {
+      "prefab": "prefabs/creature.prefab.json",
+      "components": {
+        "Transform": {
+          "position": {
+            "x": -116.2587,
+            "y": 177.36298,
+            "z": 5
+          }
+        },
+        "SpriteAnimator": {
+          "machine": "anim/creature2.anim.json",
+          "stateTime": 0.9467375
+        },
+        "Patrol": {
+          "speed": 63.76052,
+          "direction": 1
+        }
+      }
+    },
+    {
+      "prefab": "prefabs/creature.prefab.json",
+      "components": {
+        "Transform": {
+          "position": {
+            "x": 354.80664,
+            "y": 9.287476,
+            "z": 5
+          }
+        },
+        "SpriteAnimator": {
+          "machine": "anim/creature5.anim.json",
+          "stateTime": 0.31255895
+        },
+        "Patrol": {
+          "speed": 69.216446,
+          "direction": 1
+        }
+      }
+    },
+    {
+      "prefab": "prefabs/creature.prefab.json",
+      "components": {
+        "Transform": {
+          "position": {
+            "x": 515.2501,
+            "y": -15.897675,
+            "z": 5
+          }
+        },
+        "SpriteAnimator": {
+          "machine": "anim/creature5.anim.json",
+          "stateTime": 0.689153
+        },
+        "Patrol": {
+          "speed": 80.98239,
+          "direction": -1
+        }
+      }
+    },
+    {
+      "prefab": "prefabs/creature.prefab.json",
+      "components": {
+        "Transform": {
+          "position": {
+            "x": -481.49234,
+            "y": -167.81332,
+            "z": 5
+          }
+        },
+        "SpriteAnimator": {
+          "machine": "anim/creature6.anim.json",
+          "stateTime": 0.59353656
+        },
+        "Patrol": {
+          "speed": 78.08595,
+          "direction": -1
+        }
+      }
+    },
+    {
+      "prefab": "prefabs/creature.prefab.json",
+      "components": {
+        "Transform": {
+          "position": {
+            "x": 160.11926,
+            "y": -128.07466,
+            "z": 5
+          }
+        },
+        "SpriteAnimator": {
+          "machine": "anim/creature7.anim.json",
+          "stateTime": 0.28384253
+        },
+        "Patrol": {
+          "speed": 67.55568,
+          "direction": 1
+        }
+      }
+    },
+    {
+      "prefab": "prefabs/creature.prefab.json",
+      "components": {
+        "Transform": {
+          "position": {
+            "x": 290.8313,
+            "y": -1.1891327,
+            "z": 5
+          }
+        },
+        "SpriteAnimator": {
+          "machine": "anim/creature4.anim.json",
+          "stateTime": 0.9256932
+        },
+        "Patrol": {
+          "speed": 77.03833,
+          "direction": -1
+        }
+      }
+    },
+    {
+      "prefab": "prefabs/creature.prefab.json",
+      "components": {
+        "Transform": {
+          "position": {
+            "x": -330.1193,
+            "y": -66.95546,
+            "z": 5
+          }
+        },
+        "SpriteAnimator": {
+          "machine": "anim/creature5.anim.json",
+          "stateTime": 0.6264542
+        },
+        "Patrol": {
+          "speed": 98.93482,
+          "direction": 1
+        }
+      }
+    },
+    {
+      "prefab": "prefabs/creature.prefab.json",
+      "components": {
+        "Transform": {
+          "position": {
+            "x": -405.5226,
+            "y": 187.1871,
+            "z": 5
+          }
+        },
+        "SpriteAnimator": {
+          "machine": "anim/creature4.anim.json",
+          "stateTime": 0.5044469
+        },
+        "Patrol": {
+          "speed": 51.92009,
+          "direction": 1
+        }
+      }
+    },
+    {
+      "prefab": "prefabs/creature.prefab.json",
+      "components": {
+        "Transform": {
+          "position": {
+            "x": 231.39331,
+            "y": -81.39325,
+            "z": 5
+          }
+        },
+        "SpriteAnimator": {
+          "machine": "anim/creature6.anim.json",
+          "stateTime": 0.8830873
+        },
+        "Patrol": {
+          "speed": 70.70344,
+          "direction": 1
+        }
+      }
+    },
+    {
+      "prefab": "prefabs/creature.prefab.json",
+      "components": {
+        "Transform": {
+          "position": {
+            "x": -255.37811,
+            "y": 136.88391,
+            "z": 5
+          }
+        },
+        "SpriteAnimator": {
+          "machine": "anim/creature2.anim.json",
+          "stateTime": 0.19376265
+        },
+        "Patrol": {
+          "speed": 61.54216,
+          "direction": -1
+        }
+      }
+    },
+    {
+      "prefab": "prefabs/creature.prefab.json",
+      "components": {
+        "Transform": {
+          "position": {
+            "x": -501.357,
+            "y": 10.818909,
+            "z": 5
+          }
+        },
+        "SpriteAnimator": {
+          "machine": "anim/creature1.anim.json",
+          "stateTime": 0.7491132
+        },
+        "Patrol": {
+          "speed": 79.207085,
+          "direction": 1
+        }
+      }
+    },
+    {
+      "prefab": "prefabs/creature.prefab.json",
+      "components": {
+        "Transform": {
+          "position": {
+            "x": -171.88577,
+            "y": -214.33551,
+            "z": 5
+          }
+        },
+        "SpriteAnimator": {
+          "machine": "anim/creature7.anim.json",
+          "stateTime": 0.50535744
+        },
+        "Patrol": {
+          "speed": 73.30005,
+          "direction": -1
+        }
+      }
+    }
+  ]
+}

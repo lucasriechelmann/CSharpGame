@@ -57,7 +57,31 @@ try {
     Shot $proc "$OutDir\D_jumping.png"
     [Win32]::keybd_event(0x20, 0, 2, [UIntPtr]::Zero)
     [Win32]::keybd_event(0x44, 0, 2, [UIntPtr]::Zero)
-    Write-Output "done"
+
+    # E: let the hero land and stop, then F5 (quick-save)
+    Start-Sleep -Milliseconds 1500
+    [Win32]::keybd_event(0x74, 0, 0, [UIntPtr]::Zero); Start-Sleep -Milliseconds 80
+    [Win32]::keybd_event(0x74, 0, 2, [UIntPtr]::Zero)
+    Start-Sleep -Milliseconds 300
+    Shot $proc "$OutDir\E_saved.png"
+
+    # F: run left for 1s so the hero is somewhere else
+    [Win32]::keybd_event(0x41, 0, 0, [UIntPtr]::Zero)
+    Start-Sleep -Milliseconds 1000
+    [Win32]::keybd_event(0x41, 0, 2, [UIntPtr]::Zero)
+    Start-Sleep -Milliseconds 500
+    Shot $proc "$OutDir\F_moved.png"
+
+    # G: F9 (quick-load) should put the hero back where it was saved
+    [Win32]::keybd_event(0x78, 0, 0, [UIntPtr]::Zero); Start-Sleep -Milliseconds 80
+    [Win32]::keybd_event(0x78, 0, 2, [UIntPtr]::Zero)
+    Start-Sleep -Milliseconds 300
+    Shot $proc "$OutDir\G_loaded.png"
+
+    # Close the window the normal way: a clean shutdown must exit with code 0.
+    $proc.CloseMainWindow() | Out-Null
+    if ($proc.WaitForExit(10000)) { Write-Output "closed normally, exit code $($proc.ExitCode)" }
+    else { Write-Output "did NOT exit after close (hung)" }
 }
 finally {
     if (-not $proc.HasExited) { Stop-Process -Id $proc.Id -Force }

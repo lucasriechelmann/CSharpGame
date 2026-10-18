@@ -1,0 +1,30 @@
+{
+  "parameters": [],
+  "default": "Walk",
+  "states": [
+    {
+      "name": "Walk",
+      "clip": {
+        "fps": 6,
+        "loop": "Loop",
+        "frames": [
+          {
+            "x": 128,
+            "y": 0,
+            "width": 16,
+            "height": 16,
+            "isEmpty": false
+          },
+          {
+            "x": 144,
+            "y": 0,
+            "width": 16,
+            "height": 16,
+            "isEmpty": false
+          }
+        ]
+      }
+    }
+  ],
+  "transitions": []
+}

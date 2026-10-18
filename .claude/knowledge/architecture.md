@@ -9,6 +9,7 @@ samples/Platformer ──► Engine.Runtime ──► Engine.Rendering ──►
         │                   │                                     ▲
         │                   └──────────► Engine.Platform ─────────┤
         ├──► Engine.Physics2D ────────────────────────────────────┤
+        ├──► Engine.Scenes ──► Engine.Core   (Runtime also depends on Scenes, Physics2D, Tilemaps, Animation)
         ├──► Engine.Tilemaps ──► Engine.Rendering, Engine.Physics2D, Engine.Core
         ├──► Engine.Animation ──► Engine.Rendering, Engine.Core
         └──► Engine.Rendering, Engine.Core (direct, for components/types)
@@ -40,7 +41,7 @@ Per display frame (`Game.OnUpdate` then `Game.OnRender`, driven by Silk's window
 4. `Input.EndFrame()` clears pressed/released edges and scroll.
 5. Render: `Game.Draw` (resets batch stats, clears), `RenderSystems` in registration order (sample: background/ground `TileLayerRenderSystem`, `SpriteRenderSystem` which gathers `Transform`+`Sprite` and sorts back-to-front by Z then texture, foreground `TileLayerRenderSystem`; each pass is its own `SpriteBatch.Begin/End`), then the ImGui overlay (`DebugOverlay` + `Game.DebugGui`).
 
-Shutdown: `Game.Dispose` runs `Unload()`, then `Assets.Dispose()` (disposes every loaded texture), then the window (GL context last).
+Shutdown: GPU cleanup happens in the window's `Closing` event, **while the GL context still exists**: `GameWindow.OnClosing` raises `Closing` (so `Game` runs `Unload()` then `Assets.Dispose()`), then disposes the ImGui controller and input. `Game.Dispose`/`GameWindow.Dispose` afterwards only release the managed GL bindings and the window. (Decision and reason: after `Run()` returns the context is destroyed and any GL delete throws `NoContext`; this crashed every normal window close until phase 7.)
 
 ## ECS (`src/Engine.Core/Ecs`)
 
@@ -72,6 +73,15 @@ Shutdown: `Game.Dispose` runs `Unload()`, then `Assets.Dispose()` (disposes ever
 - `AnimationStateMachine` (shared asset): float parameters (booleans are 0/1), states (each a clip), and ordered transitions (`From` a state or any, `To`, conditions on parameters, optional `RequiresFinished`). First matching transition wins; any-state transitions never target the current state. One transition per update.
 - `SpriteAnimator` component = machine handle, current state, state time, speed, finished flag, parameter array (create with `SpriteAnimator.Create`). `AnimationSystem` (frame group) advances time, evaluates transitions, writes `Sprite.Source`. Game systems write parameters first (sample: `HeroAnimationSystem` from `PhysicsBody`).
 
+## Scenes and prefabs (`src/Engine.Scenes`)
+
+- **File shapes** (camelCase, indented). Scene: `{ "version": 1, "entities": [ { "prefab": "optional.prefab.json", "components": { "Transform": { "position": { "x": 1 } } } } ] }`. A prefab file is the same entity shape (and may itself name a `prefab`, depth limit 16). Asset data files: `.layer.json` (rows of tile ids, top row first, plus `originX/originY` of the bottom-left cell), `.tileset.json` (texture name, tile size, solid ids), `.anim.json` (parameters, states with `grid` or `frames` clips, transitions with conditions by name).
+- **Components**: `ComponentRegistry.Register<T>(name)` builds a `TypedComponentSerializer<T>` (System.Text.Json with `IncludeFields`, camelCase, enums as text, computed read-only properties skipped). Only registered components are saved; unknown names in files throw naming the component. Names are stable file names, independent of the C# type. `Runtime.EngineComponents.RegisterAll` registers the engine's ten; games add their own (sample: `Patrol`).
+- **Assets by name**: `AssetHandleConverter<T>` writes `assets.NameOf(handle)` (or `null`) and reads via `assets.Load<T>(name)`, which returns cached/in-memory assets first and otherwise loads the file. So anything a scene refers to needs a registered `IAssetLoader<T>`.
+- **Load is two-phase**: resolve prefab chains and parse every component into a ready-to-apply action first (errors surface here, world untouched), then create entities. Prefab override = `JsonMerge.Apply` (RFC 7386: objects merge recursively, arrays/scalars replace, `null` removes). Prefabs are cached assets; resolution works on `DeepClone`d copies so cached templates are never mutated.
+- **Save** writes every entity in id order with its registered components (`SerializeEntity` returns a valid prefab body). Quick-save in the sample writes `saves/quicksave.scene.json` next to the exe; quick-load does `World.Clear()` then `LoadFile`.
+- **Limits**: no `Entity` references between components (not remapped), no scene-in-scene, no instance-to-prefab link kept after loading (instances are expanded), no editor yet.
+
 ## Components (data)
 
 | Component | Defined in | Notes |
@@ -80,6 +90,7 @@ Shutdown: `Game.Dispose` runs `Unload()`, then `Assets.Dispose()` (disposes ever
 | `Sprite` | `src/Engine.Rendering/Sprite.cs` | `AssetHandle<Texture2D>`, size, pixel-space `Source` rect (empty = whole texture), tint, pivot, flip. |
 | `BoxCollider`, `PhysicsBody`, `StaticSolid` (tag) | `src/Engine.Physics2D/` | Collider size/offset; velocity, gravity scale and contact flags; immovable solid marker. |
 | `PlatformerController`, `PlatformerIntent` | `src/Engine.Physics2D/` | Tuning + runtime timers; player intent written by an input system. |
+| `Name` | `src/Engine.Core/Components/` | Human-readable label (tools, inspector, saves). |
 | `TileLayerRenderer` | `src/Engine.Tilemaps/` | Layer + tile set handles, tint, foreground flag. |
 | `SpriteAnimator` | `src/Engine.Animation/` | Machine handle, state, time, speed, parameters. |
 | `Patrol` | `samples/Platformer/` | Game-specific walking AI. |
@@ -100,4 +111,4 @@ None (no network, database or config files).
 
 ## Planned (from the roadmap, not built yet)
 
-JSON scenes (System.Text.Json) with components as plain serializable data (handles saved by asset name; tile layers, tile sets and animation machines will need loaders), ImGui inspector, OpenAL audio, post-processing/2D lights, an editor, and a 3D renderer beside `Engine.Rendering`.
+ImGui inspector (can enumerate `World.Entities` and the registry), OpenAL audio, post-processing/2D lights, an editor, and a 3D renderer beside `Engine.Rendering`.

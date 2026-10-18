@@ -28,6 +28,18 @@ public sealed partial class World
         return _allocator.Create();
     }
 
+    /// <summary>Every live entity in ascending id order. Do not create or destroy entities while enumerating; copy to a list first.</summary>
+    public IEnumerable<Entity> Entities => _allocator.Enumerate();
+
+    /// <summary>Destroys every entity and component. All existing handles go stale. Used to reset the world before loading a scene.</summary>
+    /// <exception cref="InvalidOperationException">Called during a query.</exception>
+    public void Clear()
+    {
+        ThrowIfIterating();
+        foreach (var pool in _pools) pool.Clear();
+        _allocator.DestroyAll();
+    }
+
     /// <summary>True when the handle refers to an entity that has not been destroyed.</summary>
     public bool IsAlive(Entity entity) => _allocator.IsAlive(entity);
 

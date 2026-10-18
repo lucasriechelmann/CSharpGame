@@ -16,12 +16,12 @@ public sealed class HeroAnimationSystem : ISystem
     private readonly EntityAction<SpriteAnimator, PhysicsBody, PlatformerIntent> _apply;
 
     /// <summary>Creates the system, caching the parameter indices of the hero's machine.</summary>
-    /// <param name="machine">The machine built by <see cref="HeroAnimations.Create"/>.</param>
+    /// <param name="machine">The hero's machine, loaded from <c>anim/hero.anim.json</c>.</param>
     public HeroAnimationSystem(AnimationStateMachine machine)
     {
-        _speed = machine.GetParameterIndex(HeroAnimations.Speed);
-        _velocityY = machine.GetParameterIndex(HeroAnimations.VelocityY);
-        _grounded = machine.GetParameterIndex(HeroAnimations.Grounded);
+        _speed = machine.GetParameterIndex(HeroAnimationParameters.Speed);
+        _velocityY = machine.GetParameterIndex(HeroAnimationParameters.VelocityY);
+        _grounded = machine.GetParameterIndex(HeroAnimationParameters.Grounded);
         _apply = Apply; // Created once so the per-frame query does not allocate a delegate.
     }
 

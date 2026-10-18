@@ -1,0 +1,77 @@
+{
+  "components": {
+    "Name": { "value": "Creature" },
+    "Transform": {
+      "position": {
+        "x": -116.2587,
+        "y": 177.36298,
+        "z": 5
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      }
+    },
+    "Sprite": {
+      "texture": "creatures.png",
+      "size": {
+        "x": 32,
+        "y": 32
+      },
+      "source": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0
+      },
+      "color": {
+        "r": 1,
+        "g": 1,
+        "b": 1,
+        "a": 1
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "flip": "None"
+    },
+    "SpriteAnimator": {
+      "machine": "anim/creature2.anim.json",
+      "currentState": 0,
+      "stateTime": 0.9467375,
+      "speed": 1,
+      "finished": false,
+      "parameters": []
+    },
+    "BoxCollider": {
+      "size": {
+        "x": 20,
+        "y": 20
+      },
+      "offset": {
+        "x": 0,
+        "y": -4
+      }
+    },
+    "PhysicsBody": {
+      "velocity": {
+        "x": 0,
+        "y": 0
+      },
+      "gravityScale": 1,
+      "contacts": "None"
+    },
+    "Patrol": {
+      "speed": 63.76052,
+      "direction": 1
+    }
+  }
+}
