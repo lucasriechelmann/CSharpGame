@@ -13,6 +13,11 @@ public sealed partial class PlatformerGame
 
     private static readonly Rect LockedDoorSource = new(64f, 0f, 16f, 16f);
 
+    /// <summary>Sprite-sheet rectangles of a checkpoint flag that has not been reached (down) and has (raised).</summary>
+    private static readonly Rect FlagDownSource = new(96f, 0f, 16f, 16f);
+
+    private static readonly Rect FlagRaisedSource = new(112f, 0f, 16f, 16f);
+
     /// <summary>Loads the gameplay sound effects and uploads them to the sound card so the first play does not hitch.</summary>
     private GameSounds LoadGameSounds()
     {
@@ -45,6 +50,7 @@ public sealed partial class PlatformerGame
         if (_session.Phase != GamePhase.Playing) World.Get<PlatformerIntent>(_hero) = default;
 
         if (_session.GoalUnlocked != _doorOpen) SetDoorOpen(_session.GoalUnlocked);
+        ShowCheckpointFlags();
 
         // Blink while invulnerable so the player can see the grace period.
         bool blinkOff = _session.IsInvulnerable && ((int)(_session.Elapsed * 12) & 1) == 0;
@@ -58,12 +64,17 @@ public sealed partial class PlatformerGame
         Scenes.LoadFile(LevelScene);
         _hero = FindHero();
         _session.Reset(CountCoins());
+        _session.SetStart(HeroPosition());
         ResetRunRecord();
         SetDoorOpen(false);
         SnapCameraToHero();
         ShowStatus("New run");
         Log.Info("Game", $"New run: {_session.CoinsTotal} coins to collect");
     }
+
+    /// <summary>Shows the raised-flag art on every checkpoint the hero has reached (the flag state lives in the saved component).</summary>
+    private void ShowCheckpointFlags() =>
+        World.Query<Sprite, Checkpoint>((Entity _, ref Sprite sprite, ref Checkpoint flag) => sprite.Source = flag.Reached ? FlagRaisedSource : FlagDownSource);
 
     /// <summary>Switches the exit door's art and brightness between locked and open.</summary>
     private void SetDoorOpen(bool open)

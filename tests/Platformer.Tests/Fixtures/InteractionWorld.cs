@@ -60,6 +60,14 @@ internal sealed class InteractionWorld
         return goal;
     }
 
+    public Entity AddCheckpoint(float x, float y)
+    {
+        var flag = World.CreateEntity();
+        World.Add(flag, Transform.At(x, y));
+        World.Add(flag, new Checkpoint());
+        return flag;
+    }
+
     public void SetHeroPosition(float x, float y) => World.Get<Transform>(Hero).Position = new Vector3(x, y, 0f);
 
     public void SetHeroVelocity(float x, float y) => World.Get<PhysicsBody>(Hero).Velocity = new Vector2(x, y);

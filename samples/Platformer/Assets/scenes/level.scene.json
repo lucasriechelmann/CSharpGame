@@ -639,6 +639,42 @@
           }
         }
       }
+    },
+    {
+      "prefab": "prefabs/checkpoint.prefab.json",
+      "components": {
+        "Transform": {
+          "position": {
+            "x": -64,
+            "y": 52,
+            "z": 6
+          }
+        }
+      }
+    },
+    {
+      "prefab": "prefabs/checkpoint.prefab.json",
+      "components": {
+        "Transform": {
+          "position": {
+            "x": 496,
+            "y": -76,
+            "z": 6
+          }
+        }
+      }
+    },
+    {
+      "prefab": "prefabs/checkpoint.prefab.json",
+      "components": {
+        "Transform": {
+          "position": {
+            "x": 384,
+            "y": 116,
+            "z": 6
+          }
+        }
+      }
     }
   ]
 }

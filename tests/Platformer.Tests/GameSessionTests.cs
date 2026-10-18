@@ -1,3 +1,5 @@
+using System.Numerics;
+
 namespace Platformer.Tests;
 
 public class GameSessionTests
@@ -208,5 +210,64 @@ public class GameSessionTests
         session.SyncCoinsRemaining(99);
 
         Assert.Equal(0, session.CoinsCollected);
+    }
+
+    [Fact]
+    public void The_respawn_point_defaults_to_the_origin_until_a_start_is_set()
+    {
+        Assert.Equal(Vector2.Zero, new GameSession(1).RespawnPoint);
+    }
+
+    [Fact]
+    public void SetStart_sets_the_respawn_point()
+    {
+        var session = new GameSession(1);
+
+        session.SetStart(new Vector2(-528f, -234f));
+
+        Assert.Equal(new Vector2(-528f, -234f), session.RespawnPoint);
+    }
+
+    [Fact]
+    public void Reaching_a_new_checkpoint_moves_the_respawn_point_and_reports_it()
+    {
+        var session = new GameSession(1);
+        session.SetStart(new Vector2(0f, 0f));
+
+        bool isNew = session.ReachCheckpoint(new Vector2(100f, 50f));
+
+        Assert.True(isNew);
+        Assert.Equal(new Vector2(100f, 50f), session.RespawnPoint);
+    }
+
+    [Fact]
+    public void Reaching_the_current_respawn_point_again_is_not_new()
+    {
+        var session = new GameSession(1);
+        session.ReachCheckpoint(new Vector2(100f, 50f));
+
+        Assert.False(session.ReachCheckpoint(new Vector2(100f, 50f)));
+    }
+
+    [Fact]
+    public void A_checkpoint_after_the_run_ends_is_ignored()
+    {
+        var session = new GameSession(0);
+        session.TryReachGoal(); // no coins needed: wins at once
+
+        Assert.False(session.ReachCheckpoint(new Vector2(100f, 50f)));
+        Assert.Equal(Vector2.Zero, session.RespawnPoint);
+    }
+
+    [Fact]
+    public void Starting_a_new_run_keeps_the_respawn_point_until_the_game_sets_a_new_start()
+    {
+        var session = new GameSession(1);
+        session.ReachCheckpoint(new Vector2(100f, 50f));
+
+        session.Reset(1);
+        session.SetStart(new Vector2(-528f, -234f));
+
+        Assert.Equal(new Vector2(-528f, -234f), session.RespawnPoint);
     }
 }

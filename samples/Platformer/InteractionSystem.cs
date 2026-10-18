@@ -8,7 +8,7 @@ namespace Platformer;
 
 /// <summary>
 /// Turns the hero touching things into game events: coins are collected, creatures are stomped (from above, while falling) or hurt
-/// the hero (from the side or below), and the exit ends the run. It only <i>detects</i> overlaps and reports to the
+/// the hero (from the side or below, sending it back to the last checkpoint), checkpoints are raised, and the exit ends the run. It only <i>detects</i> overlaps and reports to the
 /// <see cref="GameSession"/>, which owns the rules. Run it in the fixed group after <see cref="PhysicsSystem"/> so it sees the
 /// positions the step settled on.
 /// </summary>
@@ -27,8 +27,8 @@ public sealed class InteractionSystem : ISystem
     /// <summary>Upward speed the hero gets after stomping a creature.</summary>
     private const float StompBounce = 420f;
 
-    /// <summary>Speed the hero is thrown away from a creature that hurt it (sideways, upwards).</summary>
-    private static readonly Vector2 Knockback = new(240f, 380f);
+    /// <summary>Side of the square around a checkpoint flag that counts as touching it.</summary>
+    private const float CheckpointSize = 32f;
 
     private readonly GameSession _session;
     private readonly IAudioDevice _audio;
@@ -38,6 +38,7 @@ public sealed class InteractionSystem : ISystem
     private readonly EntityAction<Transform, Coin> _touchCoin;
     private readonly EntityAction<Transform, Patrol> _touchCreature;
     private readonly EntityAction<Transform, Goal> _touchGoal;
+    private readonly EntityAction<Transform, Checkpoint> _touchCheckpoint;
     private World _world = null!;
     private Entity _heroEntity;
     private Aabb _heroBox;
@@ -56,6 +57,7 @@ public sealed class InteractionSystem : ISystem
         _touchCoin = TouchCoin; // Created once so the per-step queries do not allocate delegates.
         _touchCreature = TouchCreature;
         _touchGoal = TouchGoal;
+        _touchCheckpoint = TouchCheckpoint;
     }
 
     /// <inheritdoc />
@@ -68,6 +70,7 @@ public sealed class InteractionSystem : ISystem
         _heroBox = world.Get<BoxCollider>(_heroEntity).GetBounds(world.Get<Transform>(_heroEntity).Position);
 
         world.Query(_touchCoin);
+        world.Query(_touchCheckpoint);
         world.Query(_touchCreature);
         world.Query(_touchGoal);
         _buffer.Playback(world);
@@ -105,9 +108,32 @@ public sealed class InteractionSystem : ISystem
 
         if (!_session.TryHurt()) return;
 
-        float away = _heroBox.Center.X >= box.Center.X ? 1f : -1f;
-        body.Velocity = new Vector2(away * Knockback.X, Knockback.Y);
         _audio.Play(_session.Phase == GamePhase.Lost ? _sounds.Lose : _sounds.Hurt, volume: 0.8f);
+        if (_session.Phase == GamePhase.Playing) RespawnHero(ref body);
+    }
+
+    /// <summary>
+    /// Puts the hero back at the session's respawn point, standing still. Its <see cref="PreviousTransform"/> is cleared so the
+    /// renderer draws it at the new spot instead of sweeping it across the level; the invulnerability the hit started covers
+    /// whatever is standing there.
+    /// </summary>
+    private void RespawnHero(ref PhysicsBody body)
+    {
+        ref var transform = ref _world.Get<Transform>(_heroEntity);
+        var point = _session.RespawnPoint;
+        transform.Position = new Vector3(point.X, point.Y, transform.Position.Z);
+        body.Velocity = Vector2.Zero;
+        if (_world.Has<PreviousTransform>(_heroEntity)) _world.Get<PreviousTransform>(_heroEntity) = default;
+        _heroBox = _world.Get<BoxCollider>(_heroEntity).GetBounds(transform.Position);
+    }
+
+    private void TouchCheckpoint(Entity entity, ref Transform transform, ref Checkpoint checkpoint)
+    {
+        var point = new Vector2(transform.Position.X, transform.Position.Y);
+        if (!_heroBox.Overlaps(Aabb.FromCenter(point, new Vector2(CheckpointSize)))) return;
+
+        checkpoint.Reached = true;
+        if (_session.ReachCheckpoint(point)) _audio.Play(_sounds.Unlock, volume: 0.6f, pitch: 1.4f);
     }
 
     private void TouchGoal(Entity entity, ref Transform transform, ref Goal goal)

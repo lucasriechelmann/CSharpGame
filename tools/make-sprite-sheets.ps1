@@ -4,7 +4,7 @@ param([string]$OutDir)
 #   tiles.png     80x16   5 tiles of 16x16: 1 dirt, 2 grass, 3 stone, 4 background brick, 5 grass tuft
 #   hero.png     128x16   8 frames: 0-1 idle, 2-5 run, 6 jump, 7 fall
 #   creatures.png 256x16  8 creature types x 2 walk frames (type n uses cells 2n and 2n+1)
-#   items.png     96x16   cells 0-3 spinning coin, 4 locked exit door, 5 open exit door
+#   items.png    128x16   cells 0-3 spinning coin, 4 locked exit door, 5 open exit door, 6 checkpoint flag (down), 7 checkpoint flag (raised)
 # Everything faces right so horizontal flips are easy to see.
 
 Add-Type -AssemblyName System.Drawing
@@ -119,7 +119,7 @@ foreach ($blade in @(@(3, 4), @(6, 6), @(9, 5), @(12, 3))) {                 # 5
 $tiles.Save((Join-Path $OutDir "tiles.png"), [System.Drawing.Imaging.ImageFormat]::Png)
 
 # ---- items ----
-$items = New-Sheet 96 16
+$items = New-Sheet 128 16
 $goldEdge = Col 176 120 20
 $goldBody = Col 255 205 40
 $goldShine = Col 255 245 170
@@ -147,6 +147,19 @@ foreach ($cell in 4..5) {
     } else {
         Fill $items ($ox + 4) 4 8 12 (Col 90 230 255)
         Fill $items ($ox + 6) 6 4 10 (Col 220 255 255)
+    }
+}
+# Checkpoint flag: a pole with a dull grey-blue flag (6) that turns bright green and sits higher up the pole once reached (7).
+foreach ($cell in 6..7) {
+    $ox = $cell * 16
+    Fill $items ($ox + 4) 1 2 15 (Col 170 170 182)
+    Fill $items ($ox + 3) 14 4 2 (Col 120 120 132)
+    $top = $(if ($cell -eq 6) { 7 } else { 1 })
+    $flagBody = $(if ($cell -eq 6) { Col 110 120 150 } else { Col 80 220 110 })
+    $flagEdge = $(if ($cell -eq 6) { Col 80 88 112 } else { Col 40 150 70 })
+    foreach ($row in 0..4) {
+        $width = 7 - [math]::Abs($row - 2) * 2
+        Fill $items ($ox + 6) ($top + $row) $width 1 $(if ($row -eq 0 -or $row -eq 4) { $flagEdge } else { $flagBody })
     }
 }
 $items.Save((Join-Path $OutDir "items.png"), [System.Drawing.Imaging.ImageFormat]::Png)

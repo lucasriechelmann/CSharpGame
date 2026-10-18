@@ -9,7 +9,7 @@ PowerShell helpers for verifying the engine visually. Unit tests cover the maths
 | `drive-inspector.ps1 -Exe <path> -OutDir <dir>` | Launches the sample, drags the Inspector window up from its default spot and clicks an entity in its list, saving `I1_moved.png` and `I2_selected.png` (the details pane should show the entity's components). Click coordinates assume a fresh layout, so delete `imgui.ini` first. |
 | `capture-clean.ps1 -Exe <path> -Out <png> [-Keys 0x44] [-HoldSeconds 1] [-Then 0x0D] [-KeepUi]` | Launches the exe, hides the debug UI with `F1` (unless `-KeepUi`), optionally holds keys (virtual-key codes, comma separated) for `-HoldSeconds`, optionally taps one more key (`-Then`, e.g. Enter), then screenshots only the scene. Holding a harmless key such as `0x10` for 16 s lets the game-over screen appear. Use it to judge rendering effects (lighting, bloom) that the debug panels would cover. |
 | `make-sounds.ps1 [-OutDir <dir>]` | Synthesises the sample's sound effects (`jump.wav`, `land.wav`, `spawn.wav`) into `samples/Platformer/Assets/sounds`. |
-| `make-sprite-sheets.ps1 -OutDir <dir>` | Regenerates the Platformer sample's art in `samples/Platformer/Assets`: `tiles.png` (5 tiles), `hero.png` (8 animation frames), `creatures.png` (8 types x 2 walk frames) and `items.png` (spinning coin, locked and open exit door). |
+| `make-sprite-sheets.ps1 -OutDir <dir>` | Regenerates the Platformer sample's art in `samples/Platformer/Assets`: `tiles.png` (5 tiles), `hero.png` (8 animation frames), `creatures.png` (8 types x 2 walk frames) and `items.png` (spinning coin, locked and open exit door, checkpoint flag down and raised). |
 
 Example (after `dotnet build`):
 

@@ -64,6 +64,7 @@ public sealed partial class PlatformerGame : Game
         Components.Register<Patrol>("Patrol");
         Components.Register<Coin>("Coin");
         Components.Register<Goal>("Goal");
+        Components.Register<Checkpoint>("Checkpoint");
     }
 
     /// <inheritdoc />
@@ -82,6 +83,7 @@ public sealed partial class PlatformerGame : Game
         Audio.Preload(_spawnSound);
         _sounds = LoadGameSounds();
         _session = new GameSession(CountCoins());
+        _session.SetStart(HeroPosition());
         LoadHighScores();
         Log.Info("Game", $"Level loaded: {World.EntityCount} entities, {_session.CoinsTotal} coins");
 

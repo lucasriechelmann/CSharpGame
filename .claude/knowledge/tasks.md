@@ -10,7 +10,7 @@ Small, about one session. Fixes known gaps that affect game feel and that the ed
 - [x] **Logging.** A small `ILogger`-style abstraction in Core (no Silk.NET), with a console sink and an in-overlay log panel. Why: the editor and asset hot-reload both need it.
 - [x] **Pause and menu.** Pause state in `Game`, a menu drawn from `Game.Hud()`.
 - [ ] **Moving platforms.** Physics2D support (carry riders), then use in the sample level.
-- [ ] **Checkpoints.** Respawn at the last checkpoint instead of restarting the level; rules stay in `GameSession`.
+- [x] **Checkpoints.** Respawn at the last checkpoint instead of restarting the level; rules stay in `GameSession`.
 - [x] **Saved high scores.** Persist to a JSON file; unit-test the load/save path.
 
 ## Phase 12: Editor (largest piece, three sub-phases)

@@ -1,3 +1,5 @@
+using System.Numerics;
+
 namespace Platformer;
 
 /// <summary>
@@ -59,7 +61,13 @@ public sealed class GameSession
     /// <summary>Bonus points a win would earn right now for speed.</summary>
     public int TimeBonus => Math.Max(0, BonusSeconds - (int)Elapsed) * PointsPerSecondSaved;
 
-    /// <summary>Starts a fresh run.</summary>
+    /// <summary>
+    /// Where the hero comes back after losing a life: the level start until a checkpoint is reached, then the latest checkpoint.
+    /// A world position (the session only stores it; the game moves the hero).
+    /// </summary>
+    public Vector2 RespawnPoint { get; private set; }
+
+    /// <summary>Starts a fresh run. Set the level start with <see cref="SetStart"/> afterwards.</summary>
     /// <param name="coinsTotal">How many coins the level holds.</param>
     /// <exception cref="ArgumentOutOfRangeException">The count is negative.</exception>
     public void Reset(int coinsTotal)
@@ -83,6 +91,21 @@ public sealed class GameSession
 
         Elapsed += dt;
         if (InvulnerableSeconds > 0) InvulnerableSeconds = Math.Max(0, InvulnerableSeconds - dt);
+    }
+
+    /// <summary>Sets where the hero respawns until a checkpoint is reached (the level start, or the spot a quick-save was loaded at).</summary>
+    /// <param name="point">World position to respawn at.</param>
+    public void SetStart(Vector2 point) => RespawnPoint = point;
+
+    /// <summary>Makes a checkpoint the respawn point.</summary>
+    /// <param name="point">World position of the checkpoint.</param>
+    /// <returns>True when this is a new respawn point (so the caller should play the sound and raise the flag); false when the run is over or it is already the current one.</returns>
+    public bool ReachCheckpoint(Vector2 point)
+    {
+        if (Phase != GamePhase.Playing || point == RespawnPoint) return false;
+
+        RespawnPoint = point;
+        return true;
     }
 
     /// <summary>Records a picked-up coin.</summary>

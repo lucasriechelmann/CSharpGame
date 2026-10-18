@@ -26,6 +26,13 @@ public sealed partial class PlatformerGame
     private string _status = "";
     private double _statusSecondsLeft;
 
+    /// <summary>The hero's simulated position in the world (not the interpolated draw position).</summary>
+    private Vector2 HeroPosition()
+    {
+        var position = World.Get<Transform>(_hero).Position;
+        return new Vector2(position.X, position.Y);
+    }
+
     /// <summary>The hero is the one entity that has a <see cref="PlatformerIntent"/>.</summary>
     private Entity FindHero()
     {
@@ -119,6 +126,7 @@ public sealed partial class PlatformerGame
         Scenes.LoadFile(QuickSavePath);
         _hero = FindHero();
         SnapCameraToHero();
+        _session.SetStart(HeroPosition()); // the loaded spot is where the hero comes back after a hit
         _session.SyncCoinsRemaining(CountCoins()); // the saved world holds only the coins not yet collected
         SetDoorOpen(_session.GoalUnlocked);
         ShowStatus($"Loaded {World.EntityCount} entities");
