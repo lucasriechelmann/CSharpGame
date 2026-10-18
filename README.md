@@ -119,4 +119,4 @@ Details live in [`CLAUDE.md`](CLAUDE.md) and the [`.claude/knowledge/`](.claude/
 
 ## License
 
-No license has been chosen yet, so all rights are reserved by default. Add a `LICENSE` file to change that.
+Released under the [MIT License](LICENSE).
