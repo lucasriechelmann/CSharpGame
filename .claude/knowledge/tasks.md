@@ -87,7 +87,37 @@ Small, about one session. Fixes known gaps that affect game feel and that the ed
 - [ ] Per-camera effects (the chain is one per window; a camera with its own effect list needs viewports). Follow-ups for the done parts: soft shadows, a shadow-casting polygon/segment component, shadows from sprites by alpha, per-light shadow toggle; bloom/other effects keep 8-bit internal targets, MSAA does not apply when nothing redirects the scene (use the chain), a pixel-perfect mouse mapping in the editor, integer zoom enforcement.
 - [x] Audio: streaming (`WavStream`), positional audio, `AudioSource`/`AudioListener` + `AudioSourceSystem`, mixer groups (`AudioMixer`). Follow-ups: Ogg/MP3 decoding, effects (reverb, low-pass), doppler, ducking, a settings panel for the mixer, an audible check by ear (verified by tests and silent device runs only).
 
-Fast path to a playable game instead: phase 16 then a small 3D game; or phase 18 for more platformer levels.
+
+## Phase 20: Verify and finish (next)
+
+- [ ] Window-check the phase 18 editor extras by hand: History window, rectangle/fill tile brushes with flip flags, Save as prefab, Revert to prefab (undo it too).
+- [ ] Add a demo Tiled map (flip, animated and parallax tiles) to the Platformer and look at it in a window.
+- [ ] Listen to the audio: mixer groups, a positioned `AudioSource` with an `AudioListener`, a streamed music track; add a mixer volume panel to the Platformer.
+- [ ] Cached chunk meshes for tile layers (one buffer per chunk, rebuilt when the chunk changes).
+- [ ] Per-camera effects (a camera with its own effect list and viewport).
+
+## Phase 21: Editor as a real tool (design in `architecture.md` once started)
+
+Problem: the editor and all debug panels draw over the game window, so the game is hard to see. Decision to record: keep **one process** (the editor is a mode of the same `Game`, so Play uses the real game code with no serialization gap), but dock everything into a layout and render the game into a **scene/game view panel** instead of the full window. A separate editor executable is a later option, not the first step.
+- [ ] Render the scene into a `RenderTarget` shown as an ImGui image in a docked Scene view panel (and a Game view while playing); mouse picking, gizmos and camera controls map through the panel rectangle (reuse the `PixelPerfectLayout` idea).
+- [ ] Default dock layout: Hierarchy left, Inspector right, Assets/Log/Profiler tabbed at the bottom, saved to an `.ini` and a "Reset layout" menu item.
+- [ ] Stop drawing debug windows over the game: F1 debug overlay folded into tabbed panels (Engine stats, Profiler, Post effects, Log), closed by default when not editing.
+- [ ] Separate "play" from "edit" visually: toolbar with Play/Pause/Stop, game view fills the centre while playing, panels optional.
+- [ ] Asset browser panel (textures, prefabs, scenes, sounds) with drag-and-drop onto the scene and Save as prefab by drag.
+- [ ] Editor-only code excluded from shipped builds (see Phase 22).
+
+## Phase 22: Building and shipping a game
+
+- [ ] A `Release` configuration where `Game` has no editor, inspector, profiler or debug overlay (`#if EDITOR` or a compile-time option on the Runtime project; panels live in `Engine.Runtime.Editor` so they can be left out).
+- [ ] `tools/publish.ps1`: `dotnet publish -c Release -r win-x64 --self-contained` for a sample, copies `Assets/`, trims or leaves out the editor, produces a folder or zip ready to run.
+- [ ] Asset packing/validation step: check every scene, prefab and material loads and every referenced file exists before shipping.
+- [ ] Settings file for the shipped game (window size, fullscreen, volume, key bindings) and a command-line `--editor` flag in Debug.
+
+## Phase 23: Pick the next game or engine depth
+
+- [ ] A small playable 3D game on the character controller, PBR and physics (shows which engine pieces are missing).
+- [ ] More platformer levels authored in Tiled with the new import and editor tools.
+- [ ] Engine depth candidates: soft light shadows, a shadow-casting polygon component, image-based lighting and a skybox, rigid-body rotation in 3D physics, Ogg/MP3 audio.
 
 ## Smaller known gaps (from `features.md`, no owner yet)
 
