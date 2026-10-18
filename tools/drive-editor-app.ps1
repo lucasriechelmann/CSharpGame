@@ -58,10 +58,10 @@ try {
     Shot $proc "$OutDir\app_0_layout.png"
     Click $proc 872 165    # a coin in the scene
     Shot $proc "$OutDir\app_1_selected.png"
-    Click $proc 265 89     # Play
+    Click $proc 279 112    # Play
     Start-Sleep -Milliseconds 1500
     Shot $proc "$OutDir\app_2_playing.png"
-    Click $proc 265 89     # Stop
+    Click $proc 279 112    # Stop
     Shot $proc "$OutDir\app_3_stopped.png"
 
     if ($proc.HasExited) { Write-Output "EXITED during the run (code $($proc.ExitCode))"; Get-Content "$OutDir\app_err.txt" | Select-Object -First 20 }
