@@ -40,7 +40,6 @@ internal static class SkinnedGltf
             0, 0, 0,  0, 1, 0,  0, 0, 0,    // key 0: in-tangent, value, out-tangent
             0, 0, 0,  0, 2, 0,  0, 0, 0));  // key 1
 
-        string Float(float v) => v.ToString("R", CultureInfo.InvariantCulture);
         string buffer = GltfBytes.DataUri([.. data]);
         return $$"""
             {

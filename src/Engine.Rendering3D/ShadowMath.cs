@@ -43,14 +43,16 @@ public static class ShadowMath
         Span<Vector3> corners = stackalloc Vector3[8];
         float tan = MathF.Tan(camera.FovY * 0.5f);
         int index = 0;
-        foreach (float depth in stackalloc float[] { camera.Near, far })
+        Span<float> depths = [camera.Near, far];
+        Span<float> signs = [-1f, 1f];
+        foreach (float depth in depths)
         {
             float halfHeight = tan * depth;
             float halfWidth = halfHeight * camera.AspectRatio;
             var middle = camera.Position + camera.Forward * depth;
-            foreach (float sx in stackalloc float[] { -1f, 1f })
+            foreach (float sx in signs)
             {
-                foreach (float sy in stackalloc float[] { -1f, 1f })
+                foreach (float sy in signs)
                     corners[index++] = middle + camera.Right * (sx * halfWidth) + camera.Up * (sy * halfHeight);
             }
         }
