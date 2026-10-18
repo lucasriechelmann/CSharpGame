@@ -33,6 +33,32 @@ public sealed class CommandStack(EditContext context, int capacity = CommandStac
     /// <summary>Description of what <see cref="Redo"/> would reapply, or null when empty.</summary>
     public string? RedoDescription => _redo.Count > 0 ? _redo[^1].Description : null;
 
+    /// <summary>The commands that can be undone, oldest first (the last one is what <see cref="Undo"/> would revert).</summary>
+    public IReadOnlyList<IEditCommand> UndoCommands => _undo;
+
+    /// <summary>The commands that can be redone, in the order they would be redone: the first is what <see cref="Redo"/> would reapply.</summary>
+    public IEnumerable<IEditCommand> RedoCommands => Enumerable.Reverse(_redo);
+
+    /// <summary>Undoes up to <paramref name="count"/> commands, newest first (the History window's "go back to here").</summary>
+    /// <param name="count">How many steps to revert.</param>
+    /// <returns>The last command that was undone, or null when nothing was.</returns>
+    public IEditCommand? UndoMany(int count)
+    {
+        IEditCommand? last = null;
+        for (int i = 0; i < count; i++) last = Undo() ?? last;
+        return last;
+    }
+
+    /// <summary>Redoes up to <paramref name="count"/> commands (the History window's "go forward to here").</summary>
+    /// <param name="count">How many steps to reapply.</param>
+    /// <returns>The last command that was redone, or null when nothing was.</returns>
+    public IEditCommand? RedoMany(int count)
+    {
+        IEditCommand? last = null;
+        for (int i = 0; i < count; i++) last = Redo() ?? last;
+        return last;
+    }
+
     /// <summary>Applies <paramref name="command"/> and remembers it.</summary>
     /// <param name="command">The change to make.</param>
     public void Execute(IEditCommand command)

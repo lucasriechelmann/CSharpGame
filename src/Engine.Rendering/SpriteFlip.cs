@@ -12,4 +12,7 @@ public enum SpriteFlip
 
     /// <summary>Mirror top-to-bottom.</summary>
     Vertical = 2,
+
+    /// <summary>Swap the texture's x and y axes (mirror along the diagonal). Applied before <see cref="Horizontal"/> and <see cref="Vertical"/>, so the three together give all eight orientations of a square tile.</summary>
+    Diagonal = 4,
 }

@@ -6,7 +6,7 @@ namespace Engine.Tilemaps;
 /// <summary>A tile layer gathered from the world, waiting to be sorted by depth and drawn.</summary>
 internal struct TileLayerDraw
 {
-    /// <summary>World position of the layer's cell (0,0) bottom-left corner.</summary>
+    /// <summary>World position of the layer's cell (0,0) bottom-left corner, already shifted by its parallax.</summary>
     public Vector3 Origin;
 
     /// <summary>The tile data.</summary>

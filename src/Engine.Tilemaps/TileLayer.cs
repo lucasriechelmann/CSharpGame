@@ -35,14 +35,14 @@ public sealed class TileLayer
     /// <summary>The cell index containing a layer-local coordinate in world units (measured from the layer's origin).</summary>
     public int CellIndex(float local) => (int)MathF.Floor(local / TileSize);
 
-    /// <summary>The tile id at a cell; 0 when empty or when no chunk exists there.</summary>
+    /// <summary>The raw tile value at a cell (the id in the low bits plus <see cref="TileId"/> flip flags); 0 when empty or when no chunk exists there. Use <see cref="TileId.Id"/> for just the id.</summary>
     public int GetTile(int x, int y) =>
         _chunks.TryGetValue(Key(ChunkIndex(x), ChunkIndex(y)), out var chunk)
             ? chunk.Tiles[LocalIndex(x, y)]
             : 0;
 
-    /// <summary>Places a tile (or clears the cell with id 0). Chunks are created on demand and removed when they become empty.</summary>
-    /// <exception cref="ArgumentOutOfRangeException">The id is negative.</exception>
+    /// <summary>Places a tile (or clears the cell with value 0). The value may carry <see cref="TileId"/> flip flags. Chunks are created on demand and removed when they become empty.</summary>
+    /// <exception cref="ArgumentOutOfRangeException">The value is negative.</exception>
     public void SetTile(int x, int y, int id)
     {
         if (id < 0) throw new ArgumentOutOfRangeException(nameof(id), "Tile ids cannot be negative (0 means empty).");

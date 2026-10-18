@@ -23,7 +23,7 @@ public static class TileGridBuilder
 
         for (int y = minY; y <= maxY; y++)
             for (int x = minX; x <= maxX; x++)
-                if (tileSet.IsSolid(layer.GetTile(x, y)))
+                if (tileSet.IsSolid(layer.GetTile(x, y))) // IsSolid ignores flip flags
                     grid.SetSolid(x - minX, y - minY, true);
 
         return grid;

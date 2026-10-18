@@ -31,27 +31,30 @@ public static class SpriteQuad
         float cos = MathF.Cos(draw.Rotation);
         float sin = MathF.Sin(draw.Rotation);
 
-        // Texture coordinates, swapped per axis when flipped.
-        float u0 = draw.UvRect.X;
-        float u1 = draw.UvRect.X + draw.UvRect.Width;
-        float v0 = draw.UvRect.Y;
-        float v1 = draw.UvRect.Y + draw.UvRect.Height;
-        if ((draw.Flip & SpriteFlip.Horizontal) != 0) (u0, u1) = (u1, u0);
-        if ((draw.Flip & SpriteFlip.Vertical) != 0) (v0, v1) = (v1, v0);
-
-        destination[0] = Corner(draw, left, top, cos, sin, u0, v0);      // top-left
-        destination[1] = Corner(draw, right, top, cos, sin, u1, v0);     // top-right
-        destination[2] = Corner(draw, right, bottom, cos, sin, u1, v1);  // bottom-right
-        destination[3] = Corner(draw, left, bottom, cos, sin, u0, v1);   // bottom-left
+        // Each corner samples the tile at (a, b) in 0..1 across the region, a to the right and b downwards. A diagonal flip swaps the two
+        // first, then the horizontal and vertical flips mirror the result (the order Tiled defines).
+        destination[0] = Corner(draw, left, top, cos, sin, Sample(draw, 0f, 0f));      // top-left
+        destination[1] = Corner(draw, right, top, cos, sin, Sample(draw, 1f, 0f));     // top-right
+        destination[2] = Corner(draw, right, bottom, cos, sin, Sample(draw, 1f, 1f));  // bottom-right
+        destination[3] = Corner(draw, left, bottom, cos, sin, Sample(draw, 0f, 1f));   // bottom-left
     }
 
-    private static SpriteVertex Corner(in SpriteDraw draw, float x, float y, float cos, float sin, float u, float v) => new()
+    /// <summary>The texture coordinate a quad corner reads, for the corner's position (a across, b down) within the sprite after flipping.</summary>
+    private static Vector2 Sample(in SpriteDraw draw, float a, float b)
+    {
+        if ((draw.Flip & SpriteFlip.Diagonal) != 0) (a, b) = (b, a);
+        if ((draw.Flip & SpriteFlip.Horizontal) != 0) a = 1f - a;
+        if ((draw.Flip & SpriteFlip.Vertical) != 0) b = 1f - b;
+        return new Vector2(draw.UvRect.X + a * draw.UvRect.Width, draw.UvRect.Y + b * draw.UvRect.Height);
+    }
+
+    private static SpriteVertex Corner(in SpriteDraw draw, float x, float y, float cos, float sin, Vector2 texCoord) => new()
     {
         Position = new Vector3(
             draw.Position.X + x * cos - y * sin,
             draw.Position.Y + x * sin + y * cos,
             draw.Position.Z),
-        TexCoord = new Vector2(u, v),
+        TexCoord = texCoord,
         Color = draw.Color,
     };
 }

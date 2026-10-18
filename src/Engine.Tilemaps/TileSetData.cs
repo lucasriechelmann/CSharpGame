@@ -30,6 +30,9 @@ public sealed class TileSetData
     /// <summary>Rows of tiles; worked out from the texture height when omitted.</summary>
     public int? Rows { get; set; }
 
+    /// <summary>The animated tiles: each names a tile and the frames it cycles through.</summary>
+    public List<TileAnimationData> Animations { get; set; } = new();
+
     /// <summary>Ids of the tiles that block movement.</summary>
     public List<int> Solid { get; set; } = new();
 
@@ -54,6 +57,12 @@ public sealed class TileSetData
             if (id < 1 || id > tileSet.TileCount)
                 throw new InvalidOperationException($"Tile set: solid id {id} is outside 1..{tileSet.TileCount}.");
             tileSet.SetSolid(id, true);
+        }
+
+        foreach (var animation in Animations)
+        {
+            if (animation.Frames.Count == 0) throw new InvalidOperationException($"Tile set: the animation of tile {animation.Tile} has no frames.");
+            tileSet.SetAnimation(animation.Tile, animation.Frames.Select(f => new TileFrame(f.Tile, f.Duration)).ToList());
         }
 
         return tileSet;

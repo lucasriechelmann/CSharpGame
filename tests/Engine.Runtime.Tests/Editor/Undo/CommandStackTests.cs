@@ -155,4 +155,25 @@ public class CommandStackTests
         Assert.Throws<ArgumentNullException>(() => _stack.Execute(null!));
         Assert.Throws<ArgumentNullException>(() => _stack.Push(null!));
     }
+
+    [Fact]
+    public void UndoMany_and_RedoMany_step_several_commands_and_stop_at_the_ends()
+    {
+        _stack.Execute(Command("a"));
+        _stack.Execute(Command("b"));
+        _stack.Execute(Command("c"));
+        _log.Clear();
+
+        var last = _stack.UndoMany(5);
+
+        Assert.Equal(new[] { "undo c", "undo b", "undo a" }, _log);
+        Assert.Equal("a", last!.Description);
+        Assert.Null(_stack.UndoMany(2));
+
+        _log.Clear();
+        _stack.RedoMany(2);
+
+        Assert.Equal(new[] { "do a", "do b" }, _log);
+        Assert.Equal("c", _stack.RedoDescription);
+    }
 }

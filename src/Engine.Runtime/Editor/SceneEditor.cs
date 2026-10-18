@@ -29,6 +29,7 @@ internal sealed partial class SceneEditor
     private readonly World _world;
     private readonly EntityInspector _inspector;
     private readonly HierarchyPanel _hierarchy;
+    private readonly HistoryPanel _historyPanel;
     private readonly Logger _log;
     private readonly EditorHooks _hooks;
     private readonly CommandStack _history;
@@ -53,6 +54,7 @@ internal sealed partial class SceneEditor
         _history = new CommandStack(new EditContext(world));
         _tiles = new TilePainter(world, assets, inspector, _history);
         _boxes = new RenderedBoxes(world, assets);
+        _historyPanel = new HistoryPanel(_history, () => !Playing, entity => _inspector.Selected = entity);
         _hierarchy = new HierarchyPanel(world, inspector, () => !Playing, NewEntity, NewChild, DuplicateSelected, DeleteSelected, Reparent);
     }
 
@@ -117,8 +119,10 @@ internal sealed partial class SceneEditor
     public void Draw()
     {
         DrawMenuBar();
+        DrawPrefabPopup();
         ImGui.DockSpaceOverViewport(0, ImGui.GetMainViewport(), ImGuiDockNodeFlags.PassthruCentralNode);
         _hierarchy.Draw();
+        _historyPanel.Draw();
         _inspector.DrawDetailsWindow();
         _tiles.DrawPanel();
 
@@ -154,6 +158,8 @@ internal sealed partial class SceneEditor
             if (ImGui.MenuItem("New entity", "Ctrl+N")) NewEntity();
             if (ImGui.MenuItem("Duplicate", "Ctrl+D", false, !_inspector.Selected.IsNull)) DuplicateSelected();
             if (ImGui.MenuItem("Delete", "Del", false, !_inspector.Selected.IsNull)) DeleteSelected();
+            ImGui.Separator();
+            DrawPrefabMenuItems();
             ImGui.EndMenu();
         }
 

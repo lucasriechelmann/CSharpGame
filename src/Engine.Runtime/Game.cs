@@ -59,7 +59,8 @@ public abstract class Game : IDisposable
         Log.AddSink(new ConsoleLogSink()).AddSink(logHistory);
         _logPanel = new LogPanel(logHistory, Log);
         _editor = new SceneEditor(World, Assets, _inspector, Log, new EditorHooks(() => SceneCamera, () => SceneCamera3D, () => ScenePath, path => Scenes.SaveToFile(path), LoadSceneFromEditor, EditableAssetPath, path => _hotReloader?.Ignore(path),
-            () => Scenes.Save(), RestoreSceneFromEditor, PlayStarted, PlayStopped));
+            () => Scenes.Save(), RestoreSceneFromEditor, PlayStarted, PlayStopped,
+            e => World.TryGet<PrefabLink>(e, out var link) && !string.IsNullOrEmpty(link.Prefab) ? link.Prefab : null, Scenes.SaveAsPrefab, Scenes.RevertToPrefab));
         FixedSystems.Profile(Profiler, "Fixed");
         FrameSystems.Profile(Profiler, "Frame");
         RenderSystems.Profile(Profiler, "Render");

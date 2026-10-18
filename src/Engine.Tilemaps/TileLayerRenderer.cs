@@ -18,6 +18,12 @@ public struct TileLayerRenderer
     /// <summary>Tint multiplied with every tile; <see cref="Color.White"/> leaves the art unchanged.</summary>
     public Color Tint;
 
+    /// <summary>
+    /// Parallax: how much the layer lags behind the camera, per axis. 0 (the default) moves with the world like any other layer; 0.5 scrolls
+    /// at half the camera's speed, so it reads as far away; 1 stays put on the screen (a sky). The layer is shifted by <c>camera position * Parallax</c>.
+    /// </summary>
+    public System.Numerics.Vector2 Parallax;
+
     /// <summary>False draws behind sprites (ground, background); true draws in front of them (foreground decoration).</summary>
     public bool Foreground;
 

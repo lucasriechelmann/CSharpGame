@@ -1,3 +1,4 @@
+using Engine.Core.Ecs;
 using Engine.Rendering;
 using Engine.Rendering3D;
 
@@ -15,6 +16,9 @@ namespace Engine.Runtime.Editor;
 /// <param name="Restore">Replaces the world with scene JSON text (a <see cref="Snapshot"/>) and lets the game re-establish what it cached.</param>
 /// <param name="PlayStarted">Tells the game the editor started playing, so it can begin a fresh run from the edited world.</param>
 /// <param name="PlayStopped">Tells the game the editor stopped playing and the world was restored, so it can discard the run's state.</param>
+/// <param name="PrefabOf">The prefab file an entity was made from, or null when it was not made from one.</param>
+/// <param name="SaveAsPrefab">Writes an entity as a prefab file (a name relative to the asset root) and links the entity to it.</param>
+/// <param name="RevertToPrefab">Puts a prefab instance back to what its prefab says.</param>
 internal sealed record EditorHooks(
     Func<Camera2D?> Camera,
     Func<Camera3D?> Camera3D,
@@ -26,4 +30,7 @@ internal sealed record EditorHooks(
     Func<string> Snapshot,
     Action<string> Restore,
     Action PlayStarted,
-    Action PlayStopped);
+    Action PlayStopped,
+    Func<Entity, string?> PrefabOf,
+    Action<Entity, string> SaveAsPrefab,
+    Action<Entity> RevertToPrefab);

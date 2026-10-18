@@ -21,6 +21,9 @@ internal sealed class TilePainter(World world, AssetManager assets, EntityInspec
     private const float PaletteTileSize = 36f;
 
     private int _selectedTile = 1;
+    private int _flags;
+    private TileBrush _brush = TileBrush.Pencil;
+    private (int X, int Y)? _anchor;
     private TilePaintStroke? _stroke;
     private ImGuiMouseButton _strokeButton;
     private (int X, int Y)? _lastCell;
@@ -84,6 +87,7 @@ internal sealed class TilePainter(World world, AssetManager assets, EntityInspec
         bool paint = PaintMode;
         if (ImGui.Checkbox("Paint mode (B)", ref paint)) TogglePaintMode();
         ImGui.TextDisabled("Left button paints, right button erases.");
+        DrawBrushControls();
 
         DrawPalette(target.TileSet);
         ImGui.End();
@@ -132,19 +136,65 @@ internal sealed class TilePainter(World world, AssetManager assets, EntityInspec
         {
             if (ImGui.IsMouseClicked(ImGuiMouseButton.Left)) BeginStroke(target, ImGuiMouseButton.Left);
             else if (ImGui.IsMouseClicked(ImGuiMouseButton.Right)) BeginStroke(target, ImGuiMouseButton.Right);
+
+            if (_stroke != null && _brush == TileBrush.Rectangle) _anchor = (cellX, cellY);
+            if (_stroke != null && _brush == TileBrush.Fill)
+            {
+                FillFrom(target, camera, cellX, cellY);
+                EndStroke();
+                return;
+            }
         }
 
         if (_stroke == null) return;
         if (!ImGui.IsMouseDown(_strokeButton))
         {
+            if (_brush == TileBrush.Rectangle && _anchor is var (ax, ay))
+            {
+                foreach (var (x, y) in TileShapes.Rectangle(ax, ay, cellX, cellY)) _stroke.Paint(x, y, ValueFor(_strokeButton));
+            }
+
             EndStroke();
             return;
         }
 
-        int id = _strokeButton == ImGuiMouseButton.Right ? 0 : _selectedTile;
+        if (_brush != TileBrush.Pencil) return; // a rectangle only previews while the button is down
+        int id = ValueFor(_strokeButton);
         var (fromX, fromY) = _lastCell ?? (cellX, cellY);
         foreach (var (x, y) in TileCells.Line(fromX, fromY, cellX, cellY)) _stroke.Paint(x, y, id);
         _lastCell = (cellX, cellY);
+    }
+
+    /// <summary>The raw tile value a button paints: the right button erases, the left paints the chosen tile with the chosen flips.</summary>
+    private int ValueFor(ImGuiMouseButton button) => button == ImGuiMouseButton.Right || _selectedTile == 0 ? 0 : TileId.With(_selectedTile, _flags);
+
+    /// <summary>Bucket fill inside the part of the layer the camera can see.</summary>
+    private void FillFrom(Target target, Camera2D camera, int cellX, int cellY)
+    {
+        camera.GetVisibleBounds(out var min, out var max);
+        var (minX, minY) = TileCells.FromWorld(min, target.Origin, target.Layer.TileSize);
+        var (maxX, maxY) = TileCells.FromWorld(max, target.Origin, target.Layer.TileSize);
+        int value = ValueFor(_strokeButton);
+        foreach (var (x, y) in TileShapes.FloodFill(target.Layer, cellX, cellY, minX, minY, maxX, maxY)) _stroke!.Paint(x, y, value);
+    }
+
+    /// <summary>The brush choice and flip toggles in the Tiles window.</summary>
+    private void DrawBrushControls()
+    {
+        int brush = (int)_brush;
+        ImGui.RadioButton("Pencil", ref brush, (int)TileBrush.Pencil);
+        ImGui.SameLine();
+        ImGui.RadioButton("Rectangle", ref brush, (int)TileBrush.Rectangle);
+        ImGui.SameLine();
+        ImGui.RadioButton("Fill", ref brush, (int)TileBrush.Fill);
+        _brush = (TileBrush)brush;
+
+        bool h = (_flags & TileId.FlipHorizontal) != 0, v = (_flags & TileId.FlipVertical) != 0, d = (_flags & TileId.FlipDiagonal) != 0;
+        if (ImGui.Checkbox("Flip X", ref h)) _flags ^= TileId.FlipHorizontal;
+        ImGui.SameLine();
+        if (ImGui.Checkbox("Flip Y", ref v)) _flags ^= TileId.FlipVertical;
+        ImGui.SameLine();
+        if (ImGui.Checkbox("Diagonal", ref d)) _flags ^= TileId.FlipDiagonal;
     }
 
     /// <summary>Outlines the cell under the mouse so the artist sees where a click would paint.</summary>
@@ -155,6 +205,15 @@ internal sealed class TilePainter(World world, AssetManager assets, EntityInspec
         if (!TryGetTarget(out var target)) return;
 
         var (x, y) = TileCells.FromWorld(camera.ScreenToWorld(mouse), target.Origin, target.Layer.TileSize);
+        if (_stroke != null && _brush == TileBrush.Rectangle && _anchor is var (ax, ay))
+        {
+            var (lo, hi) = TileCells.Bounds(Math.Min(ax, x), Math.Min(ay, y), target.Origin, target.Layer.TileSize);
+            var (lo2, hi2) = TileCells.Bounds(Math.Max(ax, x), Math.Max(ay, y), target.Origin, target.Layer.TileSize);
+            var p = camera.WorldToScreen(Vector2.Min(lo, lo2));
+            var q = camera.WorldToScreen(Vector2.Max(hi, hi2));
+            ImGui.GetBackgroundDrawList().AddRect(Vector2.Min(p, q), Vector2.Max(p, q), ImGui.GetColorU32(new Vector4(1f, 0.9f, 0.3f, 1f)), 0f, ImDrawFlags.None, 2f);
+        }
+
         var (min, max) = TileCells.Bounds(x, y, target.Origin, target.Layer.TileSize);
         var a = camera.WorldToScreen(min);
         var b = camera.WorldToScreen(max);
@@ -174,6 +233,7 @@ internal sealed class TilePainter(World world, AssetManager assets, EntityInspec
     {
         var stroke = _stroke;
         _stroke = null;
+        _anchor = null;
         _lastCell = null;
         if (stroke == null || stroke.IsEmpty) return;
 

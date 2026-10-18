@@ -73,10 +73,12 @@ Small, about one session. Fixes known gaps that affect game feel and that the ed
 - [x] glTF skins and animation: `ModelAnimator`, `ModelAnimationSystem`, `AnimatedPose`, GPU skinning (64 joints), linear/step/cubic-spline channels.
 - [ ] Follow-ups: cascaded shadow maps and point-light shadows, image-based lighting and a skybox, occlusion/emissive maps, blending between clips, animation events, morph targets, instancing of skinned meshes, reading a file's own TANGENT attribute, order-independent transparency.
 
-## Phase 18: Level and content pipeline
+## Phase 18: Level and content pipeline (done, except cached chunk meshes)
 
-- [ ] Tiled import, animated tiles, flip flags, parallax, cached chunk meshes.
-- [ ] Editor extras: History window, save-entity-as-prefab, revert-to-prefab, fill/rectangle tile brushes.
+- [x] Tile flip flags (`TileId`), animated tiles (`TileSet.SetAnimation`), parallax layers, `SpriteFlip.Diagonal`.
+- [x] Tiled `.tmj`/`.tsj` import (`TiledReader`, `TiledConverter`, `TiledSpawner`).
+- [x] Editor: History window (click to jump), rectangle and fill tile brushes with flip flags, save-entity-as-prefab, undoable revert-to-prefab.
+- [ ] Follow-ups: cached chunk meshes (every visible tile is still one `SpriteDraw` per frame), a demo map and a window check of flip/animated/parallax tiles, `.tmx` and infinite maps, Tiled object layers turned into entities by a registered spawner, editing a prefab file and updating open instances.
 
 ## Phase 19: 2D rendering and audio depth
 

@@ -99,6 +99,46 @@ public class SpriteQuadTests
     }
 
     [Fact]
+    public void Diagonal_flip_swaps_the_texture_axes()
+    {
+        var draw = SpriteDraw.At(Vector3.Zero, Vector2.One);
+        draw.Flip = SpriteFlip.Diagonal;
+        var v = Build(draw);
+
+        // Top-left still samples (0,0); the top-right corner now reads what was the bottom-left of the image and vice versa.
+        Assert.Equal(new Vector2(0f, 0f), v[0].TexCoord);
+        Assert.Equal(new Vector2(0f, 1f), v[1].TexCoord);
+        Assert.Equal(new Vector2(1f, 1f), v[2].TexCoord);
+        Assert.Equal(new Vector2(1f, 0f), v[3].TexCoord);
+    }
+
+    [Fact]
+    public void Diagonal_then_horizontal_is_a_quarter_turn()
+    {
+        var draw = SpriteDraw.At(Vector3.Zero, Vector2.One);
+        draw.Flip = SpriteFlip.Diagonal | SpriteFlip.Horizontal; // Tiled's rotate-90-clockwise
+        var v = Build(draw);
+
+        Assert.Equal(new Vector2(1f, 0f), v[0].TexCoord);
+        Assert.Equal(new Vector2(1f, 1f), v[1].TexCoord);
+        Assert.Equal(new Vector2(0f, 1f), v[2].TexCoord);
+        Assert.Equal(new Vector2(0f, 0f), v[3].TexCoord);
+    }
+
+    [Fact]
+    public void Flips_work_inside_a_sub_rectangle_of_the_texture()
+    {
+        var draw = SpriteDraw.At(Vector3.Zero, Vector2.One);
+        draw.UvRect = new Rect(0.5f, 0.25f, 0.25f, 0.5f);
+        draw.Flip = SpriteFlip.Diagonal;
+        var v = Build(draw);
+
+        Assert.Equal(new Vector2(0.5f, 0.25f), v[0].TexCoord);
+        Assert.Equal(new Vector2(0.5f, 0.75f), v[1].TexCoord); // (a, b) = (1, 0) transposed to (0, 1): left edge of the region, bottom
+        Assert.Equal(new Vector2(0.75f, 0.75f), v[2].TexCoord);
+    }
+
+    [Fact]
     public void Color_is_copied_to_every_vertex()
     {
         var draw = SpriteDraw.At(Vector3.Zero, Vector2.One);
