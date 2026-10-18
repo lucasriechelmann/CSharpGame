@@ -1,10 +1,13 @@
 using System.Numerics;
+using Engine.Core.Assets;
 using Engine.Core.Components;
 using Engine.Core.Ecs;
 using Engine.Core.Logging;
 using Engine.Rendering;
+using Engine.Runtime.Editor.Tiles;
 using Engine.Runtime.Editor.Undo;
 using Engine.Runtime.Inspector;
+using Engine.Tilemaps;
 using ImGuiNET;
 
 namespace Engine.Runtime.Editor;
@@ -27,20 +30,25 @@ internal sealed partial class SceneEditor
     private readonly Logger _log;
     private readonly EditorHooks _hooks;
     private readonly CommandStack _history;
+    private readonly AssetManager _assets;
+    private readonly TilePainter _tiles;
     private string? _playSnapshot;
 
     /// <summary>Creates the editor.</summary>
     /// <param name="world">The world being edited.</param>
+    /// <param name="assets">Resolves the tile layers and tile sets the painter edits.</param>
     /// <param name="inspector">Shows and edits the selected entity; also holds the selection.</param>
     /// <param name="log">Where file operations report to.</param>
     /// <param name="hooks">What the game provides: camera, scene file, save and load.</param>
-    public SceneEditor(World world, EntityInspector inspector, Logger log, EditorHooks hooks)
+    public SceneEditor(World world, AssetManager assets, EntityInspector inspector, Logger log, EditorHooks hooks)
     {
         _world = world;
+        _assets = assets;
         _inspector = inspector;
         _log = log;
         _hooks = hooks;
         _history = new CommandStack(new EditContext(world));
+        _tiles = new TilePainter(world, assets, inspector, _history);
         _hierarchy = new HierarchyPanel(world, inspector, () => !Playing, NewEntity, DuplicateSelected, DeleteSelected);
     }
 
@@ -63,6 +71,7 @@ internal sealed partial class SceneEditor
 
         _playSnapshot = _hooks.Snapshot();
         _gizmo.End();
+        _tiles.Cancel();
         _history.Clear();
         _inspector.History = null; // edits made while playing are live tweaks that Stop discards, so they are not undo steps
         _hooks.PlayStarted();
@@ -91,6 +100,7 @@ internal sealed partial class SceneEditor
 
         Active = !Active;
         _gizmo.End();
+        _tiles.Cancel();
 
         // History only means something against the world it was recorded on. The game runs freely while the editor is off, so start clean each time.
         _history.Clear();
@@ -105,6 +115,7 @@ internal sealed partial class SceneEditor
         ImGui.DockSpaceOverViewport(0, ImGui.GetMainViewport(), ImGuiDockNodeFlags.PassthruCentralNode);
         _hierarchy.Draw();
         _inspector.DrawDetailsWindow();
+        _tiles.DrawPanel();
 
         HandleShortcuts();
         if (Playing) return; // the game owns the mouse and camera while it plays
@@ -161,13 +172,14 @@ internal sealed partial class SceneEditor
         if (Playing) return;
 
         bool shift = ImGui.IsKeyDown(ImGuiKey.LeftShift) || ImGui.IsKeyDown(ImGuiKey.RightShift);
-        bool editing = _gizmo.IsDragging || ImGui.IsAnyItemActive(); // do not pull the world out from under a drag
+        bool editing = _gizmo.IsDragging || _tiles.IsStroking || ImGui.IsAnyItemActive(); // do not pull the world out from under a drag
         if (ctrl && ImGui.IsKeyPressed(ImGuiKey.Z, false) && !editing) { if (shift) Redo(); else Undo(); }
         else if (ctrl && ImGui.IsKeyPressed(ImGuiKey.Y, false) && !editing) Redo();
         else if (ctrl && ImGui.IsKeyPressed(ImGuiKey.S, false)) SaveScene();
         else if (ctrl && ImGui.IsKeyPressed(ImGuiKey.D, false)) DuplicateSelected();
         else if (ctrl && ImGui.IsKeyPressed(ImGuiKey.N, false)) NewEntity();
         else if (ImGui.IsKeyPressed(ImGuiKey.Delete, false)) DeleteSelected();
+        else if (ImGui.IsKeyPressed(ImGuiKey.B, false)) _tiles.TogglePaintMode();
     }
 
     /// <summary>
@@ -246,6 +258,22 @@ internal sealed partial class SceneEditor
 
         _hooks.Save(path);
         _log.Info("Editor", $"Saved {_world.EntityCount} entities to {path} (prefab instances are saved expanded)");
+        SaveDirtyTileLayers();
+    }
+
+    /// <summary>Writes every tile layer that was painted since it was last saved, each to the file the game names for it.</summary>
+    private void SaveDirtyTileLayers()
+    {
+        foreach (var handle in _history.Context.DirtyTileLayers)
+        {
+            string name = _assets.NameOf(handle);
+            string file = _hooks.AssetPath(name);
+            Directory.CreateDirectory(Path.GetDirectoryName(file)!);
+            File.WriteAllText(file, TileLayerJson.Write(_assets.Get(handle)));
+            _log.Info("Editor", $"Saved tile layer {name} to {file}");
+        }
+
+        _history.Context.DirtyTileLayers.Clear();
     }
 
     private void ReloadScene()

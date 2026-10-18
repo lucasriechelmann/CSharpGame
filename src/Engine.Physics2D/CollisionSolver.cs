@@ -18,6 +18,12 @@ public sealed partial class CollisionSolver(TileGrid? grid)
     /// </summary>
     public const float Epsilon = 0.001f;
 
+    /// <summary>
+    /// The tile collision, or null for none. Settable so the level can be rebuilt (the editor changes tiles) without replacing the
+    /// systems that hold this solver.
+    /// </summary>
+    public TileGrid? Grid { get; set; } = grid;
+
     /// <summary>Static solid boxes (platforms, crates) checked in addition to the tile grid. Refill it each step.</summary>
     public List<Aabb> StaticBoxes { get; } = new();
 
@@ -38,7 +44,7 @@ public sealed partial class CollisionSolver(TileGrid? grid)
         float limit = MathF.Abs(delta);
 
         limit = SweepBoxes(box, axis, sign, limit, ref hit);
-        if (grid is not null) limit = SweepTiles(grid, box, axis, sign, limit, ref hit);
+        if (Grid is not null) limit = SweepTiles(Grid, box, axis, sign, limit, ref hit);
 
         return sign * limit;
     }

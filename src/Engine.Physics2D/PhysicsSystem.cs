@@ -31,6 +31,13 @@ public sealed class PhysicsSystem : ISystem
         _moveBody = MoveBody;
     }
 
+    /// <summary>The tile collision bodies are stopped by, or null for none. Replace it when the level's tiles change.</summary>
+    public TileGrid? Grid
+    {
+        get => _solver.Grid;
+        set => _solver.Grid = value;
+    }
+
     /// <inheritdoc />
     public void Update(World world, double dt)
     {

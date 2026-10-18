@@ -61,6 +61,13 @@ public sealed partial class PlatformerGame
         return TileGridBuilder.FromLayer(Assets.Get(groundHandle), Assets.Get(tileSetHandle), origin);
     }
 
+    /// <summary>Rebuilds collision from the ground layer as it is now and hands it to the physics system.</summary>
+    private void RebuildCollisionGrid()
+    {
+        _grid = BuildCollisionGrid();
+        _physics.Grid = _grid;
+    }
+
     private void SpawnCreaturesAt(Vector2 position, int count)
     {
         for (int i = 0; i < count; i++)
@@ -156,17 +163,21 @@ public sealed partial class PlatformerGame
     /// inside the project tree (so a save is a source change you can commit; the next build copies it to the output folder),
     /// otherwise the copy next to the executable.
     /// </summary>
-    private static string EditableLevelPath { get; } = FindEditableLevel();
+    private static string EditableLevelPath => EditableAsset(LevelScene);
 
-    private static string FindEditableLevel()
+    /// <inheritdoc />
+    protected override string EditableAssetPath(string assetName) => EditableAsset(assetName);
+
+    /// <summary>The project's copy of an asset when the game runs from a build inside the project tree, otherwise the copy next to the executable.</summary>
+    private static string EditableAsset(string assetName)
     {
         for (var folder = new DirectoryInfo(AppContext.BaseDirectory); folder != null; folder = folder.Parent)
         {
             if (File.Exists(Path.Combine(folder.FullName, "Platformer.csproj")))
-                return Path.GetFullPath(Path.Combine(folder.FullName, "Assets", LevelScene));
+                return Path.GetFullPath(Path.Combine(folder.FullName, "Assets", assetName));
         }
 
-        return Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "Assets", LevelScene));
+        return Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "Assets", assetName));
     }
 
     private void ShowStatus(string message)

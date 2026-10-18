@@ -56,7 +56,7 @@ public abstract class Game : IDisposable
         var logHistory = new MemoryLogSink();
         Log.AddSink(new ConsoleLogSink()).AddSink(logHistory);
         _logPanel = new LogPanel(logHistory, Log);
-        _editor = new SceneEditor(World, _inspector, Log, new EditorHooks(() => SceneCamera, () => ScenePath, path => Scenes.SaveToFile(path), LoadSceneFromEditor,
+        _editor = new SceneEditor(World, Assets, _inspector, Log, new EditorHooks(() => SceneCamera, () => ScenePath, path => Scenes.SaveToFile(path), LoadSceneFromEditor, EditableAssetPath,
             () => Scenes.Save(), RestoreSceneFromEditor, PlayStarted, PlayStopped));
         FixedSystems.Profile(Profiler, "Fixed");
         FrameSystems.Profile(Profiler, "Frame");
@@ -177,6 +177,14 @@ public abstract class Game : IDisposable
 
     /// <summary>The scene file the editor saves to and reloads from, as a full path; null disables those menu items.</summary>
     protected virtual string? ScenePath => null;
+
+    /// <summary>
+    /// The file the editor writes an edited asset (a painted tile layer) to, given its asset name such as <c>levels/ground.layer.json</c>.
+    /// The default is the file the asset was loaded from, in the <c>Assets</c> folder next to the executable; override it to point at
+    /// your project source assets so an edit is a change you can commit.
+    /// </summary>
+    /// <param name="assetName">The asset name, relative to the asset root.</param>
+    protected virtual string EditableAssetPath(string assetName) => Path.Combine(Assets.RootDirectory, assetName);
 
     /// <summary>
     /// Called after the editor replaced the world with a scene file (Reload). Re-find whatever you cached from the old world

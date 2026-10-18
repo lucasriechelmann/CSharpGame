@@ -1,4 +1,4 @@
-param([string]$Exe, [string]$OutDir, [switch]$Save, [switch]$Play)
+param([string]$Exe, [string]$OutDir, [switch]$Save, [switch]$Play, [switch]$Paint)
 
 # NOTE: the click coordinates below were measured on a 125% scaled display; on other scales adjust them (the DBG line style:
 # temporarily log the ImGui mouse position to calibrate).
@@ -79,6 +79,24 @@ try {
         [Win32]::keybd_event(0x44, 0x20, 2, [UIntPtr]::Zero); Start-Sleep -Milliseconds 200
         [Win32]::keybd_event(0x72, 0, 0, [UIntPtr]::Zero); Start-Sleep -Milliseconds 80; [Win32]::keybd_event(0x72, 0, 2, [UIntPtr]::Zero); Start-Sleep -Milliseconds 400
         Shot $proc "$OutDir\P2_stopped.png"
+    }
+
+    # With -Paint: select the second tile layer in the hierarchy, press B (paint mode), drag a horizontal stroke through the empty air
+    # (Q1_painted), undo it (Q2_undone) and redo it (Q3_redone).
+    if ($Paint) {
+        Move-Mouse $rect 41 155
+        [Win32]::mouse_event(0x0002, 0, 0, 0, [UIntPtr]::Zero); Start-Sleep -Milliseconds 80
+        [Win32]::mouse_event(0x0004, 0, 0, 0, [UIntPtr]::Zero); Start-Sleep -Milliseconds 300
+        [Win32]::keybd_event(0x42, 0x30, 0, [UIntPtr]::Zero); Start-Sleep -Milliseconds 80; [Win32]::keybd_event(0x42, 0x30, 2, [UIntPtr]::Zero); Start-Sleep -Milliseconds 300
+        Move-Mouse $rect 406 190
+        [Win32]::mouse_event(0x0002, 0, 0, 0, [UIntPtr]::Zero); Start-Sleep -Milliseconds 100
+        foreach ($step in 1..16) { Move-Mouse $rect (406 + $step * 10) 190 }
+        [Win32]::mouse_event(0x0004, 0, 0, 0, [UIntPtr]::Zero); Start-Sleep -Milliseconds 400
+        Shot $proc "$OutDir\Q1_painted.png"
+        Send-Chord 0x5A 0x2C
+        Shot $proc "$OutDir\Q2_undone.png"
+        Send-Chord 0x59 0x15
+        Shot $proc "$OutDir\Q3_redone.png"
     }
 
     # Wheel down three ticks zooms out; then middle-drag pans.

@@ -28,7 +28,7 @@ Small, about one session. Fixes known gaps that affect game feel and that the ed
 - [ ] Follow-ups: a History window listing the steps; make Load/Reload undoable (today they clear the history); undo for edits made while the F1 debug inspector is used outside the editor.
 
 ### 12c. Authoring tools
-- [ ] Tile painting.
+- [x] Tile painting (palette, stroke undo, layer save; single-tile brush only: no fill, rectangle or multi-tile brushes yet).
 - [ ] Prefab-aware editing, including saving without flattening prefab instances (today the editor's Save expands them).
 - [x] Play/stop that snapshots and restores the scene (F3).
 - [ ] Hot-reload of assets.

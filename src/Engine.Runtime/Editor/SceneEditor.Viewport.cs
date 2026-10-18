@@ -1,6 +1,7 @@
 using System.Numerics;
 using Engine.Core.Components;
 using Engine.Core.Ecs;
+using Engine.Rendering;
 using Engine.Runtime.Editor.Undo;
 using Engine.Runtime.Inspector;
 using ImGuiNET;
@@ -37,6 +38,18 @@ internal sealed partial class SceneEditor
         }
 
         _hover = GizmoHandle.None;
+
+        // Paint mode: the mouse paints tiles instead of selecting. A stroke keeps going when the mouse strays over a window.
+        if (_tiles.IsPainting || _tiles.IsStroking)
+        {
+            _tiles.HandleMouse(camera, mouse, io.WantCaptureMouse);
+            if (io.WantCaptureMouse) return;
+
+            ZoomAndPan(camera, io, mouse);
+            _tiles.DrawCursor(camera, mouse);
+            return;
+        }
+
         if (io.WantCaptureMouse) return; // over a window or menu
 
         var selectedPosition = Vector2.Zero;
@@ -46,8 +59,7 @@ internal sealed partial class SceneEditor
             _hover = MoveGizmo.HitTest(mouse, camera.WorldToScreen(selectedPosition));
         }
 
-        EditorCameraControls.ZoomAt(camera, mouse, io.MouseWheel);
-        if (ImGui.IsMouseDown(ImGuiMouseButton.Middle)) EditorCameraControls.Pan(camera, io.MouseDelta);
+        ZoomAndPan(camera, io, mouse);
 
         if (!ImGui.IsMouseClicked(ImGuiMouseButton.Left)) return;
 
@@ -60,6 +72,13 @@ internal sealed partial class SceneEditor
 
         float radius = EntityPicking.FallbackRadiusPixels / camera.Zoom;
         _inspector.Selected = EntityPicking.Pick(_world, camera.ScreenToWorld(mouse), radius);
+    }
+
+    /// <summary>Mouse wheel zooms about the cursor; the middle button drags the view.</summary>
+    private static void ZoomAndPan(Camera2D camera, ImGuiIOPtr io, Vector2 mouse)
+    {
+        EditorCameraControls.ZoomAt(camera, mouse, io.MouseWheel);
+        if (ImGui.IsMouseDown(ImGuiMouseButton.Middle)) EditorCameraControls.Pan(camera, io.MouseDelta);
     }
 
     /// <summary>Ends a gizmo drag and records it as one undo step (the world was already updated every frame of the drag).</summary>

@@ -1,5 +1,7 @@
+using Engine.Core.Assets;
 using Engine.Core.Components;
 using Engine.Core.Ecs;
+using Engine.Tilemaps;
 
 namespace Engine.Runtime.Editor.Undo;
 
@@ -9,6 +11,9 @@ public sealed class EditContext(World world)
 {
     /// <summary>The world being edited.</summary>
     public World World { get; } = world;
+
+    /// <summary>Tile layers painted since they were last written to disk. Save writes these files.</summary>
+    public HashSet<AssetHandle<TileLayer>> DirtyTileLayers { get; } = new();
 
     /// <summary>Maps stable ids to the entities that currently exist.</summary>
     public EntityTracker Entities { get; } = new();

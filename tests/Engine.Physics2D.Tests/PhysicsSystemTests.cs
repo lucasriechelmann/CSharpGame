@@ -36,6 +36,20 @@ public class PhysicsSystemTests
     }
 
     [Fact]
+    public void Replacing_the_grid_changes_what_bodies_collide_with()
+    {
+        var e = SpawnBody(100f, 40f);
+        Step(30);
+        Assert.True(_world.Get<PhysicsBody>(e).IsGrounded); // standing on the floor row of the original grid
+
+        _physics.Grid = null; // no collision at all
+        Step(30);
+
+        Assert.False(_world.Get<PhysicsBody>(e).IsGrounded);
+        Assert.True(_world.Get<Transform>(e).Position.Y < 16f, "fell through where the floor used to be");
+    }
+
+    [Fact]
     public void Gravity_accelerates_a_falling_body()
     {
         var e = SpawnBody(100f, 300f);

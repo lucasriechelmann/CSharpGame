@@ -66,6 +66,7 @@ public sealed partial class PlatformerGame
     private void StartFreshRun()
     {
         IsPaused = false;
+        RebuildCollisionGrid(); // the editor may have painted tiles
         _session.Reset(CountCoins());
         _session.SetStart(HeroPosition());
         ResetRunRecord();

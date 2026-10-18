@@ -31,6 +31,7 @@ public sealed partial class PlatformerGame : Game
     private Vector3 _clear = new(0.07f, 0.08f, 0.12f);
     private SpriteBatch _batch = null!;
     private TileGrid _grid = null!;
+    private PhysicsSystem _physics = null!;
     private AudioClip _spawnSound = null!;
     private GameSounds _sounds = null!;
     private GameSession _session = null!;
@@ -113,7 +114,8 @@ public sealed partial class PlatformerGame : Game
         FixedSystems.Add(new MovingPlatformSystem()); // carries riders before anything decides this step's velocities
         FixedSystems.Add(new PatrolSystem());
         FixedSystems.Add(new PlatformerControllerSystem());
-        FixedSystems.Add(new PhysicsSystem(_grid, _physicsSettings));
+        _physics = new PhysicsSystem(_grid, _physicsSettings);
+        FixedSystems.Add(_physics);
         FixedSystems.Add(new InteractionSystem(_session, Audio, _sounds, () => _hero)); // after physics: sees the settled positions
 
         // Render passes: background and ground tiles, then sprites, then foreground tiles in front.
