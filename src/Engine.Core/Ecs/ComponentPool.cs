@@ -1,27 +1,27 @@
 namespace Engine.Core.Ecs;
 
-internal interface IComponentPool
-{
-    int Count { get; }
-    bool Has(int entityId);
-    bool Remove(int entityId);
-}
-
 /// <summary>
 /// Sparse-set storage for one component type. <c>_sparse[entityId]</c> holds the dense
-/// index + 1 (0 means "absent"); <c>Dense</c> and <c>Components</c> are packed in parallel.
+/// index + 1 (0 means "absent"); <see cref="Dense"/> and <see cref="Components"/> are packed in parallel.
 /// </summary>
+/// <typeparam name="T">The component type stored in this pool.</typeparam>
 internal sealed class ComponentPool<T> : IComponentPool
 {
     private int[] _sparse = new int[64];
 
+    /// <summary>Entity ids, packed; <c>Dense[i]</c> owns <c>Components[i]</c>.</summary>
     internal int[] Dense = new int[16];
+
+    /// <summary>Component values, packed in the same order as <see cref="Dense"/> for cache-friendly iteration.</summary>
     internal T[] Components = new T[16];
 
+    /// <inheritdoc />
     public int Count { get; private set; }
 
+    /// <inheritdoc />
     public bool Has(int entityId) => (uint)entityId < (uint)_sparse.Length && _sparse[entityId] != 0;
 
+    /// <summary>Returns a reference to the entity's component. The caller guarantees it exists.</summary>
     public ref T Get(int entityId) => ref Components[_sparse[entityId] - 1];
 
     /// <summary>Adds a default-initialised component. The caller guarantees it is not already present.</summary>

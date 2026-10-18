@@ -1,7 +1,6 @@
 using Engine.Core;
 using Engine.Core.Ecs;
 using Engine.Platform;
-using ImGuiNET;
 using Silk.NET.Input;
 using Silk.NET.OpenGL;
 
@@ -16,12 +15,18 @@ public abstract class Game : IDisposable
     private readonly GameWindow _window;
     private readonly FixedTimestep _timestep;
     private readonly FrameStats _stats = new();
-    private bool _showDebug = true;
+    private readonly DebugOverlay _overlay;
 
+    /// <summary>Creates the window and loop. Nothing is shown until <see cref="Run"/> is called.</summary>
+    /// <param name="title">Window title.</param>
+    /// <param name="width">Initial window width in pixels.</param>
+    /// <param name="height">Initial window height in pixels.</param>
+    /// <param name="fixedHz">Fixed simulation rate in steps per second.</param>
     protected Game(string title, int width = 1280, int height = 720, double fixedHz = 60)
     {
         _timestep = new FixedTimestep(1.0 / fixedHz);
         _window = new GameWindow(title, width, height);
+        _overlay = new DebugOverlay(_window, _timestep, _stats, World);
         _window.Load += OnLoad;
         _window.Update += OnUpdate;
         _window.Render += OnRender;
@@ -37,28 +42,47 @@ public abstract class Game : IDisposable
     /// <summary>Systems run once per frame (input handling, animation, camera smoothing).</summary>
     public SystemGroup FrameSystems { get; } = new();
 
+    /// <summary>The OpenGL API. Only valid after the window has loaded, i.e. from <see cref="Load"/> onwards.</summary>
     protected GL Gl => _window.Gl;
+
+    /// <summary>The platform window (size, input, VSync).</summary>
     protected GameWindow Window => _window;
+
+    /// <summary>Length of one fixed simulation step, in seconds.</summary>
     protected double FixedDeltaTime => _timestep.Step;
 
     /// <summary>0..1 position between the last two fixed steps, for render interpolation.</summary>
     protected double Alpha => _timestep.Alpha;
 
+    /// <summary>Called once after the window and OpenGL context exist. Create GPU resources here.</summary>
     protected virtual void Load() { }
+
+    /// <summary>Called once per fixed simulation step, after <see cref="FixedSystems"/> have run.</summary>
+    /// <param name="dt">The fixed step length in seconds.</param>
     protected virtual void FixedUpdate(double dt) { }
+
+    /// <summary>Called once per frame, after <see cref="FrameSystems"/> have run.</summary>
+    /// <param name="dt">Seconds since the previous frame.</param>
     protected virtual void Update(double dt) { }
+
+    /// <summary>Called once per frame to draw the scene, before the debug UI is drawn on top.</summary>
+    /// <param name="dt">Seconds since the previous frame.</param>
     protected virtual void Draw(double dt) { }
 
-    /// <summary>Game-specific debug panels (ImGui calls).</summary>
+    /// <summary>Game-specific debug panels (ImGui calls). Hidden together with the engine overlay (F1).</summary>
     protected virtual void DebugGui() { }
 
+    /// <summary>Opens the window and runs the game loop until the window closes.</summary>
     public void Run() => _window.Run();
+
+    /// <summary>Releases the window and GPU context.</summary>
+    public void Dispose() => _window.Dispose();
 
     private void OnLoad()
     {
         _window.Input.Keyboards[0].KeyDown += (_, key, _) =>
         {
-            if (key == Key.F1) _showDebug = !_showDebug;
+            if (key == Key.F1) _overlay.Toggle();
         };
         Load();
     }
@@ -72,55 +96,22 @@ public abstract class Game : IDisposable
             FixedUpdate(_timestep.Step);
         }
 
-        _stats.Steps += steps;
+        _stats.RecordFixedSteps(steps);
         FrameSystems.Run(World, dt);
         Update(dt);
     }
 
     private void OnRender(double dt)
     {
-        _stats.Record(dt);
+        _stats.RecordFrame(dt);
         Draw(dt);
     }
 
     private void OnGui(double dt)
     {
-        if (!_showDebug) return;
-        ImGui.Begin("Engine");
-        ImGui.Text($"FPS: {_stats.Fps:F0}  ({_stats.FrameMs:F2} ms)");
-        ImGui.Text($"Fixed steps: {_stats.Steps}  (step {_timestep.Step * 1000:F2} ms)");
-        ImGui.Text($"Alpha: {_timestep.Alpha:F2}");
-        ImGui.Text($"Entities: {World.EntityCount}");
-        ImGui.Text($"Window: {_window.Width}x{_window.Height}");
-        bool vsync = _window.VSync;
-        if (ImGui.Checkbox("VSync", ref vsync)) _window.VSync = vsync;
-        ImGui.Text("F1: toggle debug UI");
-        ImGui.End();
+        if (!_overlay.Visible) return;
+
+        _overlay.Draw();
         DebugGui();
-    }
-
-    public void Dispose() => _window.Dispose();
-}
-
-internal sealed class FrameStats
-{
-    private double _accum;
-    private int _frames;
-
-    public double Fps { get; private set; }
-    public double FrameMs { get; private set; }
-    public long Steps { get; set; }
-
-    public void Record(double dt)
-    {
-        _accum += dt;
-        _frames++;
-        if (_accum >= 0.5)
-        {
-            Fps = _frames / _accum;
-            FrameMs = _accum / _frames * 1000;
-            _accum = 0;
-            _frames = 0;
-        }
     }
 }

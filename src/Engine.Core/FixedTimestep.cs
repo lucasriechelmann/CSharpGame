@@ -8,6 +8,9 @@ public sealed class FixedTimestep
 {
     private double _accumulator;
 
+    /// <summary>Creates a timestep.</summary>
+    /// <param name="stepSeconds">Length of one simulation step in seconds (default 60 Hz).</param>
+    /// <param name="maxFrameSeconds">Longest frame time to accept; longer frames are clamped.</param>
     public FixedTimestep(double stepSeconds = 1.0 / 60.0, double maxFrameSeconds = 0.25)
     {
         if (stepSeconds <= 0) throw new ArgumentOutOfRangeException(nameof(stepSeconds));
@@ -15,6 +18,7 @@ public sealed class FixedTimestep
         MaxFrame = maxFrameSeconds;
     }
 
+    /// <summary>Length of one simulation step in seconds.</summary>
     public double Step { get; }
 
     /// <summary>Longest frame we will simulate; avoids the "spiral of death" after a stall.</summary>
