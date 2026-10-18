@@ -33,6 +33,21 @@ public class ComponentRegistryTests
         Assert.Throws<ArgumentException>(() => registry.Register<Health>("HP"));
     }
 
+    [Fact]
+    public void Describe_lists_name_type_and_default_value_in_registration_order()
+    {
+        var registry = new ComponentRegistry()
+            .Register<Health>("Health")
+            .Register("Transform", Transform.Identity);
+
+        var infos = registry.Describe().ToArray();
+
+        Assert.Equal(new[] { "Health", "Transform" }, infos.Select(i => i.Name).ToArray());
+        Assert.Equal(typeof(Health), infos[0].Type);
+        Assert.Equal(typeof(Transform), infos[1].Type);
+        Assert.Equal(Transform.Identity, (Transform)infos[1].DefaultValue);
+    }
+
     [Theory]
     [InlineData("")]
     [InlineData("   ")]

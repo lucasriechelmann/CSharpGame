@@ -61,6 +61,9 @@ public sealed partial class PlatformerGame
             var spot = position + new Vector2(Range(-20f, 20f), Range(-10f, 10f));
             if (IsFree(spot)) SpawnCreature(spot);
         }
+
+        // One blip per click, not per creature, with a random pitch so repeated clicks do not sound identical.
+        Audio.Play(_spawnSound, volume: 0.5f, pitch: Range(0.9f, 1.2f));
     }
 
     /// <summary>Instantiates the creature prefab, then varies this instance: position, creature type, walk phase, speed and direction.</summary>

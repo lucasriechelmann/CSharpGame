@@ -25,6 +25,7 @@ function Shot($proc, $path) {
 }
 
 $proc = Start-Process -FilePath $Exe -PassThru -RedirectStandardError "$OutDir\err.txt"
+$null = $proc.Handle # keeps the process handle open so ExitCode is readable after the window closes
 try {
     Start-Sleep -Seconds 4
     $proc.Refresh()

@@ -9,7 +9,8 @@ samples/Platformer ──► Engine.Runtime ──► Engine.Rendering ──►
         │                   │                                     ▲
         │                   └──────────► Engine.Platform ─────────┤
         ├──► Engine.Physics2D ────────────────────────────────────┤
-        ├──► Engine.Scenes ──► Engine.Core   (Runtime also depends on Scenes, Physics2D, Tilemaps, Animation)
+        ├──► Engine.Scenes ──► Engine.Core   (Runtime also depends on Scenes, Physics2D, Tilemaps, Animation, Audio)
+        ├──► Engine.Audio ──► Engine.Core
         ├──► Engine.Tilemaps ──► Engine.Rendering, Engine.Physics2D, Engine.Core
         ├──► Engine.Animation ──► Engine.Rendering, Engine.Core
         └──► Engine.Rendering, Engine.Core (direct, for components/types)
@@ -25,7 +26,8 @@ tests/<Module>.Tests ──► <Module> (+ the modules it needs): one test proje
 | `src/Engine.Tilemaps` | Sparse chunked tile layers, tile sets (atlas layout + per-tile solidity), layer-to-`TileGrid` builder, tile render system. Decision: separate from Rendering (which stays GL-focused) and from Physics2D (which must not know about tilemaps; the builder lives here and depends on Physics2D). | none |
 | `src/Engine.Animation` | Clips, state machine, animator component and system. Drives `Sprite.Source`, so it depends on Rendering but not on GL. | none |
 | `src/Engine.Scenes` | Save/load a `World` as JSON, prefabs with merge overrides, component registry. Knows no component types; only depends on Core (System.Text.Json is in the BCL). | none |
-| `src/Engine.Runtime` | `Game` base class (the loop), `DebugOverlay`, `FrameStats`, `EngineComponents`. **Composition root: the one module allowed to depend on every engine module** (decision: it registers every engine component and every asset loader (texture, tile set, tile layer, animation, prefab) so games need no boilerplate; later Audio follows the same rule). | ImGui.NET via Silk ImGui extension |
+| `src/Engine.Audio` | `AudioClip` (decoded 16-bit PCM, no OpenAL objects), `WavDecoder`, `AudioClipLoader`, `IAudioDevice` with `OpenAlAudioDevice` (sources/buffers via Silk.NET.OpenAL, unsafe only for the buffer upload) and `NullAudioDevice`, `VoicePool` (pure voice bookkeeping). Decision: audio is its own module because it has no window or GL dependency and another backend would sit behind `IAudioDevice`; clips are pure data so they can be decoded and tested without a sound card. | Silk.NET.OpenAL, Silk.NET.OpenAL.Soft.Native |
+| `src/Engine.Runtime` | `Game` base class (the loop), `DebugOverlay`, `FrameStats`, `EngineComponents`, `Inspector/` (`EntityInspector`, `FieldEditor`, `ProfilerPanel`). **Composition root: the one module allowed to depend on every engine module** (decision: it registers every engine component and every asset loader (texture, tile set, tile layer, animation, prefab) so games need no boilerplate; the audio clip loader and the audio device follow the same rule). | ImGui.NET via Silk ImGui extension |
 | `samples/Platformer` | The first game; consumes the engine like any game project. | none beyond engine |
 
 Rules: Core never references Platform, Rendering or Silk.NET. Layers depend on abstractions at their boundaries (input is `InputState`/`ActionMap`, not Silk types).
@@ -83,6 +85,13 @@ Shutdown: GPU cleanup happens in the window's `Closing` event, **while the GL co
 - **Save** writes every entity in id order with its registered components (`SerializeEntity` returns a valid prefab body). Quick-save in the sample writes `saves/quicksave.scene.json` next to the exe; quick-load does `World.Clear()` then `LoadFile`.
 - **Limits**: no `Entity` references between components (not remapped), no scene-in-scene, no instance-to-prefab link kept after loading (instances are expanded), no editor yet.
 
+## Diagnostics and tools (`Engine.Core/Diagnostics`, `Engine.Runtime/Inspector`)
+
+- **Profiler**: sections are registered once by name and timed by integer id (`Begin()` returns a tick count, `End(section, start)` adds to that frame's total). `BeginFrame()` rolls the totals into a 120-frame ring buffer per section. Sections that run several times per frame (fixed systems on a multi-step frame) sum. The clock is injected (`Func<long>` plus ticks per second) so tests use exact values. `SystemGroup.Profile(profiler, "Fixed")` resolves a `group/SystemType` section per system up front, so a profiled run allocates nothing. `Game` calls `BeginFrame()` at the start of `OnUpdate` and closes the `CPU frame` section at the end of `OnGui` (the last callback of a frame, so it also works with the overlay hidden; it excludes the vsync wait in the buffer swap).
+- **Type-erased component access** (`World.Reflection.cs`): `GetComponentTypes`, `GetBoxed`, `SetBoxed`, `AddBoxed`, `Remove(entity, Type)` (pools gained `ComponentType`/`GetBoxed`/`SetBoxed`/`AddDefault`). They box and allocate, so they are for tools only. Structural ones respect the query lock; `SetBoxed`, like `Set`, is allowed mid-query.
+- **Inspector**: `ComponentRegistry.Describe()` supplies name, type and a valid default value (`Register<T>(name, defaultValue)`, e.g. `Transform.Identity`) for the Add menu. `FieldEditor` draws one widget per type (boxed `object` in, changed flag out) and recurses into structs: public-field structs are edited in place on the box, positional record structs (`Rect`, `Color`) are edited per constructor parameter and rebuilt through the constructor. Quaternions go through `QuaternionMath` (Euler degrees, pitch clamped at +-90). The inspector copies the component out, edits, and writes back only when something changed.
+- **Audio flow**: `Game.OnLoad` registers `AudioClipLoader` and creates the device with `OpenAlAudioDevice.TryCreate` (a missing OpenAL library or output device yields a `NullAudioDevice` whose `Description` explains why; the overlay shows it). `OnUpdate` calls `Audio.Update()` (frees finished voices). `OnClosing` disposes the device after `Unload` and before `Assets`. `Play` takes a free voice or steals the oldest (`VoicePool`), buffers upload on first play or `Preload`, and handles are generation-checked so a stale `VoiceId` never stops someone else's sound.
+
 ## Components (data)
 
 | Component | Defined in | Notes |
@@ -112,4 +121,4 @@ None (no network, database or config files).
 
 ## Planned (from the roadmap, not built yet)
 
-ImGui inspector (can enumerate `World.Entities` and the registry), OpenAL audio, post-processing/2D lights, an editor, and a 3D renderer beside `Engine.Rendering`.
+Post-processing and 2D lights (phase 9), an editor that builds on the inspector, music streaming and positional audio, and a 3D renderer beside `Engine.Rendering`.

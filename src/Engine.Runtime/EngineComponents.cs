@@ -17,7 +17,7 @@ public static class EngineComponents
     /// <returns>The same registry, so calls can be chained.</returns>
     public static ComponentRegistry RegisterAll(ComponentRegistry registry) => registry
         .Register<Name>("Name")
-        .Register<Transform>("Transform")
+        .Register("Transform", Transform.Identity)
         .Register<Sprite>("Sprite")
         .Register<SpriteAnimator>("SpriteAnimator")
         .Register<TileLayerRenderer>("TileLayerRenderer")

@@ -43,6 +43,18 @@ internal sealed class ComponentPool<T> : IComponentPool
     }
 
     /// <inheritdoc />
+    public Type ComponentType => typeof(T);
+
+    /// <inheritdoc />
+    public object GetBoxed(int entityId) => Get(entityId)!;
+
+    /// <inheritdoc />
+    public void SetBoxed(int entityId, object value) => Get(entityId) = (T)value;
+
+    /// <inheritdoc />
+    public void AddDefault(int entityId) => Add(entityId);
+
+    /// <inheritdoc />
     public void Clear()
     {
         Array.Clear(Components, 0, Count); // release any references held by components

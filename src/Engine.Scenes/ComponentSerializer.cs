@@ -10,8 +10,12 @@ namespace Engine.Scenes;
 /// </summary>
 /// <param name="name">The name the component has in JSON files.</param>
 /// <param name="type">The component's C# type.</param>
-internal abstract class ComponentSerializer(string name, Type type)
+/// <param name="defaultValue">The boxed value tools use when adding the component (<c>default</c> is invalid for some, e.g. <c>Transform</c>).</param>
+internal abstract class ComponentSerializer(string name, Type type, object defaultValue)
 {
+    /// <summary>The boxed value tools such as the inspector start a newly added component from.</summary>
+    public object DefaultValue { get; } = defaultValue;
+
     /// <summary>The name the component has in JSON files.</summary>
     public string Name { get; } = name;
 

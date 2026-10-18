@@ -4,6 +4,7 @@
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/Engine.Animation/Engine.Animation.csproj" />
+    <Project Path="src/Engine.Audio/Engine.Audio.csproj" />
     <Project Path="src/Engine.Core/Engine.Core.csproj" />
     <Project Path="src/Engine.Physics2D/Engine.Physics2D.csproj" />
     <Project Path="src/Engine.Platform/Engine.Platform.csproj" />
@@ -14,6 +15,7 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Engine.Animation.Tests/Engine.Animation.Tests.csproj" />
+    <Project Path="tests/Engine.Audio.Tests/Engine.Audio.Tests.csproj" />
     <Project Path="tests/Engine.Core.Tests/Engine.Core.Tests.csproj" />
     <Project Path="tests/Engine.Physics2D.Tests/Engine.Physics2D.Tests.csproj" />
     <Project Path="tests/Engine.Rendering.Tests/Engine.Rendering.Tests.csproj" />

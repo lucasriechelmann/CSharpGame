@@ -17,4 +17,16 @@ internal interface IComponentPool
 
     /// <summary>Removes every component from the pool.</summary>
     void Clear();
+
+    /// <summary>The component type stored in this pool.</summary>
+    Type ComponentType { get; }
+
+    /// <summary>Copies the entity's component into a box. The caller guarantees it exists. Allocates; for tools, not per-frame code.</summary>
+    object GetBoxed(int entityId);
+
+    /// <summary>Overwrites the entity's existing component from a box. The caller guarantees it exists and the box has the right type.</summary>
+    void SetBoxed(int entityId, object value);
+
+    /// <summary>Adds a default-initialised component for the entity. The caller guarantees it is not already present.</summary>
+    void AddDefault(int entityId);
 }

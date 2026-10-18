@@ -1,3 +1,4 @@
+using Engine.Audio;
 using Engine.Core;
 using Engine.Core.Assets;
 using Engine.Core.Ecs;
@@ -7,10 +8,16 @@ using ImGuiNET;
 namespace Engine.Runtime;
 
 /// <summary>The built-in "Engine" debug panel: timing, fixed-step info, entity count and window settings.</summary>
-internal sealed class DebugOverlay(GameWindow window, FixedTimestep timestep, FrameStats stats, World world, AssetManager assets)
+internal sealed class DebugOverlay(GameWindow window, FixedTimestep timestep, FrameStats stats, World world, AssetManager assets, Func<IAudioDevice> audio)
 {
     /// <summary>Whether the overlay (and the game's own debug panels) are drawn. Toggled with F1.</summary>
     public bool Visible { get; private set; } = true;
+
+    /// <summary>Whether the entity inspector window is open.</summary>
+    public bool ShowInspector { get; private set; } = true;
+
+    /// <summary>Whether the profiler window is open.</summary>
+    public bool ShowProfiler { get; private set; } = true;
 
     /// <summary>Flips <see cref="Visible"/>.</summary>
     public void Toggle() => Visible = !Visible;
@@ -26,8 +33,19 @@ internal sealed class DebugOverlay(GameWindow window, FixedTimestep timestep, Fr
         ImGui.Text($"Entities: {world.EntityCount}   Assets: {assets.Count}");
         ImGui.Text($"Window: {window.Width}x{window.Height}");
 
+        var device = audio();
+        ImGui.Text($"Audio: {device.Description} ({device.ActiveVoices} playing)");
+        float volume = device.MasterVolume;
+        if (ImGui.SliderFloat("Volume", ref volume, 0f, 1f)) device.MasterVolume = volume;
+
         bool vsync = window.VSync;
         if (ImGui.Checkbox("VSync", ref vsync)) window.VSync = vsync;
+
+        bool inspector = ShowInspector;
+        if (ImGui.Checkbox("Inspector", ref inspector)) ShowInspector = inspector;
+        ImGui.SameLine();
+        bool profiler = ShowProfiler;
+        if (ImGui.Checkbox("Profiler", ref profiler)) ShowProfiler = profiler;
 
         ImGui.Text("F1: toggle debug UI");
         ImGui.End();

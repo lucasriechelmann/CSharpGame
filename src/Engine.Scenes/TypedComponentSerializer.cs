@@ -7,7 +7,8 @@ namespace Engine.Scenes;
 /// <summary>The serializer for one concrete component type <typeparamref name="T"/>.</summary>
 /// <typeparam name="T">The component struct.</typeparam>
 /// <param name="name">The name the component has in JSON files.</param>
-internal sealed class TypedComponentSerializer<T>(string name) : ComponentSerializer(name, typeof(T))
+/// <param name="defaultValue">The value a newly added component starts from.</param>
+internal sealed class TypedComponentSerializer<T>(string name, T defaultValue) : ComponentSerializer(name, typeof(T), defaultValue!)
 {
     /// <inheritdoc />
     public override bool TryWrite(World world, Entity entity, JsonSerializerOptions options, out JsonNode? node)

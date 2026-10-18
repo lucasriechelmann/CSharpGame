@@ -1,5 +1,6 @@
 using System.Numerics;
 using Engine.Animation;
+using Engine.Audio;
 using Engine.Core.Assets;
 using Engine.Core.Components;
 using Engine.Core.Ecs;
@@ -29,6 +30,7 @@ public sealed partial class PlatformerGame : Game
     private Vector3 _clear = new(0.07f, 0.08f, 0.12f);
     private SpriteBatch _batch = null!;
     private TileGrid _grid = null!;
+    private AudioClip _spawnSound = null!;
     private Entity _hero;
 
     /// <summary>Registers input bindings and the game's own components for scene files. Systems are added in <see cref="Load"/>.</summary>
@@ -62,6 +64,9 @@ public sealed partial class PlatformerGame : Game
             .Select(type => Assets.Load<AnimationStateMachine>($"anim/creature{type}.anim.json"))
             .ToArray();
 
+        _spawnSound = Assets.Get(Assets.Load<AudioClip>("sounds/spawn.wav"));
+        Audio.Preload(_spawnSound);
+
         _camera.ViewportSize = new Vector2(Window.Width, Window.Height);
         Window.Resized += (w, h) => _camera.ViewportSize = new Vector2(w, h);
         SnapCameraToHero();
@@ -71,6 +76,10 @@ public sealed partial class PlatformerGame : Game
         FrameSystems.Add(new HeroAnimationSystem(Assets.Get(Assets.Load<AnimationStateMachine>(HeroAnimation))));
         FrameSystems.Add(new AnimationSystem(Assets));
         FrameSystems.Add(new FaceVelocitySystem());
+        FrameSystems.Add(new HeroSoundSystem(
+            Audio,
+            Assets.Get(Assets.Load<AudioClip>("sounds/jump.wav")),
+            Assets.Get(Assets.Load<AudioClip>("sounds/land.wav"))));
 
         // Fixed step: decide velocities (patrol, controller) first, then let physics move everything.
         FixedSystems.Add(new PatrolSystem());

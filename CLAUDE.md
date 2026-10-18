@@ -1,7 +1,7 @@
 # CSharpGame: a learning-oriented 2D game engine in C# (3D-ready)
 
 Windows, .NET 10, Silk.NET (OpenGL 3.3 core), custom sparse-set ECS, Dear ImGui debug UI.
-Goal: learn how engines work, so write core systems from scratch and use libraries only for plumbing. First game: a platformer. Status: phases 1-7 of 10 done (see `.claude/knowledge/features.md`).
+Goal: learn how engines work, so write core systems from scratch and use libraries only for plumbing. First game: a platformer. Status: phases 1-8 of 10 done (see `.claude/knowledge/features.md`).
 
 ## Projects
 
@@ -12,12 +12,13 @@ Goal: learn how engines work, so write core systems from scratch and use librari
 - `src/Engine.Tilemaps`  Chunked `TileLayer`, `TileSet` atlas, `TileGridBuilder` (layer -> physics grid), `TileLayerRenderSystem`.
 - `src/Engine.Animation` `AnimationClip`, data-driven `AnimationStateMachine`, `SpriteAnimator` component, `AnimationSystem`.
 - `src/Engine.Scenes`    JSON scenes and prefabs: `ComponentRegistry`, `SceneSerializer`, `Prefab`, `JsonMerge`. Depends on Core only.
-- `src/Engine.Runtime`   `Game` base class and loop, debug overlay, `EngineComponents` (registers every engine component), `Game.Scenes`. Composition root: the only module allowed to depend on every engine module; it also registers all asset loaders.
+- `src/Engine.Audio`     `AudioClip`, `WavDecoder`, `IAudioDevice` (`OpenAlAudioDevice`, `NullAudioDevice`), `VoicePool`. Depends on Core and Silk.NET.OpenAL only; no window or GL.
+- `src/Engine.Runtime`   `Game` base class and loop, debug overlay, entity inspector and profiler panel (`Inspector/`), `EngineComponents` (registers every engine component), `Game.Scenes`, `Game.Audio`, `Game.Profiler`. Composition root: the only module allowed to depend on every engine module; it also registers all asset loaders.
 - `samples/Platformer`   The first game, almost entirely data: scene, prefabs, tile layers, tile set and animation graphs are JSON under `Assets/`.
 - `tests/`               xUnit tests, one project per module (`Engine.<Module>.Tests`).
 - `tools/`               PowerShell scripts to run, drive and screenshot the sample (see `tools/README.md`).
 
-Dependency direction: samples -> Runtime -> (Core, Platform, Rendering, Scenes, Physics2D, Tilemaps, Animation); Tilemaps -> (Core, Rendering, Physics2D); Animation -> (Core, Rendering); Rendering, Platform, Physics2D and Scenes -> Core. Core never references any other module or Silk.NET; Physics2D never references Rendering or Tilemaps; Scenes knows no component types (Runtime registers them).
+Dependency direction: samples -> Runtime -> (Core, Platform, Rendering, Scenes, Physics2D, Tilemaps, Animation, Audio); Tilemaps -> (Core, Rendering, Physics2D); Animation -> (Core, Rendering); Rendering, Platform, Physics2D, Scenes and Audio -> Core. Core never references any other module or Silk.NET; Physics2D never references Rendering or Tilemaps; Scenes knows no component types (Runtime registers them).
 
 ## Standing rules
 
@@ -35,7 +36,10 @@ Dependency direction: samples -> Runtime -> (Core, Platform, Rendering, Scenes, 
 - **Tilemaps**: tile id 0 = empty, 1+ index a `TileSet` (row-major, 1-based); solidity lives on the tile set and collision is derived with `TileGridBuilder`, never hand-built twice. Draw order: background `TileLayerRenderSystem` -> `SpriteRenderSystem` -> foreground `TileLayerRenderSystem`.
 - **Animation**: gameplay writes animator *parameters* (`SpriteAnimator.SetParameter`); the state machine picks the clip. Run the parameter-writing system before `AnimationSystem`, both per frame. Create animators with `SpriteAnimator.Create`.
 - **Scenes and prefabs**: a component is saved only if registered (`Components.Register<T>("Name")`, in the game's constructor for game components); register it **and** keep it plain public-field data. Files reference assets by *name*, never id; prefab overrides are JSON merge (objects merge, arrays replace, `null` removes a component). Loading is all-or-nothing: parse first, create entities after. Do not store `Entity` references in saved components (not remapped on load yet). New asset kinds that scenes refer to need an `IAssetLoader<T>` registered in `Game.OnLoad`.
-- **Shutdown**: free GPU resources in `Unload`/the window `Closing` event, while the GL context still exists. Never touch GL from `Dispose` or after `Run()` returns.
+- **Profiling**: systems are timed automatically (`SystemGroup.Profile`); time your own work with `Profiler.GetSection` once (keep the id) then `Begin`/`End` per use. Never look sections up by name per frame.
+- **Audio**: game code plays sounds through `Game.Audio` (`IAudioDevice`), never OpenAL types; load clips with `Assets.Load<AudioClip>("sounds/x.wav")` and `Audio.Preload` them in `Load`. A missing sound card falls back to `NullAudioDevice` (visible in the overlay), never a crash.
+- **Inspector**: it edits registered components by reflection over their public fields, so keep component fields to simple types (numbers, bools, strings, enums, vectors, `Color`, `Rect`, `AssetHandle<T>`, nested plain structs); anything else shows read-only. Pass `defaultValue` to `Register<T>` when `default(T)` is invalid.
+- **Shutdown**: free GPU resources in `Unload`/the window `Closing` event, while the GL context still exists (`Game` then disposes `Audio`, then `Assets`). Never touch GL from `Dispose` or after `Run()` returns.
 - **Render stats**: call `SpriteBatch.ResetStats()` once per frame (in `Draw`) because a frame has several batch passes.
 - **GPU resources** are `IDisposable`, owned by exactly one object; create in `Load`, dispose in `Unload`; `Game.Assets` disposes loaded assets.
 - **Fail loudly** with specific guard-clause exceptions; never swallow exceptions.

@@ -1,9 +1,12 @@
 using Engine.Animation;
+using Engine.Audio;
 using Engine.Core;
 using Engine.Core.Assets;
+using Engine.Core.Diagnostics;
 using Engine.Core.Ecs;
 using Engine.Core.Input;
 using Engine.Platform;
+using Engine.Runtime.Inspector;
 using Engine.Rendering;
 using Engine.Scenes;
 using Engine.Tilemaps;
@@ -21,6 +24,14 @@ public abstract class Game : IDisposable
     private readonly FixedTimestep _timestep;
     private readonly FrameStats _stats = new();
     private readonly DebugOverlay _overlay;
+    private readonly EntityInspector _inspector;
+    private readonly ProfilerPanel _profilerPanel;
+    private readonly int _frameSection;
+    private readonly int _updateSection;
+    private readonly int _fixedUpdateSection;
+    private readonly int _drawSection;
+    private readonly int _debugGuiSection;
+    private long _frameStart;
 
     /// <summary>Creates the window and loop. Nothing is shown until <see cref="Run"/> is called.</summary>
     /// <param name="title">Window title.</param>
@@ -33,7 +44,17 @@ public abstract class Game : IDisposable
         _window = new GameWindow(title, width, height);
         Actions = new ActionMap(_window.Input);
         Scenes = new SceneSerializer(World, Assets, Components);
-        _overlay = new DebugOverlay(_window, _timestep, _stats, World, Assets);
+        _overlay = new DebugOverlay(_window, _timestep, _stats, World, Assets, () => Audio);
+        _inspector = new EntityInspector(World, Components);
+        _profilerPanel = new ProfilerPanel(Profiler);
+        FixedSystems.Profile(Profiler, "Fixed");
+        FrameSystems.Profile(Profiler, "Frame");
+        RenderSystems.Profile(Profiler, "Render");
+        _frameSection = Profiler.GetSection("CPU frame");
+        _updateSection = Profiler.GetSection("Game.Update");
+        _fixedUpdateSection = Profiler.GetSection("Game.FixedUpdate");
+        _drawSection = Profiler.GetSection("Game.Draw");
+        _debugGuiSection = Profiler.GetSection("Debug UI");
         _window.Load += OnLoad;
         _window.Closing += OnClosing;
         _window.Update += OnUpdate;
@@ -61,6 +82,19 @@ public abstract class Game : IDisposable
     /// registered automatically once the window is ready, so scenes can refer to those files by name from <see cref="Load"/> onwards.
     /// </summary>
     public SceneSerializer Scenes { get; }
+
+    /// <summary>
+    /// Per-section frame timing. Every system in <see cref="FixedSystems"/>, <see cref="FrameSystems"/> and <see cref="RenderSystems"/>
+    /// and each game hook is measured automatically; add your own sections with <see cref="Profiler.GetSection"/>.
+    /// </summary>
+    public Profiler Profiler { get; } = new();
+
+    /// <summary>
+    /// Plays sounds. Silent until the window loads; from <see cref="Load"/> onwards it is an OpenAL device, or a silent stand-in
+    /// (whose <see cref="IAudioDevice.Description"/> says why) when the machine has no usable audio output. Load clips with
+    /// <c>Assets.Load&lt;AudioClip&gt;("sounds/jump.wav")</c>.
+    /// </summary>
+    public IAudioDevice Audio { get; private set; } = new NullAudioDevice("starts when the window loads");
 
     /// <summary>Raw keyboard and mouse state. Prefer <see cref="Actions"/> for game logic.</summary>
     public InputState Input => _window.Input;
@@ -123,6 +157,7 @@ public abstract class Game : IDisposable
     private void OnClosing()
     {
         Unload();
+        Audio.Dispose();
         Assets.Dispose();
     }
 
@@ -133,6 +168,8 @@ public abstract class Game : IDisposable
         Assets.Register(new TileLayerLoader());
         Assets.Register(new AnimationStateMachineLoader());
         Assets.Register(new PrefabLoader());
+        Assets.Register(new AudioClipLoader());
+        Audio = OpenAlAudioDevice.TryCreate(out var device, out string reason) ? device! : new NullAudioDevice(reason);
         Load();
     }
 
@@ -142,16 +179,23 @@ public abstract class Game : IDisposable
     /// </summary>
     private void OnUpdate(double dt)
     {
+        Profiler.BeginFrame();
+        _frameStart = Profiler.Begin();
         if (Input.WasPressed(KeyCode.F1)) _overlay.Toggle();
+        Audio.Update();
 
         FrameSystems.Run(World, dt);
+        long start = Profiler.Begin();
         Update(dt);
+        Profiler.End(_updateSection, start);
 
         int steps = _timestep.Advance(dt);
         for (int i = 0; i < steps; i++)
         {
             FixedSystems.Run(World, _timestep.Step);
+            start = Profiler.Begin();
             FixedUpdate(_timestep.Step);
+            Profiler.End(_fixedUpdateSection, start);
         }
 
         _stats.RecordFixedSteps(steps);
@@ -161,15 +205,25 @@ public abstract class Game : IDisposable
     private void OnRender(double dt)
     {
         _stats.RecordFrame(dt);
+        long start = Profiler.Begin();
         Draw(dt);
+        Profiler.End(_drawSection, start);
         RenderSystems.Run(World, dt);
     }
 
     private void OnGui(double dt)
     {
-        if (!_overlay.Visible) return;
+        long start = Profiler.Begin();
+        if (_overlay.Visible)
+        {
+            _overlay.Draw();
+            if (_overlay.ShowInspector) _inspector.Draw();
+            if (_overlay.ShowProfiler) _profilerPanel.Draw();
+            DebugGui();
+        }
 
-        _overlay.Draw();
-        DebugGui();
+        Profiler.End(_debugGuiSection, start);
+        // The GUI callback is the last thing in a frame, so this closes the whole-frame measurement even when the overlay is hidden.
+        Profiler.End(_frameSection, _frameStart);
     }
 }
