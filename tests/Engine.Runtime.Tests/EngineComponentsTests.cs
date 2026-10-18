@@ -46,7 +46,7 @@ public sealed class EngineComponentsTests : IDisposable
         var registry = EngineComponents.RegisterAll(new ComponentRegistry());
 
         Assert.Equal(
-            new[] { "BoxCollider", "Light2D", "Name", "PhysicsBody", "PlatformerController", "PlatformerIntent", "Sprite", "SpriteAnimator", "StaticSolid", "TileLayerRenderer", "Transform" },
+            new[] { "BoxCollider", "Light2D", "Name", "PhysicsBody", "PlatformerController", "PlatformerIntent", "PreviousTransform", "Sprite", "SpriteAnimator", "StaticSolid", "TileLayerRenderer", "Transform" },
             registry.Names.OrderBy(n => n).ToArray());
     }
 
@@ -70,6 +70,17 @@ public sealed class EngineComponentsTests : IDisposable
         Assert.Equal(180f, light.Radius);
         Assert.Equal(1.5f, light.Intensity);
         Assert.Equal(new Color(1f, 0.5f, 0.25f), light.Color);
+    }
+
+    [Fact]
+    public void Empty_previous_transform_round_trips_without_history()
+    {
+        var e = _world.CreateEntity();
+        _world.Add(e, new PreviousTransform());
+
+        var loaded = RoundTrip();
+
+        Assert.False(_world.Get<PreviousTransform>(loaded).HasHistory);
     }
 
     [Fact]

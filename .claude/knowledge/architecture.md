@@ -40,11 +40,15 @@ Per display frame (`Game.OnUpdate` then `Game.OnRender`, driven by Silk's window
 
 1. Window events fill `InputState` (via `SilkInputAdapter`; key/mouse presses are dropped while ImGui wants the input, releases always pass).
 2. `FrameSystems` run, then `Game.Update` (read input here, latch intent into components, e.g. `PlayerInputSystem` writes `PlatformerIntent`).
-3. `FixedTimestep.Advance(dt)` returns N steps; for each: `FixedSystems`, then `Game.FixedUpdate`.
+3. `FixedTimestep.Advance(dt)` returns N steps; for each: `FixedSystems`, then `Game.FixedUpdate`. The sample's first fixed system is `PreviousTransformSystem` (records each `PreviousTransform` before the step moves anything).
 4. `Input.EndFrame()` clears pressed/released edges and scroll.
-5. Render: `PostProcess.BeginScene()` (redirects drawing into the scene target only if some effect is enabled), `Game.Draw` (resets batch stats, clears), `RenderSystems` in registration order (sample: background/ground `TileLayerRenderSystem`, `SpriteRenderSystem` which gathers `Transform`+`Sprite` and sorts back-to-front by Z then texture, foreground `TileLayerRenderSystem`; each pass is its own `SpriteBatch.Begin/End`), then `PostProcess.EndScene()` (runs the enabled effects, the last one writing to the window), then the ImGui overlay (`DebugOverlay` + `Game.DebugGui`), which is drawn after the effects so tools are never darkened or bloomed.
+5. Render: `Game` sets `RenderClock.Alpha` (the timestep's 0..1 fraction), then `PostProcess.BeginScene()` (redirects drawing into the scene target only if some effect is enabled), `Game.Draw` (resets batch stats, clears), `RenderSystems` in registration order (sample: background/ground `TileLayerRenderSystem`, `SpriteRenderSystem` which gathers `Transform`+`Sprite` and sorts back-to-front by Z then texture, foreground `TileLayerRenderSystem`; each pass is its own `SpriteBatch.Begin/End`), then `PostProcess.EndScene()` (runs the enabled effects, the last one writing to the window), then the ImGui overlay (`DebugOverlay` + `Game.DebugGui`), which is drawn after the effects so tools are never darkened or bloomed.
 
 Shutdown: GPU cleanup happens in the window's `Closing` event, **while the GL context still exists**: `GameWindow.OnClosing` raises `Closing` (so `Game` runs `Unload()` then `Assets.Dispose()`), then disposes the ImGui controller and input. `Game.Dispose`/`GameWindow.Dispose` afterwards only release the managed GL bindings and the window. (Decision and reason: after `Run()` returns the context is destroyed and any GL delete throws `NoContext`; this crashed every normal window close until phase 7.)
+
+## Render interpolation
+
+Fixed steps and display frames do not line up, so drawing the raw simulated position makes motion judder. Entities with a `PreviousTransform` are drawn at `Lerp(previous, current, alpha)` (`PreviousTransform.Interpolate`; scale is not blended). Decisions and reasons: (1) it is an opt-in component rather than a second copy of every `Transform`, so static entities pay nothing; (2) `default` means "no history", so a spawn, respawn or scene load draws at the real position instead of sweeping in from the origin; (3) `RenderClock` (set by `Game` before `Draw`) is handed to the render systems by constructor, not read from a global, and the parameter is optional so systems without it draw the raw state; (4) the camera follow runs in `Game.Draw` (after the steps, with the current alpha) on the interpolated hero position, otherwise it chases a position the sprite is not drawn at and jitters; (5) `LightingEffect` interpolates lights the same way so the lantern stays on the hero.
 
 ## ECS (`src/Engine.Core/Ecs`)
 
@@ -107,6 +111,7 @@ Shutdown: GPU cleanup happens in the window's `Closing` event, **while the GL co
 | `BoxCollider`, `PhysicsBody`, `StaticSolid` (tag) | `src/Engine.Physics2D/` | Collider size/offset; velocity, gravity scale and contact flags; immovable solid marker. |
 | `PlatformerController`, `PlatformerIntent` | `src/Engine.Physics2D/` | Tuning + runtime timers; player intent written by an input system. |
 | `Name` | `src/Engine.Core/Components/` | Human-readable label (tools, inspector, saves). |
+| `PreviousTransform` | `src/Engine.Core/Components/` | Position/rotation at the start of the last fixed step; `default` = no history yet (draws at the current transform, so teleports never smear). Opt-in for moving entities (hero, creatures). |
 | `TileLayerRenderer` | `src/Engine.Tilemaps/` | Layer + tile set handles, tint, foreground flag. |
 | `SpriteAnimator` | `src/Engine.Animation/` | Machine handle, state, time, speed, parameters. |
 | `Patrol` | `samples/Platformer/` | Game-specific walking AI; also marks an entity as a creature for `InteractionSystem`. |

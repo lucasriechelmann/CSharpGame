@@ -18,6 +18,7 @@ public static class EngineComponents
     public static ComponentRegistry RegisterAll(ComponentRegistry registry) => registry
         .Register<Name>("Name")
         .Register("Transform", Transform.Identity)
+        .Register<PreviousTransform>("PreviousTransform")
         .Register<Sprite>("Sprite")
         .Register("Light2D", Light2D.Create(160f, Color.White))
         .Register<SpriteAnimator>("SpriteAnimator")

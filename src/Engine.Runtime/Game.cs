@@ -105,6 +105,12 @@ public abstract class Game : IDisposable
     /// </summary>
     public PostProcessChain PostProcess { get; private set; } = null!;
 
+    /// <summary>
+    /// The render interpolation factor, refreshed every frame before <see cref="Draw"/>. Pass it to the render systems
+    /// (<c>new SpriteRenderSystem(..., RenderClock)</c>) and give moving entities a <c>PreviousTransform</c>.
+    /// </summary>
+    public RenderClock RenderClock { get; } = new();
+
     /// <summary>Raw keyboard and mouse state. Prefer <see cref="Actions"/> for game logic.</summary>
     public InputState Input => _window.Input;
 
@@ -225,6 +231,7 @@ public abstract class Game : IDisposable
     private void OnRender(double dt)
     {
         _stats.RecordFrame(dt);
+        RenderClock.Alpha = (float)_timestep.Alpha;
         PostProcess.BeginScene();
         long start = Profiler.Begin();
         Draw(dt);

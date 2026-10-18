@@ -1,6 +1,7 @@
 using System.Numerics;
 using Engine.Animation;
 using Engine.Audio;
+using Engine.Core;
 using Engine.Core.Assets;
 using Engine.Core.Components;
 using Engine.Core.Ecs;
@@ -76,7 +77,7 @@ public sealed partial class PlatformerGame : Game
 
         // Full-screen effects, in order: lights first (so the glow can bloom), then bloom, vignette and an off-by-default colour grade.
         // Lights themselves are Light2D components in the scene file (the hero carries a lantern); tune everything live in the "Post effects" window.
-        PostProcess.Add(new LightingEffect(Gl, World, _camera) { Ambient = new Vector3(0.38f, 0.4f, 0.55f), Exposure = 1.5f });
+        PostProcess.Add(new LightingEffect(Gl, World, _camera, RenderClock) { Ambient = new Vector3(0.38f, 0.4f, 0.55f), Exposure = 1.5f });
         PostProcess.Add(new BloomEffect(Gl));
         PostProcess.Add(new VignetteEffect(Gl));
         PostProcess.Add(new ColorGradeEffect(Gl) { Enabled = false });
@@ -95,7 +96,8 @@ public sealed partial class PlatformerGame : Game
             Assets.Get(Assets.Load<AudioClip>("sounds/jump.wav")),
             Assets.Get(Assets.Load<AudioClip>("sounds/land.wav"))));
 
-        // Fixed step: decide velocities (patrol, controller) first, then let physics move everything.
+        // Fixed step: record where everything was (for render interpolation), decide velocities (patrol, controller), then let physics move everything.
+        FixedSystems.Add(new PreviousTransformSystem());
         FixedSystems.Add(new PatrolSystem());
         FixedSystems.Add(new PlatformerControllerSystem());
         FixedSystems.Add(new PhysicsSystem(_grid, _physicsSettings));
@@ -103,7 +105,7 @@ public sealed partial class PlatformerGame : Game
 
         // Render passes: background and ground tiles, then sprites, then foreground tiles in front.
         RenderSystems.Add(new TileLayerRenderSystem(_batch, _camera, Assets, foreground: false));
-        RenderSystems.Add(new SpriteRenderSystem(_batch, _camera, Assets));
+        RenderSystems.Add(new SpriteRenderSystem(_batch, _camera, Assets, RenderClock));
         RenderSystems.Add(new TileLayerRenderSystem(_batch, _camera, Assets, foreground: true));
     }
 
@@ -113,7 +115,7 @@ public sealed partial class PlatformerGame : Game
     /// <inheritdoc />
     protected override void Update(double dt)
     {
-        UpdateCamera(dt);
+        UpdateCameraControls(dt);
         UpdateStatusMessage(dt);
         UpdateFlow(dt);
 
@@ -127,19 +129,31 @@ public sealed partial class PlatformerGame : Game
     /// <inheritdoc />
     protected override void Draw(double dt)
     {
+        FollowHero(dt);
         _batch.ResetStats(); // render systems add to the totals; the debug UI reads them after all passes
         Gl.ClearColor(_clear.X, _clear.Y, _clear.Z, 1f);
         Gl.Clear(ClearBufferMask.ColorBufferBit);
     }
 
-    private void UpdateCamera(double dt)
+    /// <summary>The hero's position as it is drawn this frame (between the last two fixed steps), which is what the camera must follow.</summary>
+    private Vector2 HeroDrawPosition()
     {
-        // Follow the hero with a frame-rate independent ease.
-        var heroPosition = World.Get<Transform>(_hero).Position;
-        var target = new Vector2(heroPosition.X, heroPosition.Y);
-        float follow = 1f - MathF.Exp(-6f * (float)dt);
-        _camera.Position = Vector2.Lerp(_camera.Position, target, follow);
+        var drawn = PreviousTransform.Interpolate(World.Get<Transform>(_hero), World.Get<PreviousTransform>(_hero), RenderClock.Alpha);
+        return new Vector2(drawn.Position.X, drawn.Position.Y);
+    }
 
+    /// <summary>
+    /// Follows the hero with a frame-rate independent ease. Runs in <see cref="Draw"/>, after the fixed steps, so it chases the
+    /// interpolated position the sprite is drawn at; following the raw simulated position would jitter against the sprite.
+    /// </summary>
+    private void FollowHero(double dt)
+    {
+        float follow = 1f - MathF.Exp(-6f * (float)dt);
+        _camera.Position = Vector2.Lerp(_camera.Position, HeroDrawPosition(), follow);
+    }
+
+    private void UpdateCameraControls(double dt)
+    {
         float zoom = _camera.Zoom * (1f + Actions.GetAxis(GameActions.Zoom) * (float)dt);
         zoom *= MathF.Pow(1.1f, Input.ScrollDelta);
         _camera.Zoom = Math.Clamp(zoom, 0.1f, 8f);
@@ -147,7 +161,7 @@ public sealed partial class PlatformerGame : Game
         if (Actions.WasPressed(GameActions.ResetCamera))
         {
             _camera.Zoom = 1f;
-            _camera.Position = target;
+            _camera.Position = HeroDrawPosition();
         }
     }
 

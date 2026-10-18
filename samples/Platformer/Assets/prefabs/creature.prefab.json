@@ -1,6 +1,7 @@
 {
   "components": {
     "Name": { "value": "Creature" },
+    "PreviousTransform": {},
     "Transform": {
       "position": {
         "x": -116.2587,

@@ -1,4 +1,5 @@
 using System.Numerics;
+using Engine.Core;
 using Engine.Core.Components;
 using Engine.Core.Ecs;
 using Silk.NET.OpenGL;
@@ -37,6 +38,7 @@ public sealed class LightingEffect : IPostEffect
     private readonly GL _gl;
     private readonly World _world;
     private readonly Camera2D _camera;
+    private readonly RenderClock? _clock;
     private readonly SpriteBatch _batch;
     private readonly Texture2D _gradient;
     private readonly Shader _composite;
@@ -50,8 +52,10 @@ public sealed class LightingEffect : IPostEffect
     /// <param name="gl">The GL context that will own the effect's resources.</param>
     /// <param name="world">The world whose <see cref="Light2D"/> entities are drawn.</param>
     /// <param name="camera">The scene camera; the light map is drawn through the same view so lights line up with the sprites.</param>
-    public LightingEffect(GL gl, World world, Camera2D camera)
+    /// <param name="clock">Interpolation factor; when given, lights on entities with a <see cref="PreviousTransform"/> follow them smoothly between fixed steps, like their sprites.</param>
+    public LightingEffect(GL gl, World world, Camera2D camera, RenderClock? clock = null)
     {
+        _clock = clock;
         _gl = gl;
         _world = world;
         _camera = camera;
@@ -117,9 +121,13 @@ public sealed class LightingEffect : IPostEffect
         _batch.End();
     }
 
-    private void Collect(Entity entity, ref Transform transform, ref Light2D light)
+    private void Collect(Entity entity, ref Transform simulated, ref Light2D light)
     {
         if (light.Radius <= 0f) return;
+
+        var transform = simulated;
+        if (_clock != null && _world.TryGet<PreviousTransform>(entity, out var previous))
+            transform = PreviousTransform.Interpolate(simulated, previous, _clock.Alpha);
 
         var centre = new Vector2(transform.Position.X, transform.Position.Y);
         if (!LightMath.Overlaps(_visibleMin, _visibleMax, centre, light.Radius)) return;
