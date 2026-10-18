@@ -15,7 +15,9 @@
   </ItemGroup>
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
+    <OutputType>Library</OutputType>
+    <!-- The library is the game; the Platformer.Launcher project makes the Platformer.exe that runs it, and the editor loads this DLL. -->
+    <AssemblyName>Platformer.Game</AssemblyName>
   </PropertyGroup>
 
   <!-- Game.Assets loads from an "Assets" folder next to the executable. -->

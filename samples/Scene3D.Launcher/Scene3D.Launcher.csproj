@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Scene3D\Scene3D.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>Scene3D</AssemblyName>
+    <RootNamespace>Scene3D.Launcher</RootNamespace>
+  </PropertyGroup>
+
+</Project>

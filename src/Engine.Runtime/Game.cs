@@ -46,8 +46,11 @@ public abstract class Game : IDisposable
     /// <param name="width">Initial window width in pixels.</param>
     /// <param name="height">Initial window height in pixels.</param>
     /// <param name="fixedHz">Fixed simulation rate in steps per second.</param>
-    protected Game(string title, int width = 1280, int height = 720, double fixedHz = 60)
+    /// <param name="launch">Where assets and data files live; null means the folders next to the executable (<see cref="GameLaunch.Default"/>).</param>
+    protected Game(string title, int width = 1280, int height = 720, double fixedHz = 60, GameLaunch? launch = null)
     {
+        Launch = launch ?? GameLaunch.Default;
+        Assets = new AssetManager(Launch.AssetRoot);
         _timestep = new FixedTimestep(1.0 / fixedHz);
         _window = new GameWindow(title, width, height);
         Actions = new ActionMap(_window.Input);
@@ -80,10 +83,13 @@ public abstract class Game : IDisposable
     public World World { get; } = new();
 
     /// <summary>
-    /// Loads and caches assets from the <c>Assets</c> folder next to the executable. A texture loader is registered
+    /// Loads and caches assets from <see cref="Launch"/>'s asset folder (next to the executable unless the host says otherwise). A texture loader is registered
     /// automatically once the window is ready; everything it owns is disposed on shutdown.
     /// </summary>
-    public AssetManager Assets { get; } = new(Path.Combine(AppContext.BaseDirectory, "Assets"));
+    public AssetManager Assets { get; }
+
+    /// <summary>Where this run finds its assets and writes its files; use it instead of <c>AppContext.BaseDirectory</c>.</summary>
+    public GameLaunch Launch { get; }
 
     /// <summary>
     /// The components that may appear in scene and prefab files. The engine's own are registered already; register your game's

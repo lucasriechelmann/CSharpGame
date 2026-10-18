@@ -20,7 +20,7 @@ public sealed partial class PlatformerGame
     private const float CreatureHalfExtent = 12f;
 
     // Written next to the executable, outside the asset folder, because it is player data rather than content.
-    private static readonly string QuickSavePath = Path.Combine(AppContext.BaseDirectory, "saves", "quicksave.scene.json");
+    private string QuickSavePath => Path.Combine(Launch.DataRoot, "saves", "quicksave.scene.json");
 
     private AssetHandle<AnimationStateMachine>[] _creatureMachines = [];
     private string _status = "";
@@ -163,7 +163,7 @@ public sealed partial class PlatformerGame
     /// inside the project tree (so a save is a source change you can commit; the next build copies it to the output folder),
     /// otherwise the copy next to the executable.
     /// </summary>
-    private static string EditableLevelPath => EditableAsset(LevelScene);
+    private string EditableLevelPath => EditableAsset(LevelScene);
 
     /// <inheritdoc />
     protected override string EditableAssetPath(string assetName) => EditableAsset(assetName);
@@ -172,15 +172,19 @@ public sealed partial class PlatformerGame
     protected override string? HotReloadRoot => Path.GetDirectoryName(EditableAsset("x"));
 
     /// <summary>The project's copy of an asset when the game runs from a build inside the project tree, otherwise the copy next to the executable.</summary>
-    private static string EditableAsset(string assetName)
+    private string EditableAsset(string assetName)
     {
+        // Opened as a project by the editor: the assets already are the source files.
+        if (Launch.EditsSource) return Path.GetFullPath(Path.Combine(Launch.AssetRoot, assetName));
+
+        // Started from a build inside the repository (samples/Platformer.Launcher/bin/...): the game library project is a sibling folder.
         for (var folder = new DirectoryInfo(AppContext.BaseDirectory); folder != null; folder = folder.Parent)
         {
-            if (File.Exists(Path.Combine(folder.FullName, "Platformer.csproj")))
-                return Path.GetFullPath(Path.Combine(folder.FullName, "Assets", assetName));
+            if (File.Exists(Path.Combine(folder.FullName, "Platformer", "Platformer.csproj")))
+                return Path.GetFullPath(Path.Combine(folder.FullName, "Platformer", "Assets", assetName));
         }
 
-        return Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "Assets", assetName));
+        return Path.GetFullPath(Path.Combine(Launch.AssetRoot, assetName));
     }
 
     private void ShowStatus(string message)

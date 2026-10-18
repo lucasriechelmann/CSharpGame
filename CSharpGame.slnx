@@ -1,6 +1,8 @@
 <Solution>
   <Folder Name="/samples/">
+    <Project Path="samples/Platformer.Launcher/Platformer.Launcher.csproj" />
     <Project Path="samples/Platformer/Platformer.csproj" />
+    <Project Path="samples/Scene3D.Launcher/Scene3D.Launcher.csproj" />
     <Project Path="samples/Scene3D/Scene3D.csproj" />
   </Folder>
   <Folder Name="/src/">

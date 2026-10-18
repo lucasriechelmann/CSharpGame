@@ -13,7 +13,8 @@
   </ItemGroup>
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
+    <OutputType>Library</OutputType>
+    <AssemblyName>Scene3D.Game</AssemblyName>
   </PropertyGroup>
 
   <!-- Game.Assets loads from an "Assets" folder next to the executable. -->

@@ -44,7 +44,7 @@ public sealed class Scene3DGame : Game
     private bool _wasLooking;
 
     /// <summary>Registers input bindings and the game's own component.</summary>
-    public Scene3DGame() : base("Scene3D")
+    public Scene3DGame(GameLaunch? launch = null) : base("Scene3D", launch: launch)
     {
         Actions
             .BindAxis(GameActions.MoveForward, KeyCode.S, KeyCode.W)
@@ -105,7 +105,7 @@ public sealed class Scene3DGame : Game
     protected override Camera3D? SceneCamera3D => _camera;
 
     /// <inheritdoc />
-    protected override string? ScenePath => FindProjectScene();
+    protected override string? ScenePath => Launch.EditsSource ? Path.Combine(Launch.AssetRoot, "scenes", "room.scene.json") : FindProjectScene();
 
     /// <inheritdoc />
     protected override void SceneReloaded()

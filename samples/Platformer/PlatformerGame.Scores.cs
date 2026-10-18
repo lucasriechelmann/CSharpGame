@@ -3,7 +3,7 @@ namespace Platformer;
 // High scores: loaded at start, a finished run is submitted once, saved to saves/highscores.json (player data, like the quick-save).
 public sealed partial class PlatformerGame
 {
-    private static readonly string HighScoresPath = Path.Combine(AppContext.BaseDirectory, "saves", "highscores.json");
+    private string HighScoresPath => Path.Combine(Launch.DataRoot, "saves", "highscores.json");
 
     private HighScores _highScores = new();
     private bool _runRecorded;

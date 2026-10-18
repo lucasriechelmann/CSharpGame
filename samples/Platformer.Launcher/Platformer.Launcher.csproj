@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Platformer\Platformer.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>Platformer</AssemblyName>
+    <RootNamespace>Platformer.Launcher</RootNamespace>
+  </PropertyGroup>
+
+</Project>

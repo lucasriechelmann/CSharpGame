@@ -38,7 +38,7 @@ public sealed partial class PlatformerGame : Game
     private Entity _hero;
 
     /// <summary>Registers input bindings and the game's own components for scene files. Systems are added in <see cref="Load"/>.</summary>
-    public PlatformerGame() : base("Platformer")
+    public PlatformerGame(GameLaunch? launch = null) : base("Platformer", launch: launch)
     {
         Actions
             .BindAxis(GameActions.MoveX, KeyCode.A, KeyCode.D)
