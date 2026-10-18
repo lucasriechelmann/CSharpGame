@@ -1,3 +1,5 @@
+using Engine.Core.Input;
+using ImGuiNET;
 using Silk.NET.Input;
 using Silk.NET.Maths;
 using Silk.NET.OpenGL;
@@ -7,12 +9,13 @@ using Silk.NET.Windowing;
 namespace Engine.Platform;
 
 /// <summary>
-/// Owns the OS window, the OpenGL context, the input context and the ImGui overlay.
+/// Owns the OS window, the OpenGL context, the input wiring and the ImGui overlay.
 /// Everything Silk.NET-specific lives here so higher layers never touch it directly.
 /// </summary>
 public sealed class GameWindow : IDisposable
 {
     private readonly IWindow _window;
+    private IInputContext? _silkInput;
     private ImGuiController? _imgui;
 
     /// <summary>Configures a window requesting an OpenGL 3.3 core context. It opens when <see cref="Run"/> is called.</summary>
@@ -34,14 +37,15 @@ public sealed class GameWindow : IDisposable
         _window.Update += dt => Update?.Invoke(dt);
         _window.Render += OnRender;
         _window.FramebufferResize += size => { Gl?.Viewport(size); Resized?.Invoke(size.X, size.Y); };
+        _window.FocusChanged += focused => { if (!focused) Input.ReleaseAll(); };
         _window.Closing += () => Closing?.Invoke();
     }
 
     /// <summary>The OpenGL API. Only valid once <see cref="Load"/> has been raised.</summary>
     public GL Gl { get; private set; } = null!;
 
-    /// <summary>Keyboards, mice and gamepads. Only valid once <see cref="Load"/> has been raised.</summary>
-    public IInputContext Input { get; private set; } = null!;
+    /// <summary>Keyboard and mouse state. Usable immediately; it is fed with events once the window has loaded.</summary>
+    public InputState Input { get; } = new();
 
     /// <summary>Current window width in pixels.</summary>
     public int Width => _window.Size.X;
@@ -63,6 +67,7 @@ public sealed class GameWindow : IDisposable
 
     /// <summary>Raised after the scene is drawn and the ImGui frame has begun; issue ImGui calls here.</summary>
     public event Action<double>? Gui;
+
     /// <summary>Raised when the framebuffer is resized, with the new width and height in pixels.</summary>
     public event Action<int, int>? Resized;
 
@@ -78,8 +83,13 @@ public sealed class GameWindow : IDisposable
     private void OnLoad()
     {
         Gl = _window.CreateOpenGL();
-        Input = _window.CreateInput();
-        _imgui = new ImGuiController(Gl, _window, Input);
+        _silkInput = _window.CreateInput();
+        _imgui = new ImGuiController(Gl, _window, _silkInput);
+        _ = new SilkInputAdapter(
+            _silkInput,
+            Input,
+            () => ImGui.GetIO().WantCaptureKeyboard,
+            () => ImGui.GetIO().WantCaptureMouse);
         Gl.Viewport(_window.FramebufferSize);
         Load?.Invoke();
     }
@@ -96,7 +106,7 @@ public sealed class GameWindow : IDisposable
     public void Dispose()
     {
         _imgui?.Dispose();
-        Input?.Dispose();
+        _silkInput?.Dispose();
         Gl?.Dispose();
         _window.Dispose();
     }

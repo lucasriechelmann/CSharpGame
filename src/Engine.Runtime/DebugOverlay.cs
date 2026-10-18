@@ -1,4 +1,5 @@
 using Engine.Core;
+using Engine.Core.Assets;
 using Engine.Core.Ecs;
 using Engine.Platform;
 using ImGuiNET;
@@ -6,7 +7,7 @@ using ImGuiNET;
 namespace Engine.Runtime;
 
 /// <summary>The built-in "Engine" debug panel: timing, fixed-step info, entity count and window settings.</summary>
-internal sealed class DebugOverlay(GameWindow window, FixedTimestep timestep, FrameStats stats, World world)
+internal sealed class DebugOverlay(GameWindow window, FixedTimestep timestep, FrameStats stats, World world, AssetManager assets)
 {
     /// <summary>Whether the overlay (and the game's own debug panels) are drawn. Toggled with F1.</summary>
     public bool Visible { get; private set; } = true;
@@ -21,7 +22,7 @@ internal sealed class DebugOverlay(GameWindow window, FixedTimestep timestep, Fr
         ImGui.Text($"FPS: {stats.Fps:F0}  ({stats.FrameMs:F2} ms)");
         ImGui.Text($"Fixed steps: {stats.FixedSteps}  (step {timestep.Step * 1000:F2} ms)");
         ImGui.Text($"Alpha: {timestep.Alpha:F2}");
-        ImGui.Text($"Entities: {world.EntityCount}");
+        ImGui.Text($"Entities: {world.EntityCount}   Assets: {assets.Count}");
         ImGui.Text($"Window: {window.Width}x{window.Height}");
 
         bool vsync = window.VSync;

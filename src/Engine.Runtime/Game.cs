@@ -1,7 +1,9 @@
 using Engine.Core;
+using Engine.Core.Assets;
 using Engine.Core.Ecs;
+using Engine.Core.Input;
 using Engine.Platform;
-using Silk.NET.Input;
+using Engine.Rendering;
 using Silk.NET.OpenGL;
 
 namespace Engine.Runtime;
@@ -26,7 +28,8 @@ public abstract class Game : IDisposable
     {
         _timestep = new FixedTimestep(1.0 / fixedHz);
         _window = new GameWindow(title, width, height);
-        _overlay = new DebugOverlay(_window, _timestep, _stats, World);
+        Actions = new ActionMap(_window.Input);
+        _overlay = new DebugOverlay(_window, _timestep, _stats, World, Assets);
         _window.Load += OnLoad;
         _window.Update += OnUpdate;
         _window.Render += OnRender;
@@ -36,10 +39,22 @@ public abstract class Game : IDisposable
     /// <summary>The entity world for this game.</summary>
     public World World { get; } = new();
 
+    /// <summary>
+    /// Loads and caches assets from the <c>Assets</c> folder next to the executable. A texture loader is registered
+    /// automatically once the window is ready; everything it owns is disposed on shutdown.
+    /// </summary>
+    public AssetManager Assets { get; } = new(Path.Combine(AppContext.BaseDirectory, "Assets"));
+
+    /// <summary>Raw keyboard and mouse state. Prefer <see cref="Actions"/> for game logic.</summary>
+    public InputState Input => _window.Input;
+
+    /// <summary>Named actions and axes mapped onto <see cref="Input"/>. Bind them in the constructor or <see cref="Load"/>.</summary>
+    public ActionMap Actions { get; }
+
     /// <summary>Systems run once per fixed simulation step (physics, movement, game logic).</summary>
     public SystemGroup FixedSystems { get; } = new();
 
-    /// <summary>Systems run once per frame (input handling, animation, camera smoothing).</summary>
+    /// <summary>Systems run once per frame, before the fixed steps (input handling, animation, camera smoothing).</summary>
     public SystemGroup FrameSystems { get; } = new();
 
     /// <summary>Systems run each frame after <see cref="Draw"/> (e.g. the sprite renderer), in the order added.</summary>
@@ -48,7 +63,7 @@ public abstract class Game : IDisposable
     /// <summary>The OpenGL API. Only valid after the window has loaded, i.e. from <see cref="Load"/> onwards.</summary>
     protected GL Gl => _window.Gl;
 
-    /// <summary>The platform window (size, input, VSync).</summary>
+    /// <summary>The platform window (size, VSync, resize events).</summary>
     protected GameWindow Window => _window;
 
     /// <summary>Length of one fixed simulation step, in seconds.</summary>
@@ -67,7 +82,7 @@ public abstract class Game : IDisposable
     /// <param name="dt">The fixed step length in seconds.</param>
     protected virtual void FixedUpdate(double dt) { }
 
-    /// <summary>Called once per frame, after <see cref="FrameSystems"/> have run.</summary>
+    /// <summary>Called once per frame, after <see cref="FrameSystems"/> and before the fixed steps.</summary>
     /// <param name="dt">Seconds since the previous frame.</param>
     protected virtual void Update(double dt) { }
 
@@ -81,24 +96,31 @@ public abstract class Game : IDisposable
     /// <summary>Opens the window and runs the game loop until the window closes.</summary>
     public void Run() => _window.Run();
 
-    /// <summary>Releases the window and GPU context.</summary>
+    /// <summary>Releases game resources (<see cref="Unload"/>, then every asset) and finally the window and GPU context.</summary>
     public void Dispose()
     {
         Unload();
+        Assets.Dispose();
         _window.Dispose();
     }
 
     private void OnLoad()
     {
-        _window.Input.Keyboards[0].KeyDown += (_, key, _) =>
-        {
-            if (key == Key.F1) _overlay.Toggle();
-        };
+        Assets.Register(new TextureLoader(Gl));
         Load();
     }
 
+    /// <summary>
+    /// One frame of logic: per-frame code first (so input is read once and latched into components), then the
+    /// fixed simulation steps that consume it, then input edges are cleared.
+    /// </summary>
     private void OnUpdate(double dt)
     {
+        if (Input.WasPressed(KeyCode.F1)) _overlay.Toggle();
+
+        FrameSystems.Run(World, dt);
+        Update(dt);
+
         int steps = _timestep.Advance(dt);
         for (int i = 0; i < steps; i++)
         {
@@ -107,8 +129,7 @@ public abstract class Game : IDisposable
         }
 
         _stats.RecordFixedSteps(steps);
-        FrameSystems.Run(World, dt);
-        Update(dt);
+        Input.EndFrame();
     }
 
     private void OnRender(double dt)

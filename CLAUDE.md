@@ -23,6 +23,15 @@ Dependency direction: samples -> Runtime -> (Core, Platform); samples/Runtime ->
 - `Game.Draw` clears/prepares the frame, then `RenderSystems` run, then the ImGui overlay. Create GPU resources in `Load`, dispose them in `Unload`.
 - To check rendering visually, run the sample and capture its window (see the session scratchpad `capture.ps1` pattern: launch exe, `CopyFromScreen` the window rect).
 
+## Input and assets conventions
+
+- Game code asks for intent through `ActionMap` (`Actions.WasPressed(GameActions.Jump)`, `GetAxis(GameActions.MoveX)`), never for a physical key. Action names are `const string`s in a per-game `GameActions` class.
+- `InputState` edges (pressed/released) last one frame. **Read input in per-frame code (`FrameSystems`/`Update`) and latch it into components**; fixed-step systems run 0..N times per frame and must not read edges.
+- Loop order per frame: `FrameSystems` -> `Update` -> N x (`FixedSystems` -> `FixedUpdate`) -> `Input.EndFrame()`; then `Draw` -> `RenderSystems` -> ImGui.
+- UI (ImGui) swallows key/mouse presses while it wants them; releases always pass through.
+- Components reference assets by `AssetHandle<T>` (an int), never by the loaded object. Load with `Assets.Load<T>("relative/path.png")` (cached by normalised path) or `Assets.Add(name, obj)` for procedural assets. Save `Assets.NameOf(handle)`, not the id.
+- `Game.Assets` owns and disposes everything it loads, so do not dispose assets yourself. Asset files live in the project's `Assets/` folder (copied next to the exe).
+
 ## Code rules (enforced where noted)
 
 1. **One type per file.** Class, struct, record, interface, enum and delegate each get their own file, named after the type. *(Enforced: SA1402 is a build error.)*
@@ -68,7 +77,7 @@ Never add a Co-Authored-By trailer to commit messages.
 1. Foundation: window, fixed-timestep loop, ImGui debug UI. **Done**
 2. Sparse-set ECS with tests. **Done**
 3. GL wrapper, shaders, textures, batched sprite renderer, 2D camera. **Done**
-4. Input mapping, asset cache, sprite demo.
+4. Input mapping, asset cache, sprite demo. **Done**
 5. AABB/tile collision, platformer controller (coyote time, jump buffering).
 6. Tilemaps and sprite animation.
 7. JSON scenes and prefabs (design components to be serializable).
