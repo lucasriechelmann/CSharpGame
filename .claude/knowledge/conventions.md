@@ -19,6 +19,8 @@ XML `<summary>` on every public/protected type and member (build error via CS159
 - **Static factories for components whose `default` is invalid** (`Transform.Identity`/`At`, `Sprite.Create`).
 - **Queries use `ref` lambdas** with the `EntityAction` delegates. Systems that run every frame and need a capturing callback cache the delegate in a field to avoid per-frame allocation. Reference: `src/Engine.Rendering/SpriteRenderSystem.cs` (`_collect`).
 - **Structural changes during a query go through `CommandBuffer`** (`src/Engine.Core/Ecs/CommandBuffer.cs`).
+- **Cached query callbacks**: a system whose query callback needs per-run values keeps them in fields and a delegate created in the constructor (no per-frame closure). Reference: `samples/Platformer/PlayerInputSystem.cs`, `src/Engine.Physics2D/PhysicsSystem.cs`. Non-capturing lambdas are fine inline (`FaceVelocitySystem.cs`).
+- **Systems that write what the next step reads** (controller to physics to controller via `PhysicsBody.Contacts`) rely on fixed order in `FixedSystems`; document the required order in the system's `<summary>`. Reference: `PlatformerControllerSystem.cs`.
 - **System placement:** per-frame/input systems in `FrameSystems`, simulation in `FixedSystems`, drawing in `RenderSystems`. Reference: `samples/Platformer/PlatformerGame.cs` constructor.
 - **Input:** read via `ActionMap` using `const string` names in a per-game `GameActions` class; read edges per frame and latch into components, never inside fixed systems. Reference: `samples/Platformer/PlayerInputSystem.cs`.
 - **Assets:** components hold `AssetHandle<T>`, load via `Game.Assets`; do not dispose assets manually.
@@ -39,6 +41,7 @@ Fail loudly with guard clauses and specific exceptions and messages naming the o
 - Test names describe behaviour with underscores. Reference: `tests/Engine.Core.Tests/Ecs/WorldEntityTests.cs`.
 - One test class per topic, shared fixtures in `tests/*/Fixtures/` (own files). Reference: `tests/Engine.Core.Tests/Fixtures/`.
 - Timing/float tests use binary-exact values (powers of two) to avoid rounding flakiness. Reference: `tests/Engine.Core.Tests/FixedTimestepTests.cs`.
+- Simulation tests (physics, controller) run the real systems in a small fixture level at a power-of-two timestep and assert behaviour over steps. Reference: `tests/Engine.Physics2D.Tests/Fixtures/PlatformerSim.cs`.
 - Filesystem tests use a unique temp directory and clean up in `Dispose`. Reference: `tests/Engine.Core.Tests/Assets/AssetManagerTests.cs`.
 - GPU code (`Shader`, `Texture2D`, `SpriteBatch`) has no unit tests; verify it visually with `tools/` (see `tools/README.md`).
 

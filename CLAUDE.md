@@ -1,19 +1,20 @@
 # CSharpGame: a learning-oriented 2D game engine in C# (3D-ready)
 
 Windows, .NET 10, Silk.NET (OpenGL 3.3 core), custom sparse-set ECS, Dear ImGui debug UI.
-Goal: learn how engines work, so write core systems from scratch and use libraries only for plumbing. First game: a platformer. Status: phases 1-4 of 10 done (see `.claude/knowledge/features.md`).
+Goal: learn how engines work, so write core systems from scratch and use libraries only for plumbing. First game: a platformer. Status: phases 1-5 of 10 done (see `.claude/knowledge/features.md`).
 
 ## Projects
 
 - `src/Engine.Core`      ECS, fixed timestep, `Transform`, input state and action map, asset manager. No GPU or window dependencies; unit-testable.
 - `src/Engine.Platform`  Silk.NET window, GL context, input adapter, ImGui controller.
 - `src/Engine.Rendering` Shader, Texture2D, SpriteBatch, Camera2D, `Sprite` component, `SpriteRenderSystem`, `TextureLoader`.
+- `src/Engine.Physics2D` AABB, tile grid, swept collision solver, `PhysicsSystem`, platformer controller (coyote time, jump buffering, variable jump). No GPU or window dependencies.
 - `src/Engine.Runtime`   `Game` base class and loop, debug overlay. Composition root: the only module allowed to depend on every engine module.
-- `samples/Platformer`   The first game; references the engine like any game project.
-- `tests/`               xUnit tests (`Engine.Core.Tests`, `Engine.Rendering.Tests`).
+- `samples/Platformer`   The first game (tile level, hero, patrolling creatures); references the engine like any game project.
+- `tests/`               xUnit tests (`Engine.Core.Tests`, `Engine.Rendering.Tests`, `Engine.Physics2D.Tests`).
 - `tools/`               PowerShell scripts to run, drive and screenshot the sample (see `tools/README.md`).
 
-Dependency direction: samples -> Runtime -> (Core, Platform, Rendering); Rendering and Platform -> Core. Core never references Platform, Rendering or Silk.NET.
+Dependency direction: samples -> Runtime -> (Core, Platform, Rendering); samples -> Physics2D; Rendering, Platform and Physics2D -> Core. Core never references Platform, Rendering, Physics2D or Silk.NET; Physics2D never references Rendering.
 
 ## Standing rules
 
@@ -27,6 +28,7 @@ Dependency direction: samples -> Runtime -> (Core, Platform, Rendering); Renderi
 - **No allocation in per-frame/per-entity paths** (no LINQ, no per-frame capturing closures).
 - **Structural ECS changes during a query** go through `CommandBuffer`.
 - **Input**: ask `ActionMap` for intent, never a physical key. Read edges (pressed/released) in per-frame code and latch into components; never in fixed-step systems.
+- **Physics**: order fixed systems as "decide velocities" (patrol, `PlatformerControllerSystem`) then `PhysicsSystem`. Gameplay reads `PhysicsBody.Contacts`/`IsGrounded`. Touching edges never count as overlap (epsilon); a body spawned *inside* a solid passes through it, so spawn clear of solids.
 - **GPU resources** are `IDisposable`, owned by exactly one object; create in `Load`, dispose in `Unload`; `Game.Assets` disposes loaded assets.
 - **Fail loudly** with specific guard-clause exceptions; never swallow exceptions.
 - **Gotchas**: `Matrix4x4` is row-vector/row-major, upload to GL **without transposing**; `default(Transform)` is invalid, use `Transform.Identity`/`At`; use binary-exact floats in timing tests.

@@ -6,8 +6,8 @@ public static class GameActions
     /// <summary>Horizontal movement axis (A/D or Left/Right).</summary>
     public const string MoveX = "MoveX";
 
-    /// <summary>Vertical movement axis (S/W or Down/Up).</summary>
-    public const string MoveY = "MoveY";
+    /// <summary>Jump (Space, W or Up).</summary>
+    public const string Jump = "Jump";
 
     /// <summary>Camera zoom axis (Q zooms out, E zooms in).</summary>
     public const string Zoom = "Zoom";

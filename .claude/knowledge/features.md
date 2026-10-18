@@ -12,7 +12,9 @@ What each functional area does and which folders own it. Individual files are na
 | Input | Keyboard/mouse state with per-frame edges, named actions and axes, ImGui capture respected, focus loss releases all. | `src/Engine.Core/Input`, `src/Engine.Platform` (adapter) | `InputState`, `ActionMap`, `SilkInputAdapter` |
 | Assets | Cached, typed, handle-based loading and disposal. | `src/Engine.Core/Assets`, `src/Engine.Rendering` (texture loader) | `AssetManager`, `AssetHandle<T>`, `TextureLoader` |
 | Sprite rendering | Batched sprites with tint, pivot, rotation, flip and sprite-sheet regions; 2D camera with zoom/rotation and screen-to-world conversion. | `src/Engine.Rendering` | `SpriteBatch`, `SpriteRenderSystem`, `Camera2D`, `Sprite` |
-| Sample game | Steerable hero among bouncing creatures; click to spawn, scroll or Q/E to zoom, camera follows hero. | `samples/Platformer` | `PlatformerGame`, `Program.cs` |
+| Physics and collision | Gravity, terminal velocity, swept AABB-vs-tile and AABB-vs-static-box collision, persistent contact flags. | `src/Engine.Physics2D` | `PhysicsSystem`, `CollisionSolver`, `TileGrid` |
+| Platformer controller | Acceleration, jump with coyote time, jump buffering, variable height, heavier fall; tuning editable live. | `src/Engine.Physics2D` | `PlatformerControllerSystem`, `PlatformerTuning` |
+| Sample game | Tile level (ASCII layout), crowned hero you run and jump with, patrolling creatures, click to spawn, scroll or Q/E to zoom, camera follows hero, live "Hero feel" tuning panel. | `samples/Platformer` | `PlatformerGame` (partials), `LevelLayout`, `Program.cs` |
 | Visual verification | Scripts to launch, drive and screenshot the sample. | `tools/` | `tools/README.md` |
 
 ## Roadmap
@@ -23,11 +25,11 @@ Status of the phased plan (update when a phase lands or the plan changes):
 2. Sparse-set ECS with tests. **Done**
 3. GL wrapper, shaders, textures, batched sprite renderer, 2D camera. **Done**
 4. Input mapping, asset cache, sprite demo. **Done**
-5. AABB/tile collision, own simple physics, platformer controller (coyote time, jump buffering), fixed-step rules.
+5. AABB/tile collision, own simple physics, platformer controller (coyote time, jump buffering). **Done** (spatial hash, one-way platforms, slopes, moving platforms deferred)
 6. Tilemaps (chunked, texture atlas) and sprite animation (clips, state machines).
 7. JSON scenes and prefabs (System.Text.Json, components as serializable data, assets saved by name).
 8. ImGui entity inspector/profiler, OpenAL audio.
 9. Framebuffers, post-processing, 2D lights.
 10. Playable platformer v1; then a full editor and 3D.
 
-Known gaps to keep in mind: no render interpolation between fixed steps yet (needs a previous-transform component), no hot-reload of assets, no logging, high-DPI untested.
+Known gaps to keep in mind: no render interpolation between fixed steps yet (needs a previous-transform component), no hot-reload of assets, no logging, high-DPI untested, tiles are one sprite per tile until phase 6, bodies spawned inside solids are not pushed out.

@@ -18,6 +18,7 @@ internal sealed class DebugOverlay(GameWindow window, FixedTimestep timestep, Fr
     /// <summary>Draws the panel. Call between ImGui frame begin and render.</summary>
     public void Draw()
     {
+        ImGui.SetNextWindowPos(new System.Numerics.Vector2(10f, 10f), ImGuiCond.FirstUseEver);
         ImGui.Begin("Engine");
         ImGui.Text($"FPS: {stats.Fps:F0}  ({stats.FrameMs:F2} ms)");
         ImGui.Text($"Fixed steps: {stats.FixedSteps}  (step {timestep.Step * 1000:F2} ms)");

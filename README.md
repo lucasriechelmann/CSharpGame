@@ -4,7 +4,7 @@ A small **2D game engine written in C#**, built to learn how engines work and de
 
 The first game it is being built for is a platformer.
 
-> **Status:** work in progress. Phases 1 to 4 of 10 are done (see the [roadmap](#roadmap)).
+> **Status:** work in progress. Phases 1 to 5 of 10 are done (see the [roadmap](#roadmap)).
 
 ## Features
 
@@ -12,6 +12,7 @@ The first game it is being built for is a platformer.
 - **Custom sparse-set ECS**: generational entity handles, typed component pools, 1 to 3 component queries with `ref` access, deferred changes through a `CommandBuffer`, ordered system groups
 - **Batched sprite renderer** (OpenGL 3.3 core): one draw call per texture run, tint, pivot, rotation, flip and sprite-sheet regions
 - **2D camera** with zoom, rotation and screen-to-world conversion
+- **2D physics and platformer feel**: gravity, swept AABB-vs-tile/box collision (no tunnelling), and a character controller with acceleration, coyote time, jump buffering, variable jump height and heavier falling; tunable live from the debug UI
 - **Input mapping**: named actions and axes (`"Jump"`, `"MoveX"`) bound to keys and mouse buttons, with per-frame pressed/released edges
 - **Asset manager** with typed integer handles, per-path caching and automatic disposal
 - **Dear ImGui debug overlay** (FPS, fixed steps, entities, assets; toggle with `F1`) that games can extend with their own panels
@@ -36,12 +37,13 @@ dotnet run --project samples/Platformer
 
 ### The sample
 
-The `Platformer` sample is a steerable hero among bouncing creatures, loaded from a generated sprite sheet.
+The `Platformer` sample is a tile level with a crowned hero you run and jump with, and patrolling creatures, loaded from a generated sprite sheet. The "Hero feel" panel lets you tune speed, jump, coyote time, jump buffer and gravity live.
 
 | Input | Action |
 |---|---|
-| `W` `A` `S` `D` / arrow keys | Move the hero (the camera follows) |
-| Left mouse button | Spawn 10 creatures at the cursor |
+| `A` `D` / left and right arrows | Run (the camera follows) |
+| `Space` / `W` / up arrow | Jump (hold for a higher jump) |
+| Left mouse button | Spawn 5 creatures at the cursor |
 | Mouse wheel, or `Q` / `E` | Zoom out / in |
 | `R` | Reset the camera |
 | `F1` | Toggle the debug UI |
@@ -53,6 +55,7 @@ src/
   Engine.Core/        ECS, fixed timestep, Transform, input state + action map, asset manager (no GPU dependencies)
   Engine.Platform/    Silk.NET window, OpenGL context, input adapter, ImGui controller
   Engine.Rendering/   Shader, Texture2D, SpriteBatch, Camera2D, Sprite component, sprite render system
+  Engine.Physics2D/   AABB, tile grid, swept collision solver, physics system, platformer controller
   Engine.Runtime/     Game base class and loop, debug overlay
 samples/
   Platformer/         The first game, consuming the engine like any game project would
@@ -60,7 +63,7 @@ tests/                xUnit tests for Core and Rendering
 tools/                PowerShell scripts to run, drive and screenshot the sample
 ```
 
-Dependencies point one way: `samples -> Runtime -> (Core, Platform, Rendering)`, and `Platform`/`Rendering -> Core`. `Engine.Core` never references windowing, OpenGL or Silk.NET, which keeps the core logic unit-testable without a GPU.
+Dependencies point one way: `samples -> Runtime -> (Core, Platform, Rendering)`, `samples -> Physics2D`, and `Platform`/`Rendering`/`Physics2D -> Core`. `Engine.Core` and `Engine.Physics2D` never reference windowing, OpenGL or Silk.NET, which keeps the simulation logic unit-testable without a GPU.
 
 ## Writing a game
 
@@ -106,7 +109,7 @@ Details live in [`CLAUDE.md`](CLAUDE.md) and the [`.claude/knowledge/`](.claude/
 2. Sparse-set ECS with tests (done)
 3. GL wrapper, shaders, textures, batched sprite renderer, 2D camera (done)
 4. Input mapping, asset cache, sprite demo (done)
-5. AABB and tile collision, platformer controller (coyote time, jump buffering)
+5. AABB and tile collision, platformer controller (coyote time, jump buffering) (done)
 6. Tilemaps and sprite animation
 7. JSON scenes and prefabs
 8. ImGui entity inspector and profiler, OpenAL audio

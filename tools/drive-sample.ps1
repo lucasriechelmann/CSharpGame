@@ -38,18 +38,24 @@ try {
     # A: baseline
     Shot $proc "$OutDir\A_baseline.png"
 
-    # B: click in the arena to spawn 10 creatures
-    [Win32]::SetCursorPos($rect.Left + 760, $rect.Top + 420) | Out-Null
+    # B: click in the level to spawn creatures
+    [Win32]::SetCursorPos($rect.Left + 760, $rect.Top + 300) | Out-Null
     Start-Sleep -Milliseconds 300
     [Win32]::mouse_event(0x0002, 0, 0, 0, [UIntPtr]::Zero); Start-Sleep -Milliseconds 80
     [Win32]::mouse_event(0x0004, 0, 0, 0, [UIntPtr]::Zero)
     Start-Sleep -Milliseconds 500
     Shot $proc "$OutDir\B_clicked.png"
 
-    # C: hold D (move right) for 1.5s, capture while held
+    # C: hold D (run right) for 1s, capture while held
     [Win32]::keybd_event(0x44, 0, 0, [UIntPtr]::Zero)
-    Start-Sleep -Milliseconds 1500
+    Start-Sleep -Milliseconds 1000
     Shot $proc "$OutDir\C_holdD.png"
+
+    # D: while still running, press Space and capture mid-jump
+    [Win32]::keybd_event(0x20, 0, 0, [UIntPtr]::Zero)
+    Start-Sleep -Milliseconds 250
+    Shot $proc "$OutDir\D_jumping.png"
+    [Win32]::keybd_event(0x20, 0, 2, [UIntPtr]::Zero)
     [Win32]::keybd_event(0x44, 0, 2, [UIntPtr]::Zero)
     Write-Output "done"
 }
