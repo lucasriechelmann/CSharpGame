@@ -107,7 +107,8 @@ Problem: the editor and debug panels drew over the game window, and you could no
 - [x] Play / Pause / Stop toolbar in the Scene panel (Play snapshots the scene, Stop restores it).
 - [x] Editor classes moved out of Runtime into `Engine.Editor` (shared edit state and undo moved to `Engine.Runtime/Editing`); old in-window F2 editor and its three drive scripts removed.
 - [x] Window-verified with `tools/drive-editor-app.ps1` (select a coin in the panel, Play, Stop) and `tools/run-editor.ps1` for both samples.
-- [ ] Asset browser panel (textures, prefabs, scenes, sounds) with drag-and-drop onto the scene; drag an entity into it to Save as prefab.
+- [x] Asset browser panel (`Assets` window): the asset tree, drag a prefab onto the Scene to place it (undoable); window-verified with `tools/drive-assets.ps1`.
+- [ ] Asset browser follow-ups: thumbnails for textures, drag an entity into the browser to Save as prefab, open a scene or tile layer by double-click, create/rename/delete files.
 - [ ] File > Open game / project dialog (today the game and project are command-line arguments) and a recent-projects list.
 - [ ] Game code reload: today you rebuild and restart the editor; later reload the assembly (collectible load context) and keep the open scene.
 - [ ] A drive script for the 3D editor view (orbit, select, gizmo drag in the Scene panel); the old `drive-viewport3d`/`drive-hierarchy` scripts died with the in-window editor.

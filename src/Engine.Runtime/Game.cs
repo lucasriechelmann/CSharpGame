@@ -308,7 +308,7 @@ public abstract class Game : IDisposable
 
         var hooks = new EditorHooks(() => SceneCamera, () => SceneCamera3D, () => ScenePath, path => Scenes.SaveToFile(path), LoadSceneFromEditor, EditableAssetPath, path => _hotReloader?.Ignore(path),
             () => Scenes.Save(), RestoreSceneFromEditor, PlayStarted, PlayStopped,
-            e => World.TryGet<PrefabLink>(e, out var link) && !string.IsNullOrEmpty(link.Prefab) ? link.Prefab : null, Scenes.SaveAsPrefab, Scenes.RevertToPrefab);
+            e => World.TryGet<PrefabLink>(e, out var link) && !string.IsNullOrEmpty(link.Prefab) ? link.Prefab : null, Scenes.Instantiate, Scenes.SaveAsPrefab, Scenes.RevertToPrefab);
         _editor = create(new EditorContext(World, Assets, _inspector, Log, hooks, this));
     }
 

@@ -38,6 +38,7 @@ internal sealed partial class SceneEditor : IEditorShell
     private readonly TilePainter _tiles;
     private readonly RenderedBoxes _boxes;
     private readonly SceneViewport _viewport = new();
+    private readonly AssetBrowserPanel _assetBrowser;
     private bool _layoutPending = !File.Exists("imgui.ini"); // no saved layout yet: start from the default one (Reset layout asks for it again)
     private readonly Game _game;
     private string? _playSnapshot;
@@ -56,6 +57,7 @@ internal sealed partial class SceneEditor : IEditorShell
         _inspector = inspector;
         _log = log;
         _hooks = hooks;
+        _assetBrowser = new AssetBrowserPanel(assets.RootDirectory);
         _game = game;
         _history = new CommandStack(new EditContext(world));
         _tiles = new TilePainter(world, assets, inspector, _history);
@@ -147,6 +149,7 @@ internal sealed partial class SceneEditor : IEditorShell
         DrawMenuBar();
         DrawPrefabPopup();
         _hierarchy.Draw();
+        _assetBrowser.Draw();
         _historyPanel.Draw();
         _inspector.DrawDetailsWindow();
         _tiles.DrawPanel();

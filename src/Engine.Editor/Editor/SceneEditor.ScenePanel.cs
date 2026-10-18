@@ -45,6 +45,7 @@ internal sealed partial class SceneEditor
         if (texture != null) ImGui.Image((IntPtr)texture.Handle, new Vector2(width, height), new Vector2(0f, 1f), new Vector2(1f, 0f));
         else ImGui.Dummy(new Vector2(width, height));
 
+        if (!Playing) AcceptPrefabDrop();
         bool hovered = ImGui.IsItemHovered();
         _viewport.Update(origin, new Vector2(width, height), hovered);
         if (Playing)

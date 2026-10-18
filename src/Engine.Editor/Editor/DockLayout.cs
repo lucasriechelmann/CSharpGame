@@ -21,7 +21,7 @@ internal static unsafe class DockLayout
     private const int DockSpaceFlag = 1 << 10; // ImGuiDockNodeFlags_DockSpace, an internal flag
 
     /// <summary>Windows tabbed along the bottom, in tab order.</summary>
-    private static readonly string[] BottomWindows = ["Log", "History", "Profiler", "Engine", "Post effects", "Sample", "Hero feel", "3D scene"];
+    private static readonly string[] BottomWindows = ["Assets", "Log", "History", "Profiler", "Engine", "Post effects", "Sample", "Hero feel", "3D scene"];
 
     /// <summary>Windows tabbed on the right next to the Inspector.</summary>
     private static readonly string[] RightWindows = ["Inspector", "Tiles"];

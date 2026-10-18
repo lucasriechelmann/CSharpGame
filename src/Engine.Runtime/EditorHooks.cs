@@ -16,6 +16,7 @@ namespace Engine.Runtime;
 /// <param name="Restore">Replaces the world with scene JSON text (a <see cref="Snapshot"/>) and lets the game re-establish what it cached.</param>
 /// <param name="PlayStarted">Tells the game the editor started playing, so it can begin a fresh run from the edited world.</param>
 /// <param name="PlayStopped">Tells the game the editor stopped playing and the world was restored, so it can discard the run's state.</param>
+/// <param name="Instantiate">Creates an entity from a prefab file (an asset name such as <c>prefabs/coin.prefab.json</c>) and returns it.</param>
 /// <param name="PrefabOf">The prefab file an entity was made from, or null when it was not made from one.</param>
 /// <param name="SaveAsPrefab">Writes an entity as a prefab file (a name relative to the asset root) and links the entity to it.</param>
 /// <param name="RevertToPrefab">Puts a prefab instance back to what its prefab says.</param>
@@ -32,5 +33,6 @@ internal sealed record EditorHooks(
     Action PlayStarted,
     Action PlayStopped,
     Func<Entity, string?> PrefabOf,
+    Func<string, Entity> Instantiate,
     Action<Entity, string> SaveAsPrefab,
     Action<Entity> RevertToPrefab);
