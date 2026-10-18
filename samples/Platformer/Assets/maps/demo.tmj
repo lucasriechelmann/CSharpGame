@@ -1,0 +1,63 @@
+{
+  "type": "map",
+  "version": "1.10",
+  "orientation": "orthogonal",
+  "renderorder": "right-down",
+  "width": 14,
+  "height": 6,
+  "tilewidth": 16,
+  "tileheight": 16,
+  "infinite": false,
+  "tilesets": [
+    {
+      "firstgid": 1,
+      "name": "world",
+      "image": "tiles.png",
+      "imagewidth": 80,
+      "imageheight": 16,
+      "tilewidth": 16,
+      "tileheight": 16,
+      "columns": 5,
+      "tilecount": 5,
+      "tiles": [
+        { "id": 3, "animation": [ { "tileid": 3, "duration": 500 }, { "tileid": 4, "duration": 500 } ] }
+      ]
+    }
+  ],
+  "layers": [
+    {
+      "type": "tilelayer",
+      "name": "backdrop",
+      "width": 14,
+      "height": 6,
+      "x": 0,
+      "y": 0,
+      "opacity": 0.6,
+      "visible": true,
+      "parallaxx": 0.9,
+      "parallaxy": 1,
+      "data": [0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+               0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+               0,5,0,0,0,5,0,0,0,5,0,0,0,5,
+               0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+               0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+               0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+    },
+    {
+      "type": "tilelayer",
+      "name": "ground",
+      "width": 14,
+      "height": 6,
+      "x": 0,
+      "y": 0,
+      "opacity": 1,
+      "visible": true,
+      "data": [0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+               0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+               0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+               0,0,4,0,4,0,5,0,2147483653,0,1073741829,0,536870917,0,
+               1,2,3,1,2,3,1,2,3,2147483649,1073741826,536870915,1,2,
+               1,2,3,1,2,3,1,2,3,1,2,3,1,2]
+    }
+  ]
+}

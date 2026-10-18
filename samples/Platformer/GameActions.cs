@@ -30,6 +30,9 @@ public static class GameActions
     /// <summary>Switches HDR rendering with tone mapping on or off (F7).</summary>
     public const string ToggleHdr = "ToggleHdr";
 
+    /// <summary>Imports the Tiled demo map and looks at it, or goes back to the hero (F11).</summary>
+    public const string ToggleDemoMap = "ToggleDemoMap";
+
     /// <summary>Switches light shadows on or off (F10).</summary>
     public const string ToggleShadows = "ToggleShadows";
 

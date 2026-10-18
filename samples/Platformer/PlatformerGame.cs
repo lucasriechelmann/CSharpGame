@@ -55,6 +55,7 @@ public sealed partial class PlatformerGame : Game
             .Bind(GameActions.ToggleHdr, KeyCode.F7)
             .Bind(GameActions.CycleMsaa, KeyCode.F8)
             .Bind(GameActions.ToggleShadows, KeyCode.F10)
+            .Bind(GameActions.ToggleDemoMap, KeyCode.F11)
             .Bind(GameActions.Restart, KeyCode.Enter)
             .Bind(GameActions.Pause, KeyCode.Escape)
             .Bind(GameActions.Pause, KeyCode.P)
@@ -156,6 +157,7 @@ public sealed partial class PlatformerGame : Game
         UpdateStatusMessage(dt);
         UpdateFlow(dt);
         HandleDisplayKeys();
+        if (Actions.WasPressed(GameActions.ToggleDemoMap)) ToggleDemoMap();
 
         if (Actions.WasPressed(GameActions.QuickSave)) QuickSave();
         else if (Actions.WasPressed(GameActions.QuickLoad)) QuickLoad();
@@ -186,7 +188,7 @@ public sealed partial class PlatformerGame : Game
     /// </summary>
     private void FollowHero(double dt)
     {
-        if (IsEditing) return; // the editor pans and zooms the camera itself
+        if (IsEditing || _viewingDemoMap) return; // the editor pans and zooms the camera itself; the demo map holds it still
 
         float follow = 1f - MathF.Exp(-6f * (float)dt);
         _camera.Position = Vector2.Lerp(_camera.Position, HeroDrawPosition(), follow);
