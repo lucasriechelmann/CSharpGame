@@ -7,7 +7,6 @@ using Engine.Core.Ecs;
 using Engine.Core.Input;
 using Engine.Core.Logging;
 using Engine.Platform;
-using Engine.Runtime.Editor;
 using Engine.Runtime.Inspector;
 using Engine.Rendering;
 using Engine.Rendering3D;
@@ -30,7 +29,7 @@ public abstract class Game : IDisposable
     private readonly EntityInspector _inspector;
     private readonly ProfilerPanel _profilerPanel;
     private readonly LogPanel _logPanel;
-    private readonly SceneEditor _editor;
+    private IEditorShell? _editor;
     private AssetHotReloader? _hotReloader;
     private PostEffectsPanel _postEffectsPanel = null!;
     private int _postProcessSection;
@@ -61,9 +60,6 @@ public abstract class Game : IDisposable
         var logHistory = new MemoryLogSink();
         Log.AddSink(new ConsoleLogSink()).AddSink(logHistory);
         _logPanel = new LogPanel(logHistory, Log);
-        _editor = new SceneEditor(World, Assets, _inspector, Log, new EditorHooks(() => SceneCamera, () => SceneCamera3D, () => ScenePath, path => Scenes.SaveToFile(path), LoadSceneFromEditor, EditableAssetPath, path => _hotReloader?.Ignore(path),
-            () => Scenes.Save(), RestoreSceneFromEditor, PlayStarted, PlayStopped,
-            e => World.TryGet<PrefabLink>(e, out var link) && !string.IsNullOrEmpty(link.Prefab) ? link.Prefab : null, Scenes.SaveAsPrefab, Scenes.RevertToPrefab));
         FixedSystems.Profile(Profiler, "Fixed");
         FrameSystems.Profile(Profiler, "Frame");
         RenderSystems.Profile(Profiler, "Render");
@@ -148,7 +144,7 @@ public abstract class Game : IDisposable
     /// <see cref="IsPaused"/>, so game code that advances its own clocks or reads gameplay input from <see cref="Update"/> should skip
     /// itself while this is true. It is false again between the editor's Play and Stop, when the game runs for real.
     /// </summary>
-    public bool IsEditing => _editor.Editing;
+    public bool IsEditing => _editor?.Editing ?? false;
 
     /// <summary>Raw keyboard and mouse state. Prefer <see cref="Actions"/> for game logic.</summary>
     public InputState Input => _window.Input;
@@ -259,6 +255,22 @@ public abstract class Game : IDisposable
     /// <summary>Asks the window to close; the game loop ends after the current frame and <see cref="Unload"/> runs as usual.</summary>
     public void Quit() => _window.Close();
 
+    /// <summary>
+    /// Plugs an editor into this game (the editor program calls this once, after creating the game and before <see cref="Run"/>).
+    /// The factory receives everything the editor needs and returns the shell the loop drives.
+    /// </summary>
+    /// <param name="create">Builds the editor shell from the game's services.</param>
+    /// <exception cref="InvalidOperationException">An editor is already attached.</exception>
+    internal void AttachEditor(Func<EditorContext, IEditorShell> create)
+    {
+        if (_editor != null) throw new InvalidOperationException("An editor is already attached to this game.");
+
+        var hooks = new EditorHooks(() => SceneCamera, () => SceneCamera3D, () => ScenePath, path => Scenes.SaveToFile(path), LoadSceneFromEditor, EditableAssetPath, path => _hotReloader?.Ignore(path),
+            () => Scenes.Save(), RestoreSceneFromEditor, PlayStarted, PlayStopped,
+            e => World.TryGet<PrefabLink>(e, out var link) && !string.IsNullOrEmpty(link.Prefab) ? link.Prefab : null, Scenes.SaveAsPrefab, Scenes.RevertToPrefab);
+        _editor = create(new EditorContext(World, Assets, _inspector, Log, hooks, this));
+    }
+
     /// <summary>Opens the window and runs the game loop until the window closes.</summary>
     public void Run() => _window.Run();
 
@@ -342,7 +354,7 @@ public abstract class Game : IDisposable
         _frameStart = Profiler.Begin();
         _hotReloader?.Poll();
         if (Input.WasPressed(KeyCode.F1)) _overlay.Toggle();
-        if (Input.WasPressed(KeyCode.F2)) _editor.Toggle();
+        if (Input.WasPressed(KeyCode.F2)) _editor?.Toggle();
         Audio.Update();
 
         bool frozen = IsPaused || IsEditing;
@@ -386,14 +398,14 @@ public abstract class Game : IDisposable
         if (_overlay.Visible)
         {
             _overlay.Draw();
-            if (_overlay.ShowInspector && !_editor.Active) _inspector.Draw(); // the editor has its own hierarchy and inspector windows
+            if (_overlay.ShowInspector && _editor?.Active != true) _inspector.Draw(); // the editor has its own hierarchy and inspector windows
             if (_overlay.ShowProfiler) _profilerPanel.Draw();
             if (_overlay.ShowPostEffects) _postEffectsPanel.Draw();
             if (_overlay.ShowLog) _logPanel.Draw();
             DebugGui();
         }
 
-        if (_editor.Active) _editor.Draw();
+        if (_editor?.Active == true) _editor.Draw();
 
         Profiler.End(_debugGuiSection, start);
         // The GUI callback is the last thing in a frame, so this closes the whole-frame measurement even when the overlay is hidden.

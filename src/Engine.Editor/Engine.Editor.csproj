@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The editor program: it opens a game library (an IGameModule), shows its scene in a docked view and lets you edit and play it.
+       A shipped game never references this project. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>Editor</AssemblyName>
+    <RootNamespace>Engine.Editor</RootNamespace>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Engine.Runtime\Engine.Runtime.csproj" />
+    <ProjectReference Include="..\Engine.Core\Engine.Core.csproj" />
+    <ProjectReference Include="..\Engine.Rendering\Engine.Rendering.csproj" />
+    <ProjectReference Include="..\Engine.Rendering3D\Engine.Rendering3D.csproj" />
+    <ProjectReference Include="..\Engine.Scenes\Engine.Scenes.csproj" />
+    <ProjectReference Include="..\Engine.Tilemaps\Engine.Tilemaps.csproj" />
+    <ProjectReference Include="..\Engine.Physics2D\Engine.Physics2D.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Engine.Editor.Tests" />
+  </ItemGroup>
+
+</Project>

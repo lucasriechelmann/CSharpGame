@@ -13,6 +13,12 @@
     <ProjectReference Include="..\Engine.Physics3D\Engine.Physics3D.csproj" />
   </ItemGroup>
 
+  <!-- The editor is a separate program that plugs into Game through internal seams (EditorHooks, the inspector, the panels). -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="Editor" />
+    <InternalsVisibleTo Include="Engine.Editor.Tests" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Silk.NET.OpenGL.Extensions.ImGui" Version="2.23.0" />
   </ItemGroup>
