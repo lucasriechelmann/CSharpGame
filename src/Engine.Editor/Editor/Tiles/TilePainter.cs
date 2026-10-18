@@ -200,6 +200,7 @@ internal sealed class TilePainter(World world, AssetManager assets, EntityInspec
     /// <summary>Outlines the cell under the mouse so the artist sees where a click would paint.</summary>
     /// <param name="camera">The scene camera.</param>
     /// <param name="mouse">Mouse position in screen pixels.</param>
+    /// <param name="draw">Where the outline is drawn (the scene view, in view coordinates).</param>
     public void DrawCursor(Camera2D camera, Vector2 mouse, ViewDraw draw)
     {
         if (!TryGetTarget(out var target)) return;

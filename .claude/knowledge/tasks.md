@@ -84,7 +84,7 @@ Small, about one session. Fixes known gaps that affect game feel and that the ed
 
 - [x] HDR targets + tone map, pixel-perfect mode, MSAA (window-verified with `tools/drive-display.ps1`).
 - [x] Light shadows: `ShadowCaster2D`, tile walls, `LightingEffect.CastShadows`, window-verified with `tools/drive-shadows.ps1`.
-- [ ] Per-camera effects (the chain is one per window; a camera with its own effect list needs viewports). Follow-ups for the done parts: soft shadows, a shadow-casting polygon/segment component, shadows from sprites by alpha, per-light shadow toggle; bloom/other effects keep 8-bit internal targets, MSAA does not apply when nothing redirects the scene (use the chain), a pixel-perfect mouse mapping in the editor, integer zoom enforcement.
+- [x] Per-camera effects: `RenderView` / `Game.Views` (a second camera picture with its own post chain; Platformer radar). Still open: soft shadows, a shadow-casting polygon/segment component, shadows from sprites.
 - [x] Audio: streaming (`WavStream`), positional audio, `AudioSource`/`AudioListener` + `AudioSourceSystem`, mixer groups (`AudioMixer`). Follow-ups: Ogg/MP3 decoding, effects (reverb, low-pass), doppler, ducking, a settings panel for the mixer, an audible check by ear (verified by tests and silent device runs only).
 
 
@@ -94,7 +94,7 @@ Small, about one session. Fixes known gaps that affect game feel and that the ed
 - [x] Tiled demo map (`Assets/maps/demo.tmj`, F11 in the Platformer): flipped and diagonal tiles, an animated tile and a parallax backdrop import and draw correctly (`tools/drive-demomap.ps1`).
 - [x] Mixer panel in the editor (`Mixer` window: device volume, per-group volume and mute, live). Not done: listening to the audio by ear, positional audio in the Platformer, a streamed music track.
 - [x] Cached chunk meshes for tile layers (`TileMeshCache`, `TileChunkMesh`, `TileChunkMeshBuilder`): one GPU mesh per visible chunk, rebuilt when the chunk, the tile set or the atlas changes, animated tiles still through the batch, systems that are `IDisposable` are disposed by `Game`. Window-checked: the level and the demo map look identical.
-- [ ] Per-camera effects (a camera with its own effect list and viewport). Deferred: the render systems each hold one `Camera2D`, so several views need either a camera set per pass or systems that take the camera as an argument, plus a viewport rectangle per view and one effect chain per view.
+- [x] Per-camera effects: done as `RenderView` (see phase 23 in `architecture.md`); the views borrow the shared camera instead of changing every render system.
 - [ ] Listen to the audio by ear; add a positional `AudioSource` and music to the Platformer.
 
 ## Phase 21: A standalone editor (done; design and decisions in `architecture.md`)
@@ -108,8 +108,8 @@ Problem: the editor and debug panels drew over the game window, and you could no
 - [x] Open dialog and recent projects: the hub (`Editor.exe` with no arguments) and Project > Open another project.
 - [x] Game code reload: Project > Build and reload game code (builds, then restarts the editor on the project, asking to save first).
 - [x] Windows 11 look: Segoe UI + Segoe Fluent Icons, dark Fluent palette with the system blue accent, rounded controls, dark title bar (`Win11Theme`).
-- [ ] Asset browser follow-ups: thumbnails for textures, drag an entity into the browser to Save as prefab, open a scene or tile layer by double-click, create/rename/delete files.
-- [ ] A drive script for the 3D editor view (orbit, select, gizmo drag in the Scene panel) and a way to inject mouse drags the editor accepts.
+- [x] Asset browser: picture thumbnails on hover, double-click places a prefab, Rename/Delete/New folder (`AssetFileOps`, window-checked by `tools/drive-assets-files.ps1`). [ ] Still open: drag an entity into the browser to Save as prefab, open a scene or tile layer by double-click.
+- [x] Gizmo drag, Revert to prefab and Save as prefab verified in the window (`tools/drive-prefab.ps1`: the earlier failure was a stale click position, not the editor). Edit > Add 3D checked by `tools/drive-place3d.ps1`. [ ] Still unverified in a window: rectangle/fill tile brushes and History clicks (unit-tested only).
 - [ ] Game-specific debug panels (`DebugGui`) dock by title in `DockLayout`; let a game register its panel titles.
 - [ ] Tidy: the Post effects panel lists non-simple properties (`ShadowSources`) read-only; toolbar buttons overflow in a narrow Hierarchy panel; per-project instead of per-user saved layout.
 - [ ] Mica/rounded window backdrop (needs the window handle and a Windows 11 build check), more icons in menus and the toolbar.
@@ -121,15 +121,16 @@ Problem: the editor and debug panels drew over the game window, and you could no
 - [x] Project > Validate assets: loads every scene, prefab, tile layer, tile set, animation graph, material, texture, sound and model through the game's loaders and lists the failures (`AssetValidator`).
 - [x] Settings file for the shipped game (`game.settings.json`: window size, full screen, vsync, master volume; `GameSettings`).
 - [x] New projects from the editor: `ProjectTemplate` creates the library, launcher, assets and `Directory.Build.props`; `Editor --new <folder> <name>` does it from the command line.
-- [ ] Key bindings in the settings file; a `--editor` flag; other platforms (the natives and RIDs are win-x64 only); a self-contained, published *editor* has not been tried (the engine folder layout is assumed).
-- [ ] Project templates beyond the empty 2D one (platformer starter, 3D starter); upgrade path when the engine changes (engine DLLs are referenced from the editor's folder).
+- [x] Key bindings in `game.settings.json` (`bindings`, `axisBindings`; `BindingOverrides`). [ ] Still open: a `--editor` flag; other platforms (the natives and RIDs are win-x64 only); a self-contained, published *editor* has not been tried (the engine folder layout is assumed).
+- [x] Project templates: Empty 2D, 2D platformer and 3D scene (hub list, `--template`); both new templates built and run (`tools/drive-hub.ps1` creates a platformer project). [ ] Still open: an upgrade path when the engine changes (engine DLLs are referenced from the editor's folder).
 
 ## Phase 23: Pick the next game or engine depth (3D game done; the rest is your decision)
 
 - [x] A small playable 3D game on the character controller, PBR and physics: **Orb Run** (`samples/Arena3D`, launcher + project file, 7 + 5 tests). Playable from `Arena3D.exe` and inside the editor; window-checked by `tools/drive-arena.ps1` (orb collected, platform jump, falling off the edge).
-- [ ] Gaps Orb Run showed in the engine (each worth its own task): there is no helper to find an entity by name or by component (the game wrote its own query), no cursor capture for mouse look (it needs the right button held), no third-person camera collision (it can clip through a platform), the player capsule has no facing, model or animation, sound effects exist (orb, jump, fall, win, lose in the "Sfx" mixer group, synthesised by `tools/make-arena-sounds.ps1`, never heard by ear) but no music (`WavStream`) or positional `AudioSource`, no pause/menu helper for 3D games, `World.Clear()` + `LoadFile` is the only way to restart a level, and a level made of boxes is typed by hand or generated (the editor has no box/prefab placement for 3D beyond dragging prefabs from the Assets window).
-- [ ] More platformer levels authored in Tiled with the new import and editor tools.
-- [ ] Engine depth candidates: soft light shadows, a shadow-casting polygon component, image-based lighting and a skybox, rigid-body rotation in 3D physics, Ogg/MP3 audio, per-camera effects.
+- [x] Gaps Orb Run showed, all closed: `World.FindByName/FindFirst/CountWith`, `Game.CaptureMouse`, third-person camera collision (ray), a facing and leaning player with eyes, streamed music and a positional lamp hum (`AudioSourceSystem`), the shared `PauseMenu` (also used by the Platformer), `Game.ReloadScene`, and Edit > Add 3D for placing boxes, solid platforms, spheres and lights. [ ] Not heard by ear: the sounds, music and hum (the machine used for checking has no way to listen).
+- [x] Tiled objects: `TiledObjectSpawner` (class to prefab) with Gem objects in the demo map. [ ] Still open: a whole playable second level authored in Tiled (tile layers for collision, a PlayerStart, coin and creature objects) and a level-switching flow in the Platformer.
+- [x] Procedural sky (`Lighting3D.DrawSky`, `SkyRenderer`) in Orb Run and Scene3D.
+- [ ] Engine depth candidates left: soft light shadows, a shadow-casting polygon component, image-based lighting from a real environment map, rigid-body rotation in 3D physics, Ogg/MP3 audio (needs a decoder library such as NVorbis and an encoder to make a test file; neither is on this machine).
 
 ## Smaller known gaps (from `features.md`, no owner yet)
 

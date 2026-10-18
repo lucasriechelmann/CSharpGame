@@ -35,3 +35,16 @@ Example (after `dotnet build`):
 ```
 
 Then open the PNG. Keep screenshots out of the repo.
+
+Added with the phase 23 batch (all take `-OutDir` and write numbered screenshots there):
+
+| Script | What it checks |
+|---|---|
+| `drive-minimap.ps1 -Exe <Platformer.exe>` | the Platformer radar (a `RenderView` with its own colour grade), M to hide it, and F6 pixel-perfect |
+| `drive-place3d.ps1` | Edit > Add 3D in the editor on Orb Run: the menu, a solid platform placed and selected, Ctrl+Z |
+| `drive-assets-files.ps1` | the Assets window on a throwaway platformer project: thumbnail on hover, right-click menu, rename through the dialog (reports whether the file moved) |
+| `drive-arena.ps1` | now also presses Escape for the pause menu (`arena_4_paused.png`) |
+| `drive-hub.ps1` | now picks the 2D platformer template in the New project page |
+| `drive-prefab.ps1` | Save as prefab, a gizmo drag and Revert to prefab (positions refreshed for the Windows 11 layout) |
+
+A synthetic mouse wheel does not reach ImGui scroll areas here, so scripts avoid scrolling: expand folders so the file they need is visible, or use a project with fewer folders.
