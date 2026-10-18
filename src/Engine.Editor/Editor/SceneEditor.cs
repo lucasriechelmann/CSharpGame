@@ -185,6 +185,7 @@ internal sealed partial class SceneEditor : IEditorShell
             if (ImGui.MenuItem(_history.CanRedo ? $"Redo {_history.RedoDescription}" : "Redo", "Ctrl+Y", false, _history.CanRedo)) Redo();
             ImGui.Separator();
             if (ImGui.MenuItem("New entity", "Ctrl+N")) NewEntity();
+            DrawAdd3DMenu();
             if (ImGui.MenuItem("Duplicate", "Ctrl+D", false, !_inspector.Selected.IsNull)) DuplicateSelected();
             if (ImGui.MenuItem("Delete", "Del", false, !_inspector.Selected.IsNull)) DeleteSelected();
             ImGui.Separator();
