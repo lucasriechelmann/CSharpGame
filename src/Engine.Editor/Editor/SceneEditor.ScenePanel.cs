@@ -73,7 +73,8 @@ internal sealed partial class SceneEditor
         ImGui.EndDisabled();
 
         ImGui.SameLine();
-        ImGui.TextDisabled(Playing ? "Playing: changes are discarded on Stop." : "Editing: Middle-drag pans, wheel zooms, left click selects.");
+        ImGui.TextDisabled(Playing ? "Playing: changes are discarded on Stop."
+            : _hooks.Camera3D() != null ? "Editing: middle-drag orbits, Shift+middle pans, wheel zooms, left click selects." : "Editing: middle-drag pans, wheel zooms, left click selects.");
         ImGui.SetCursorPos(new Vector2(0f, ImGui.GetCursorPosY() + 2f));
     }
 }
