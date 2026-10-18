@@ -71,6 +71,20 @@ public sealed class Shader : IDisposable
         _gl.UniformMatrix4(Location(name), 1, false, floats);
     }
 
+    /// <summary>
+    /// Sets an array of <c>mat4</c> uniforms (a skeleton's joint matrices) in one call, again without transposing. <paramref name="name"/> is the
+    /// array's first element, such as <c>uJoints[0]</c>. The program must be in use.
+    /// </summary>
+    /// <param name="name">Name of the array's first element.</param>
+    /// <param name="values">The matrices; no more than the array holds.</param>
+    public void SetUniform(string name, ReadOnlySpan<Matrix4x4> values)
+    {
+        if (values.IsEmpty) return;
+
+        ReadOnlySpan<float> floats = MemoryMarshal.Cast<Matrix4x4, float>(values);
+        _gl.UniformMatrix4(Location(name), (uint)values.Length, false, floats);
+    }
+
     /// <summary>Deletes the GL program.</summary>
     public void Dispose() => _gl.DeleteProgram(Handle);
 

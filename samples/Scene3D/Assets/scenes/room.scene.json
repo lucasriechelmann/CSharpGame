@@ -138,6 +138,532 @@
         "CharacterController3D": { "moveSpeed": 5, "acceleration": 40, "airAcceleration": 12, "jumpSpeed": 5.5, "coyoteTime": 0.1, "jumpBufferTime": 0.12 },
         "PreviousTransform": {}
       }
+    },
+    {
+      "components": {
+        "Name": { "value": "Glass pane" },
+        "Transform": { "position": { "x": 2.5, "y": 1.1, "z": 2 }, "rotation": { "x": 0, "y": 0.2588, "z": 0, "w": 0.9659 }, "scale": { "x": 2.4, "y": 2.2, "z": 0.08 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/glass.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Bumpy sphere" },
+        "Transform": { "position": { "x": -1.2, "y": 0.9, "z": 2.4 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 1.8, "y": 1.8, "z": 1.8 } },
+        "MeshRenderer": { "mesh": "meshes/sphere", "material": "materials/bumpy.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": -4, "y": 0.15, "z": -6.5 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": -3.4, "y": 0.25, "z": -6.5 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": -2.8, "y": 0.35, "z": -6.5 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": -2.2, "y": 0.15, "z": -6.5 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": -1.6, "y": 0.25, "z": -6.5 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": -1, "y": 0.35, "z": -6.5 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": -0.40000000000000036, "y": 0.15, "z": -6.5 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": 0.20000000000000018, "y": 0.25, "z": -6.5 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": 0.7999999999999998, "y": 0.35, "z": -6.5 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": 1.3999999999999995, "y": 0.15, "z": -6.5 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": 2, "y": 0.25, "z": -6.5 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": 2.5999999999999996, "y": 0.35, "z": -6.5 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": -4, "y": 0.25, "z": -7.1 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": -3.4, "y": 0.35, "z": -7.1 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": -2.8, "y": 0.15, "z": -7.1 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": -2.2, "y": 0.25, "z": -7.1 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": -1.6, "y": 0.35, "z": -7.1 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": -1, "y": 0.15, "z": -7.1 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": -0.40000000000000036, "y": 0.25, "z": -7.1 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": 0.20000000000000018, "y": 0.35, "z": -7.1 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": 0.7999999999999998, "y": 0.15, "z": -7.1 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": 1.3999999999999995, "y": 0.25, "z": -7.1 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": 2, "y": 0.35, "z": -7.1 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": 2.5999999999999996, "y": 0.15, "z": -7.1 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": -4, "y": 0.35, "z": -7.7 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": -3.4, "y": 0.15, "z": -7.7 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": -2.8, "y": 0.25, "z": -7.7 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": -2.2, "y": 0.35, "z": -7.7 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": -1.6, "y": 0.15, "z": -7.7 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": -1, "y": 0.25, "z": -7.7 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": -0.40000000000000036, "y": 0.35, "z": -7.7 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": 0.20000000000000018, "y": 0.15, "z": -7.7 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": 0.7999999999999998, "y": 0.25, "z": -7.7 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": 1.3999999999999995, "y": 0.35, "z": -7.7 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": 2, "y": 0.15, "z": -7.7 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": 2.5999999999999996, "y": 0.25, "z": -7.7 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": -4, "y": 0.15, "z": -8.3 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": -3.4, "y": 0.25, "z": -8.3 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": -2.8, "y": 0.35, "z": -8.3 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": -2.2, "y": 0.15, "z": -8.3 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": -1.6, "y": 0.25, "z": -8.3 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": -1, "y": 0.35, "z": -8.3 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": -0.40000000000000036, "y": 0.15, "z": -8.3 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": 0.20000000000000018, "y": 0.25, "z": -8.3 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": 0.7999999999999998, "y": 0.35, "z": -8.3 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": 1.3999999999999995, "y": 0.15, "z": -8.3 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": 2, "y": 0.25, "z": -8.3 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": 2.5999999999999996, "y": 0.35, "z": -8.3 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": -4, "y": 0.25, "z": -8.9 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": -3.4, "y": 0.35, "z": -8.9 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": -2.8, "y": 0.15, "z": -8.9 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": -2.2, "y": 0.25, "z": -8.9 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": -1.6, "y": 0.35, "z": -8.9 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": -1, "y": 0.15, "z": -8.9 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": -0.40000000000000036, "y": 0.25, "z": -8.9 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": 0.20000000000000018, "y": 0.35, "z": -8.9 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": 0.7999999999999998, "y": 0.15, "z": -8.9 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": 1.3999999999999995, "y": 0.25, "z": -8.9 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": 2, "y": 0.35, "z": -8.9 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": 2.5999999999999996, "y": 0.15, "z": -8.9 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": -4, "y": 0.35, "z": -9.5 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": -3.4, "y": 0.15, "z": -9.5 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": -2.8, "y": 0.25, "z": -9.5 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": -2.2, "y": 0.35, "z": -9.5 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": -1.6, "y": 0.15, "z": -9.5 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": -1, "y": 0.25, "z": -9.5 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": -0.40000000000000036, "y": 0.35, "z": -9.5 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": 0.20000000000000018, "y": 0.15, "z": -9.5 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": 0.7999999999999998, "y": 0.25, "z": -9.5 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": 1.3999999999999995, "y": 0.35, "z": -9.5 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": 2, "y": 0.15, "z": -9.5 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Field cube" },
+        "Transform": { "position": { "x": 2.5999999999999996, "y": 0.25, "z": -9.5 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 0.4, "y": 0.4, "z": 0.4 } },
+        "MeshRenderer": { "mesh": "meshes/cube", "material": "materials/bronze.material.json" }
+      }
+    },
+    {
+      "components": {
+        "Name": { "value": "Waving arm" },
+        "Transform": { "position": { "x": 0.7, "y": 0, "z": 0.9 }, "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 }, "scale": { "x": 1, "y": 1, "z": 1 } },
+        "ModelRenderer": { "model": "models/arm.glb" },
+        "ModelAnimator": { "clip": "wave", "time": 0, "speed": 1, "loop": true, "playing": true }
+      }
     }
   ]
 }

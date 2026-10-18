@@ -16,15 +16,16 @@ public static class GltfAccessors
     private const int UnsignedInt = 5125;
     private const int Float = 5126;
 
-    /// <summary>Number of components for an accessor type: SCALAR 1, VEC2 2, VEC3 3, VEC4 4 (matrices are not used for geometry).</summary>
-    /// <exception cref="InvalidOperationException">The type is not one of those four.</exception>
+    /// <summary>Number of components for an accessor type: SCALAR 1, VEC2 2, VEC3 3, VEC4 4, and MAT4 16 (inverse bind matrices; other matrix sizes are not used).</summary>
+    /// <exception cref="InvalidOperationException">The type is not one of those.</exception>
     public static int ComponentCount(string type) => type switch
     {
         "SCALAR" => 1,
         "VEC2" => 2,
         "VEC3" => 3,
         "VEC4" => 4,
-        _ => throw new InvalidOperationException($"glTF accessor type '{type}' is not supported for geometry (use SCALAR, VEC2, VEC3 or VEC4)."),
+        "MAT4" => 16,
+        _ => throw new InvalidOperationException($"glTF accessor type '{type}' is not supported (use SCALAR, VEC2, VEC3, VEC4 or MAT4)."),
     };
 
     /// <summary>Reads an accessor as floats, <c>Count * components</c> of them, in element order.</summary>

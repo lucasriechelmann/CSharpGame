@@ -68,8 +68,23 @@ public sealed partial class MeshRenderSystem
     {
         var ambient = Lighting.Ambient;
         _shader.SetUniform("uAmbient", new Vector3(ambient.R, ambient.G, ambient.B));
+        _shader.SetUniform("uSkyColor", new Vector3(Lighting.ReflectedSky.R, Lighting.ReflectedSky.G, Lighting.ReflectedSky.B));
+        _shader.SetUniform("uGroundColor", new Vector3(Lighting.ReflectedGround.R, Lighting.ReflectedGround.G, Lighting.ReflectedGround.B));
+        _shader.SetUniform("uReflectionStrength", Lighting.ReflectionStrength);
         _shader.SetUniform("uSunDirection", _sunDirection);
         _shader.SetUniform("uSunColor", _sunColor);
+    }
+
+    /// <summary>Uploads every gathered point light at once; valid when they all fit in the shader, so one upload serves every draw of the frame.</summary>
+    private void UploadAllPointLights()
+    {
+        _shader.SetUniform("uPointCount", _pointCount);
+        for (int i = 0; i < _pointCount; i++)
+        {
+            _shader.SetUniform(_pointPositionNames[i], _pointPositions[i]);
+            _shader.SetUniform(_pointColorNames[i], _pointColors[i]);
+            _shader.SetUniform(_pointRadiusNames[i], _pointRadii[i]);
+        }
     }
 
     private void UploadPointLights(Vector3 centre, float radius)

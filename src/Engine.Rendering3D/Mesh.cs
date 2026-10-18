@@ -14,6 +14,7 @@ public sealed class Mesh : IDisposable
     private readonly uint _vao;
     private readonly uint _vbo;
     private readonly uint _ebo;
+    private readonly uint _skinVbo;
 
     /// <summary>Uploads the data. Needs a current GL context.</summary>
     /// <param name="gl">The GL context that will own the buffers.</param>
@@ -42,9 +43,27 @@ public sealed class Mesh : IDisposable
         gl.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, stride, (void*)(3 * sizeof(float)));
         gl.EnableVertexAttribArray(2);
         gl.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, stride, (void*)(6 * sizeof(float)));
+        gl.EnableVertexAttribArray(3);
+        gl.VertexAttribPointer(3, 4, VertexAttribPointerType.Float, false, stride, (void*)(8 * sizeof(float)));
+
+        // Skinned meshes carry a second stream with four joint indices and four weights per vertex (attributes 11 and 12).
+        if (data.Skin != null)
+        {
+            _skinVbo = gl.GenBuffer();
+            gl.BindBuffer(BufferTargetARB.ArrayBuffer, _skinVbo);
+            gl.BufferData<SkinVertex>(BufferTargetARB.ArrayBuffer, data.Skin, BufferUsageARB.StaticDraw);
+            uint skinStride = (uint)sizeof(SkinVertex);
+            gl.EnableVertexAttribArray(11);
+            gl.VertexAttribPointer(11, 4, VertexAttribPointerType.Float, false, skinStride, (void*)0);
+            gl.EnableVertexAttribArray(12);
+            gl.VertexAttribPointer(12, 4, VertexAttribPointerType.Float, false, skinStride, (void*)(4 * sizeof(float)));
+        }
 
         gl.BindVertexArray(0);
     }
+
+    /// <summary>True when the mesh has joint indices and weights and must be drawn with a skeleton's joint matrices.</summary>
+    public bool IsSkinned => Data.Skin != null;
 
     /// <summary>The CPU copy of the geometry (bounds, picking, saving).</summary>
     public MeshData Data { get; }
@@ -58,6 +77,17 @@ public sealed class Mesh : IDisposable
     /// <summary>Number of indices drawn per call.</summary>
     public int IndexCount => Data.Indices.Length;
 
+    /// <summary>Makes this mesh's vertex array current, so per-instance attributes can be attached to it before an instanced draw.</summary>
+    public void BindVertexArray() => _gl.BindVertexArray(_vao);
+
+    /// <summary>
+    /// Draws the mesh <paramref name="count"/> times in one call. The caller has already bound this mesh's vertex array
+    /// (<see cref="BindVertexArray"/>), attached the per-instance attributes and set the shader's uniforms.
+    /// </summary>
+    /// <param name="count">How many instances to draw.</param>
+    public unsafe void DrawInstanced(int count) =>
+        _gl.DrawElementsInstanced(PrimitiveType.Triangles, (uint)IndexCount, DrawElementsType.UnsignedInt, (void*)0, (uint)count);
+
     /// <summary>Draws every triangle with the shader and uniforms the caller has already set.</summary>
     public unsafe void Draw()
     {
@@ -70,6 +100,7 @@ public sealed class Mesh : IDisposable
     {
         _gl.DeleteBuffer(_vbo);
         _gl.DeleteBuffer(_ebo);
+        if (_skinVbo != 0) _gl.DeleteBuffer(_skinVbo);
         _gl.DeleteVertexArray(_vao);
     }
 }

@@ -1,1 +1,1 @@
-{ "baseColor": [0.95, 0.75, 0.2], "shininess": 128, "specular": 1.0 }
+{ "baseColor": [0.95, 0.75, 0.2], "metallic": 1.0, "roughness": 0.3 }

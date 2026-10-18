@@ -32,4 +32,26 @@ public static class Projection3D
             0f, 0f, (far + near) / range, -1f,
             0f, 0f, 2f * far * near / range, 0f);
     }
+
+    /// <summary>
+    /// An orthographic projection for a view looking down -Z, mapping depth to OpenGL's clip range -1..1. Parallel lines stay parallel (no
+    /// perspective), which is what a directional light's shadow map wants. Row-vector form like <see cref="Perspective"/>.
+    /// </summary>
+    /// <param name="left">Left edge of the view volume in view space.</param>
+    /// <param name="right">Right edge.</param>
+    /// <param name="bottom">Bottom edge.</param>
+    /// <param name="top">Top edge.</param>
+    /// <param name="near">Distance of the near plane in front of the eye along -Z (may be negative to include things behind the eye).</param>
+    /// <param name="far">Distance of the far plane, greater than <paramref name="near"/>.</param>
+    public static Matrix4x4 Orthographic(float left, float right, float bottom, float top, float near, float far)
+    {
+        if (right <= left) throw new ArgumentOutOfRangeException(nameof(right), $"Need left < right, got {left} and {right}.");
+        if (top <= bottom) throw new ArgumentOutOfRangeException(nameof(top), $"Need bottom < top, got {bottom} and {top}.");
+        if (far <= near) throw new ArgumentOutOfRangeException(nameof(far), $"Need near < far, got near={near}, far={far}.");
+        return new Matrix4x4(
+            2f / (right - left), 0f, 0f, 0f,
+            0f, 2f / (top - bottom), 0f, 0f,
+            0f, 0f, -2f / (far - near), 0f,
+            -(right + left) / (right - left), -(top + bottom) / (top - bottom), -(far + near) / (far - near), 1f);
+    }
 }

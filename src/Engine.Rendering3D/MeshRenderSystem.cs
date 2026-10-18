@@ -3,7 +3,6 @@ using Engine.Core;
 using Engine.Core.Assets;
 using Engine.Core.Components;
 using Engine.Core.Ecs;
-using Engine.Core.Hierarchy;
 using Engine.Rendering;
 using Silk.NET.OpenGL;
 using Shader = Engine.Rendering.Shader;
@@ -11,12 +10,18 @@ using Shader = Engine.Rendering.Shader;
 namespace Engine.Rendering3D;
 
 /// <summary>
-/// Draws every entity that has a <see cref="Transform"/> and a <see cref="MeshRenderer"/> with depth testing and Blinn-Phong lighting
-/// from the scene's <see cref="DirectionalLight"/> and <see cref="PointLight3D"/> components. Add it to <c>RenderSystems</c> before the
-/// 2D passes: it clears the depth buffer first, draws the 3D world, and leaves the depth test off so sprites and tiles drawn afterwards
-/// (a HUD, 2D effects) land on top. Opaque only: there is no sorting or transparency yet. Owns a shader and a white texture, so dispose
-/// it in <c>Unload</c>.
+/// Draws every entity that has a <see cref="Transform"/> and a <see cref="MeshRenderer"/> or <see cref="ModelRenderer"/> with depth testing and
+/// metallic-roughness (PBR) lighting from the scene's <see cref="DirectionalLight"/> and <see cref="PointLight3D"/> components. Add it to
+/// <c>RenderSystems</c> before the 2D passes: it clears the depth buffer first, draws the 3D world, and leaves the depth test off so sprites and
+/// tiles drawn afterwards (a HUD, 2D effects) land on top. Owns a shader, an instance buffer and a white texture, so dispose it in <c>Unload</c>.
 /// </summary>
+/// <remarks>
+/// <para>Per frame: gather lights, gather a list of visible meshes (frustum culled), sort it, then draw opaque and cut-out surfaces grouped by
+/// material and mesh (runs of the same mesh and material are one instanced call), then blended surfaces farthest first without writing depth.</para>
+/// <para>The sun casts shadows into a depth map drawn first (<c>MeshRenderSystem.Shadows.cs</c>), which the main shader samples.</para>
+/// <para>Split by topic: this file (setup and the frame), <c>MeshRenderSystem.Items.cs</c> (gathering and sorting), <c>MeshRenderSystem.Draw.cs</c>
+/// (passes, materials, instancing), <c>MeshRenderSystem.Shadows.cs</c> (the shadow pass) and <c>MeshRenderSystem.Lights.cs</c> (lights).</para>
+/// </remarks>
 public sealed partial class MeshRenderSystem : ISystem, IDisposable
 {
     private static readonly Material DefaultMaterial = new();
@@ -25,8 +30,12 @@ public sealed partial class MeshRenderSystem : ISystem, IDisposable
     private readonly AssetManager _assets;
     private readonly Camera3D _camera;
     private readonly RenderClock? _clock;
+    private readonly ModelPoses? _poses;
     private readonly Shader _shader;
+    private readonly InstanceBuffer _instances;
     private readonly Texture2D _white;
+    private readonly Shader _shadowShader;
+    private readonly ShadowMap _shadowMap;
     private readonly EntityAction<Transform, MeshRenderer> _drawEntity;
     private readonly EntityAction<Transform, ModelRenderer> _drawModelEntity;
     private readonly EntityAction<Transform, DirectionalLight> _collectSun;
@@ -43,16 +52,22 @@ public sealed partial class MeshRenderSystem : ISystem, IDisposable
     /// <param name="assets">Resolves mesh, material and texture handles.</param>
     /// <param name="camera">The camera that defines the view; keep its <see cref="Camera3D.ViewportSize"/> up to date.</param>
     /// <param name="clock">Interpolation factor; when given, entities with a <see cref="PreviousTransform"/> are drawn between their last two fixed steps.</param>
-    public MeshRenderSystem(GL gl, AssetManager assets, Camera3D camera, RenderClock? clock = null)
+    /// <param name="shadowMapResolution">Side of the square sun shadow map in texels; 2048 is a good default, 4096 is crisper and costs four times the memory.</param>
+    /// <param name="poses">The animated poses written by <see cref="ModelAnimationSystem"/>; null draws every model at rest.</param>
+    public MeshRenderSystem(GL gl, AssetManager assets, Camera3D camera, RenderClock? clock = null, int shadowMapResolution = 2048, ModelPoses? poses = null)
     {
         _gl = gl;
         _assets = assets;
         _camera = camera;
         _clock = clock;
+        _poses = poses;
         _shader = new Shader(gl, MeshShaderSource.Vertex, MeshShaderSource.Fragment);
+        _instances = new InstanceBuffer(gl);
         _white = Texture2D.CreateWhite(gl);
-        _drawEntity = DrawEntity; // created once so the per-frame queries do not allocate delegates
-        _drawModelEntity = DrawModelEntity;
+        _shadowShader = new Shader(gl, ShadowShaderSource.Vertex, ShadowShaderSource.Fragment);
+        _shadowMap = new ShadowMap(gl, shadowMapResolution);
+        _drawEntity = GatherEntity; // created once so the per-frame queries do not allocate delegates
+        _drawModelEntity = GatherModelEntity;
         _collectSun = CollectSun;
         _collectPoint = CollectPoint;
         InitialiseLights();
@@ -67,12 +82,16 @@ public sealed partial class MeshRenderSystem : ISystem, IDisposable
     /// <summary>Meshes skipped in the last frame because their bounding sphere was outside the view.</summary>
     public int CulledLastFrame { get; private set; }
 
+    /// <summary>Draw calls issued in the last frame: fewer than <see cref="DrawnLastFrame"/> when identical meshes were instanced.</summary>
+    public int DrawCallsLastFrame { get; private set; }
+
     /// <inheritdoc />
     public void Update(World world, double dt)
     {
         _world = world;
         DrawnLastFrame = 0;
         CulledLastFrame = 0;
+        DrawCallsLastFrame = 0;
 
         GatherLights(world);
 
@@ -85,105 +104,33 @@ public sealed partial class MeshRenderSystem : ISystem, IDisposable
         _gl.Disable(EnableCap.CullFace); // each material switches it on or off as it is bound
         _gl.FrontFace(FrontFaceDirection.Ccw);
 
+        _frustum = _camera.GetFrustum();
+        PrepareShadows();
+        GatherItems(world);
+        RenderShadowMap(); // before the main shader is set up: it switches framebuffer and shader, and puts both back
+
         _shader.Use();
         _shader.SetUniform("uViewProjection", _camera.GetViewProjection());
         _shader.SetUniform("uCameraPosition", _camera.Position);
-        _shader.SetUniform("uTexture", 0);
+        _shader.SetUniform("uBaseTexture", 0);
+        _shader.SetUniform("uMetallicRoughnessTexture", 1);
+        _shader.SetUniform("uNormalTexture", 2);
         UploadSceneLights();
-
-        _frustum = _camera.GetFrustum();
-        _boundMaterial = null;
-        _cullEnabled = false;
-        world.Query(_drawEntity);
-        world.Query(_drawModelEntity);
+        UploadShadowUniforms();
+        DrawItems();
 
         _gl.Disable(EnableCap.CullFace);
         _gl.Disable(EnableCap.DepthTest);
         _gl.BindVertexArray(0);
     }
 
-    /// <summary>Deletes the shader and the white texture.</summary>
+    /// <summary>Deletes the shader, the instance buffer and the white texture.</summary>
     public void Dispose()
     {
         _shader.Dispose();
+        _instances.Dispose();
         _white.Dispose();
-    }
-
-    private void DrawEntity(Entity entity, ref Transform simulated, ref MeshRenderer renderer)
-    {
-        if (!renderer.Mesh.IsValid || !_assets.TryGet(renderer.Mesh, out var mesh)) return;
-
-        var material = renderer.Material.IsValid && _assets.TryGet(renderer.Material, out var found) ? found : DefaultMaterial;
-        DrawMesh(mesh, material, EntityMatrix(entity, simulated));
-    }
-
-    private void DrawModelEntity(Entity entity, ref Transform simulated, ref ModelRenderer renderer)
-    {
-        if (!renderer.Model.IsValid || !_assets.TryGet(renderer.Model, out var model)) return;
-
-        var entityMatrix = EntityMatrix(entity, simulated);
-        var parts = model.Parts;
-        for (int i = 0; i < parts.Count; i++)
-            DrawMesh(parts[i].Mesh, parts[i].Material, parts[i].Local * entityMatrix); // piece into model space, then the entity places the model
-    }
-
-    /// <summary>The entity's local-to-world matrix, drawn between its last two fixed steps when it has a <see cref="PreviousTransform"/>.</summary>
-    private Matrix4x4 EntityMatrix(Entity entity, in Transform simulated)
-    {
-        if (TransformHierarchy.HasParent(_world, entity)) return TransformHierarchy.GetRenderMatrix(_world, entity, _clock);
-
-        var transform = simulated;
-        if (_clock != null && _world.TryGet<PreviousTransform>(entity, out var previous))
-            transform = PreviousTransform.Interpolate(simulated, previous, _clock.Alpha);
-        return ModelMatrix.From(transform);
-    }
-
-    private void DrawMesh(Mesh mesh, Material material, in Matrix4x4 model)
-    {
-        var centre = Vector3.Transform(mesh.BoundsCenter, model);
-        float radius = mesh.BoundsRadius * ModelMatrix.MaxScale(model);
-        if (!_frustum.IntersectsSphere(centre, radius))
-        {
-            CulledLastFrame++;
-            return;
-        }
-
-        BindMaterial(material);
-
-        _shader.SetUniform("uModel", model);
-        _shader.SetUniform("uNormalMatrix", ModelMatrix.NormalMatrix(model));
-        UploadPointLights(centre, radius);
-        mesh.Draw();
-        DrawnLastFrame++;
-    }
-
-    private void BindMaterial(Material material)
-    {
-        // Consecutive meshes usually share a material, so skip the uniform and texture traffic when nothing changed.
-        // (A material edited between two draws in one frame is not a case worth handling.)
-        if (ReferenceEquals(material, _boundMaterial)) return;
-        _boundMaterial = material;
-
-        var texture = material.OwnedTexture
-            ?? (material.Texture.IsValid && _assets.TryGet(material.Texture, out var found) ? found : _white);
-        texture.Bind(0);
-        var color = material.BaseColor;
-        _shader.SetUniform("uBaseColor", new Vector4(color.R, color.G, color.B, color.A));
-        _shader.SetUniform("uShininess", material.Shininess);
-        _shader.SetUniform("uSpecular", material.Specular);
-        _shader.SetUniform("uUnlit", material.Unlit ? 1 : 0);
-
-        bool cull = !material.DoubleSided;
-        if (cull)
-        {
-            if (!_cullEnabled) _gl.Enable(EnableCap.CullFace);
-            _gl.CullFace(TriangleFace.Back);
-        }
-        else if (_cullEnabled)
-        {
-            _gl.Disable(EnableCap.CullFace);
-        }
-
-        _cullEnabled = cull;
+        _shadowShader.Dispose();
+        _shadowMap.Dispose();
     }
 }

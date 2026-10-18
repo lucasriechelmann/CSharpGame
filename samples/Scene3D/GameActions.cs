@@ -32,4 +32,7 @@ public static class GameActions
 
     /// <summary>Jump with the player capsule (Enter).</summary>
     public const string Jump = "Jump";
+
+    /// <summary>Toggle the sun's shadows (H).</summary>
+    public const string ToggleShadows = "ToggleShadows";
 }

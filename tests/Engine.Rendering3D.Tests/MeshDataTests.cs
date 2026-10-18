@@ -8,9 +8,13 @@ public class MeshDataTests
     private static Vertex3D At(float x, float y, float z) => new(new Vector3(x, y, z), Vector3.UnitZ, Vector2.Zero);
 
     [Fact]
-    public void Vertex_is_32_bytes_so_attribute_offsets_hold()
+    public void Vertex_is_48_bytes_so_attribute_offsets_hold()
     {
-        Assert.Equal(32, System.Runtime.InteropServices.Marshal.SizeOf<Vertex3D>());
+        Assert.Equal(48, System.Runtime.InteropServices.Marshal.SizeOf<Vertex3D>());
+        Assert.Equal(0, (int)System.Runtime.InteropServices.Marshal.OffsetOf<Vertex3D>(nameof(Vertex3D.Position)));
+        Assert.Equal(12, (int)System.Runtime.InteropServices.Marshal.OffsetOf<Vertex3D>(nameof(Vertex3D.Normal)));
+        Assert.Equal(24, (int)System.Runtime.InteropServices.Marshal.OffsetOf<Vertex3D>(nameof(Vertex3D.Uv)));
+        Assert.Equal(32, (int)System.Runtime.InteropServices.Marshal.OffsetOf<Vertex3D>(nameof(Vertex3D.Tangent)));
     }
 
     [Fact]

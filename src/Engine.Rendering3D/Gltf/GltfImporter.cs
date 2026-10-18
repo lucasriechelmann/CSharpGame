@@ -9,7 +9,7 @@ namespace Engine.Rendering3D.Gltf;
 /// Y up, counter-clockwise front faces, texture row 0 at the top), so geometry needs no flipping. Skins, animations, cameras, lights
 /// and sparse data are not imported; unsupported things that would draw wrongly fail loudly instead.
 /// </summary>
-public static class GltfImporter
+public static partial class GltfImporter
 {
     private const int MaxDepth = 64;
 
@@ -36,10 +36,11 @@ public static class GltfImporter
 
         var parts = new List<ModelPartData>();
         var nodes = new List<ModelNodeData>();
+        var nodeMap = new Dictionary<int, int>(); // glTF node index -> index in the model's own node list (only nodes under the scene roots exist there)
         foreach (int root in RootNodes(file))
-            Visit(file, buffers, root, Matrix4x4.Identity, -1, 0, parts, nodes, materials, ref defaultMaterial);
+            Visit(file, buffers, root, Matrix4x4.Identity, -1, 0, parts, nodes, nodeMap, materials, ref defaultMaterial);
 
-        return new ModelData(parts, materials, nodes);
+        return new ModelData(parts, materials, nodes, ImportSkins(file, buffers, nodeMap), ImportAnimations(file, buffers, nodeMap));
     }
 
     private static IEnumerable<int> RootNodes(GltfFile file)
@@ -57,7 +58,7 @@ public static class GltfImporter
         return Enumerable.Range(0, file.Nodes.Count).Where(i => !children.Contains(i));
     }
 
-    private static void Visit(GltfFile file, byte[][] buffers, int nodeIndex, Matrix4x4 parent, int parentNode, int depth, List<ModelPartData> parts, List<ModelNodeData> nodes, List<ModelMaterialData> materials, ref int defaultMaterial)
+    private static void Visit(GltfFile file, byte[][] buffers, int nodeIndex, Matrix4x4 parent, int parentNode, int depth, List<ModelPartData> parts, List<ModelNodeData> nodes, Dictionary<int, int> nodeMap, List<ModelMaterialData> materials, ref int defaultMaterial)
     {
         if (nodeIndex < 0 || nodeIndex >= file.Nodes.Count)
             throw new InvalidOperationException($"glTF node {nodeIndex} does not exist (the file has {file.Nodes.Count}).");
@@ -69,6 +70,7 @@ public static class GltfImporter
         var world = local * parent;
         int modelNode = nodes.Count; // parents are visited before their children, so a node always comes after its parent
         nodes.Add(new ModelNodeData(node.Name ?? string.Empty, parentNode, local));
+        nodeMap[nodeIndex] = modelNode;
 
         if (node.Mesh is int meshIndex)
         {
@@ -90,12 +92,21 @@ public static class GltfImporter
                     material = defaultMaterial;
                 }
 
-                parts.Add(new ModelPartData(ImportPrimitive(file, buffers, primitive, meshIndex), material, world, modelNode));
+                var meshData = ImportPrimitive(file, buffers, primitive, meshIndex);
+                int skin = -1;
+                if (meshData.Skin != null && node.Skin is int skinIndex)
+                {
+                    if (skinIndex < 0 || skinIndex >= file.Skins.Count)
+                        throw new InvalidOperationException($"glTF node {nodeIndex} uses skin {skinIndex}, which does not exist (the file has {file.Skins.Count}).");
+                    skin = skinIndex;
+                }
+
+                parts.Add(new ModelPartData(meshData, material, world, modelNode, skin));
             }
         }
 
         foreach (int child in node.Children)
-            Visit(file, buffers, child, world, modelNode, depth + 1, parts, nodes, materials, ref defaultMaterial);
+            Visit(file, buffers, child, world, modelNode, depth + 1, parts, nodes, nodeMap, materials, ref defaultMaterial);
     }
 
     private static Matrix4x4 LocalMatrix(GltfFile.NodeInfo node, int index)
@@ -158,6 +169,8 @@ public static class GltfImporter
         if (normals != null && normals.Length != positions.Length) throw new InvalidOperationException($"glTF mesh {meshIndex}: NORMAL has {normals.Length / 3} entries but POSITION has {vertexCount}.");
         if (uvs != null && uvs.Length / 2 != vertexCount) throw new InvalidOperationException($"glTF mesh {meshIndex}: TEXCOORD_0 has {uvs.Length / 2} entries but POSITION has {vertexCount}.");
 
+        var skin = ReadSkinVertices(file, buffers, primitive, meshIndex, vertexCount);
+
         // Without NORMAL the spec says to use flat shading; smooth normals are the pragmatic choice for the usually shared vertices.
         var generated = normals == null ? NormalGenerator.Smooth(positionVectors, indices) : null;
 
@@ -171,7 +184,7 @@ public static class GltfImporter
             vertices[i] = new Vertex3D(positionVectors[i], normal, uv);
         }
 
-        return new MeshData(vertices, indices);
+        return new MeshData(vertices, indices, skin);
     }
 
     private static Vector3 Normalised(Vector3 v) => v.LengthSquared() > 1e-20f ? Vector3.Normalize(v) : Vector3.UnitY;
@@ -186,9 +199,36 @@ public static class GltfImporter
             color = new Color(factor[0], factor[1], factor[2], factor[3]);
         }
 
-        byte[]? image = pbr?.BaseColorTexture is { } textureRef ? ReadImage(file, buffers, baseDirectory, textureRef.Index) : null;
-        return ModelMaterialData.FromRoughness(color, image, pbr?.RoughnessFactor ?? 1f, pbr?.MetallicFactor ?? 1f, material.DoubleSided);
+        var emissive = new Color(0f, 0f, 0f);
+        if (material.EmissiveFactor is { } glow)
+        {
+            if (glow.Length != 3) throw new InvalidOperationException($"glTF material: emissiveFactor needs 3 numbers, got {glow.Length}.");
+            emissive = new Color(glow[0], glow[1], glow[2]);
+        }
+
+        return new ModelMaterialData
+        {
+            BaseColor = color,
+            Image = pbr?.BaseColorTexture is { } baseRef ? ReadImage(file, buffers, baseDirectory, baseRef.Index) : null,
+            Metallic = pbr?.MetallicFactor ?? 1f,
+            Roughness = pbr?.RoughnessFactor ?? 1f,
+            MetallicRoughnessImage = pbr?.MetallicRoughnessTexture is { } mrRef ? ReadImage(file, buffers, baseDirectory, mrRef.Index) : null,
+            NormalImage = material.NormalTexture is { } normalRef ? ReadImage(file, buffers, baseDirectory, normalRef.Index) : null,
+            NormalScale = material.NormalTexture?.Scale ?? 1f,
+            Emissive = emissive,
+            AlphaMode = ParseAlphaMode(material.AlphaMode),
+            AlphaCutoff = material.AlphaCutoff,
+            DoubleSided = material.DoubleSided,
+        };
     }
+
+    private static AlphaMode ParseAlphaMode(string? mode) => mode switch
+    {
+        null or "OPAQUE" => AlphaMode.Opaque,
+        "MASK" => AlphaMode.Mask,
+        "BLEND" => AlphaMode.Blend,
+        _ => throw new InvalidOperationException($"glTF material: alphaMode '{mode}' is not OPAQUE, MASK or BLEND."),
+    };
 
     private static byte[] ReadImage(GltfFile file, byte[][] buffers, string? baseDirectory, int textureIndex)
     {

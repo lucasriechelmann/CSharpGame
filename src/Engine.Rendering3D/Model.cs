@@ -20,20 +20,18 @@ public sealed class Model : IDisposable
         for (int i = 0; i < materials.Length; i++)
         {
             var source = data.Materials[i];
-            Texture2D? texture = null;
-            if (source.Image != null)
-            {
-                texture = Texture2D.FromImageBytes(gl, source.Image, TextureFilter.Trilinear);
-                texture.SetRepeat(); // glTF samplers default to repeat
-                _textures.Add(texture);
-            }
-
             materials[i] = new Material
             {
                 BaseColor = source.BaseColor,
-                OwnedTexture = texture,
-                Shininess = source.Shininess,
-                Specular = source.Specular,
+                OwnedTexture = Upload(gl, source.Image),
+                Metallic = source.Metallic,
+                Roughness = source.Roughness,
+                OwnedMetallicRoughnessTexture = Upload(gl, source.MetallicRoughnessImage),
+                OwnedNormalTexture = Upload(gl, source.NormalImage),
+                NormalScale = source.NormalScale,
+                Emissive = source.Emissive,
+                AlphaMode = source.AlphaMode,
+                AlphaCutoff = source.AlphaCutoff,
                 DoubleSided = source.DoubleSided,
             };
         }
@@ -42,15 +40,34 @@ public sealed class Model : IDisposable
         for (int i = 0; i < parts.Length; i++)
         {
             var part = data.Parts[i];
-            parts[i] = new ModelPart(new Mesh(gl, part.Mesh), materials[part.MaterialIndex], part.Local, part.Node);
+            parts[i] = new ModelPart(new Mesh(gl, part.Mesh), materials[part.MaterialIndex], part.Local, part.Node, part.Skin);
         }
 
         Parts = parts;
         Nodes = data.Nodes;
+        Skins = data.Skins;
+        Animations = data.Animations;
+    }
+
+    /// <summary>Decodes an embedded image into a texture the model owns (repeat wrapping, like glTF samplers); null when the material has none.</summary>
+    private Texture2D? Upload(GL gl, byte[]? image)
+    {
+        if (image == null) return null;
+
+        var texture = Texture2D.FromImageBytes(gl, image, TextureFilter.Trilinear);
+        texture.SetRepeat(); // glTF samplers default to repeat
+        _textures.Add(texture);
+        return texture;
     }
 
     /// <summary>The node tree the pieces came from (parents before children), for posing and animation; empty for a hand-built model.</summary>
     public IReadOnlyList<ModelNodeData> Nodes { get; }
+
+    /// <summary>The skins skinned parts refer to (<see cref="ModelPart.Skin"/>); empty for a rigid model.</summary>
+    public IReadOnlyList<ModelSkinData> Skins { get; }
+
+    /// <summary>The animation clips; empty for a static model.</summary>
+    public IReadOnlyList<ModelAnimationData> Animations { get; }
 
     /// <summary>The pieces to draw.</summary>
     public IReadOnlyList<ModelPart> Parts { get; }

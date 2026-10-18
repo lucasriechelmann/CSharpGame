@@ -56,7 +56,8 @@ public sealed class Scene3DGame : Game
             .Bind(GameActions.Fast, KeyCode.ShiftLeft)
             .BindAxis(GameActions.WalkForward, KeyCode.Down, KeyCode.Up)
             .BindAxis(GameActions.WalkRight, KeyCode.Left, KeyCode.Right)
-            .Bind(GameActions.Jump, KeyCode.Enter);
+            .Bind(GameActions.Jump, KeyCode.Enter)
+            .Bind(GameActions.ToggleShadows, KeyCode.H);
 
         Components.Register<Spin>("Spin");
 
@@ -74,6 +75,7 @@ public sealed class Scene3DGame : Game
         Assets.Add("meshes/capsule", new Mesh(Gl, MeshBuilder.Capsule(0.4f, 1.8f)));
         Assets.Add("meshes/floor", new Mesh(Gl, MeshBuilder.Plane(40f, 40f, uvRepeat: 20f)));
         Assets.Add("checker", CreateChecker());
+        Assets.Add("bump_normal", CreateBumpNormalMap());
 
         Scenes.LoadFile("scenes/room.scene.json");
 
@@ -83,13 +85,15 @@ public sealed class Scene3DGame : Game
         _marker = FindByName("Pick marker");
         _player = FindByName("Player");
         FrameSystems.Add(new SpinSystem());
+        var poses = new ModelPoses(); // shared: the animation system writes them, the mesh renderer draws with them
+        FrameSystems.Add(new ModelAnimationSystem(Assets, poses));
 
         // Fixed step: record where everything was (for render interpolation), then let physics move the crates.
         _physics = new PhysicsSystem3D();
         FixedSystems.Add(new PreviousTransformSystem());
         FixedSystems.Add(new CharacterControllerSystem3D()); // before physics: it sets the velocity physics then applies
         FixedSystems.Add(_physics);
-        _meshes = new MeshRenderSystem(Gl, Assets, _camera, RenderClock);
+        _meshes = new MeshRenderSystem(Gl, Assets, _camera, RenderClock, poses: poses);
         RenderSystems.Add(_meshes);
 
         // With an effect on, the scene is drawn into an off-screen target: a check that depth testing works there too.
@@ -147,6 +151,7 @@ public sealed class Scene3DGame : Game
         _wasLooking = looking;
         _lastMouse = mouse;
 
+        if (Actions.WasPressed(GameActions.ToggleShadows)) _meshes.Lighting.ShadowsEnabled = !_meshes.Lighting.ShadowsEnabled;
         DrivePlayer();
         if (Actions.WasPressed(GameActions.Drop)) ThrowCrate();
         if (Actions.WasPressed(GameActions.Pick)) PickWithRay();
@@ -239,18 +244,54 @@ public sealed class Scene3DGame : Game
         ImGui.SetNextWindowPos(new Vector2(12f, 120f), ImGuiCond.FirstUseEver);
         if (ImGui.Begin("3D scene"))
         {
-            ImGui.Text($"Meshes drawn: {_meshes.DrawnLastFrame}  culled: {_meshes.CulledLastFrame}");
+            ImGui.Text($"Meshes drawn: {_meshes.DrawnLastFrame} in {_meshes.DrawCallsLastFrame} draw calls  culled: {_meshes.CulledLastFrame}");
             ImGui.Text($"Camera: {_fly.Position.X:F1}, {_fly.Position.Y:F1}, {_fly.Position.Z:F1}");
             var ambient = new Vector3(_meshes.Lighting.Ambient.R, _meshes.Lighting.Ambient.G, _meshes.Lighting.Ambient.B);
             if (ImGui.ColorEdit3("Ambient", ref ambient)) _meshes.Lighting.Ambient = new Color(ambient.X, ambient.Y, ambient.Z);
             float fovDegrees = _camera.FovY * 180f / MathF.PI;
             if (ImGui.SliderFloat("Field of view", ref fovDegrees, 20f, 110f)) _camera.FovY = fovDegrees * MathF.PI / 180f;
+            bool shadows = _meshes.Lighting.ShadowsEnabled;
+            if (ImGui.Checkbox("Sun shadows (H)", ref shadows)) _meshes.Lighting.ShadowsEnabled = shadows;
             ImGui.Text($"Crates: {_crates.Count}   {_lastPick}");
             ImGui.TextDisabled("Right mouse + move: look.  W/A/S/D: fly.  Q/E: down/up.  Shift: fast.");
             ImGui.TextDisabled("Space: throw a crate.  Left click: cast a ray.");
         }
 
         ImGui.End();
+    }
+
+    /// <summary>
+    /// A tangent-space normal map of a grid of round bumps (64x64 pixels, four bumps across): the height is a product of two sines and each
+    /// pixel's normal leans away from the slope, written as colour (x, y, z in 0..1). Tiles, and is stored as ordinary RGBA pixels, which the
+    /// shader reads back as directions: this is data, not a picture.
+    /// </summary>
+    private Engine.Rendering.Texture2D CreateBumpNormalMap()
+    {
+        const int size = 64;
+        const float bumps = 4f;
+        const float strength = 2.2f;
+        var pixels = new byte[size * size * 4];
+        for (int y = 0; y < size; y++)
+        {
+            for (int x = 0; x < size; x++)
+            {
+                float u = x / (float)size, v = y / (float)size;
+                // Height h = sin(2 pi b u) sin(2 pi b v); its slope along u and v is the derivative of that.
+                float dhdu = MathF.Cos(MathF.Tau * bumps * u) * MathF.Sin(MathF.Tau * bumps * v);
+                float dhdv = MathF.Sin(MathF.Tau * bumps * u) * MathF.Cos(MathF.Tau * bumps * v);
+                // The normal leans against the slope; image rows run down but the map's green channel points up, hence the sign on v.
+                var normal = Vector3.Normalize(new Vector3(-dhdu * strength, dhdv * strength, 1f));
+                int i = (y * size + x) * 4;
+                pixels[i] = (byte)MathF.Round((normal.X * 0.5f + 0.5f) * 255f);
+                pixels[i + 1] = (byte)MathF.Round((normal.Y * 0.5f + 0.5f) * 255f);
+                pixels[i + 2] = (byte)MathF.Round((normal.Z * 0.5f + 0.5f) * 255f);
+                pixels[i + 3] = 255;
+            }
+        }
+
+        var texture = Engine.Rendering.Texture2D.FromPixels(Gl, size, size, pixels, TextureFilter.Trilinear);
+        texture.SetRepeat();
+        return texture;
     }
 
     /// <summary>A grey two-tone checker (64x64 pixels, 8-pixel squares) that tiles and is mipmapped so the far floor does not shimmer.</summary>

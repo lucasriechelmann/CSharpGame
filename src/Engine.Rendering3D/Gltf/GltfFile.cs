@@ -42,6 +42,12 @@ public sealed class GltfFile
     /// <summary>Surface descriptions.</summary>
     public List<MaterialInfo> Materials { get; set; } = [];
 
+    /// <summary>The animations (keyframed node transforms).</summary>
+    public List<AnimationInfo> Animations { get; set; } = [];
+
+    /// <summary>The skins (joint lists for skinned meshes).</summary>
+    public List<SkinInfo> Skins { get; set; } = [];
+
     /// <summary>Textures: an image plus a sampler (the sampler is ignored).</summary>
     public List<TextureInfo> Textures { get; set; } = [];
 
@@ -91,6 +97,9 @@ public sealed class GltfFile
     {
         /// <summary>Optional human-readable node name (animation channels and tools refer to nodes by it).</summary>
         public string? Name { get; set; }
+
+        /// <summary>Index of the skin that deforms the mesh drawn at this node.</summary>
+        public int? Skin { get; set; }
 
         /// <summary>Index of the mesh drawn at this node.</summary>
         public int? Mesh { get; set; }
@@ -185,14 +194,92 @@ public sealed class GltfFile
         public int ByteLength { get; set; }
     }
 
-    /// <summary>A surface description (only the metallic-roughness colour is used).</summary>
+    /// <summary>A named set of channels, each animating one property of one node.</summary>
+    public sealed class AnimationInfo
+    {
+        /// <summary>Optional name.</summary>
+        public string? Name { get; set; }
+
+        /// <summary>The keyframe sources.</summary>
+        public List<AnimationSamplerInfo> Samplers { get; set; } = [];
+
+        /// <summary>What each sampler drives.</summary>
+        public List<AnimationChannelInfo> Channels { get; set; } = [];
+    }
+
+    /// <summary>Keyframes: times and values, and how to interpolate between them.</summary>
+    public sealed class AnimationSamplerInfo
+    {
+        /// <summary>Accessor of the key times (seconds).</summary>
+        public int Input { get; set; }
+
+        /// <summary>Accessor of the values.</summary>
+        public int Output { get; set; }
+
+        /// <summary><c>LINEAR</c> (default), <c>STEP</c> or <c>CUBICSPLINE</c>.</summary>
+        public string? Interpolation { get; set; }
+    }
+
+    /// <summary>Connects a sampler to a node property.</summary>
+    public sealed class AnimationChannelInfo
+    {
+        /// <summary>Index into the animation's samplers.</summary>
+        public int Sampler { get; set; }
+
+        /// <summary>The animated property.</summary>
+        public AnimationTargetInfo? Target { get; set; }
+    }
+
+    /// <summary>The node and property a channel animates.</summary>
+    public sealed class AnimationTargetInfo
+    {
+        /// <summary>The node (absent for extension targets, which are ignored).</summary>
+        public int? Node { get; set; }
+
+        /// <summary><c>translation</c>, <c>rotation</c>, <c>scale</c> or <c>weights</c>.</summary>
+        public string? Path { get; set; }
+    }
+
+    /// <summary>The joints a skinned mesh follows.</summary>
+    public sealed class SkinInfo
+    {
+        /// <summary>Accessor of the inverse bind matrices (one MAT4 per joint); identity when absent.</summary>
+        public int? InverseBindMatrices { get; set; }
+
+        /// <summary>The joint nodes, in the order the vertex data refers to them.</summary>
+        public List<int> Joints { get; set; } = [];
+    }
+
+    /// <summary>A surface description.</summary>
     public sealed class MaterialInfo
     {
         /// <summary>The PBR parameters.</summary>
         public PbrInfo? PbrMetallicRoughness { get; set; }
 
+        /// <summary>The tangent-space normal map and its strength.</summary>
+        public NormalTextureRef? NormalTexture { get; set; }
+
+        /// <summary>Emitted colour, 3 numbers 0..1.</summary>
+        public float[]? EmissiveFactor { get; set; }
+
+        /// <summary><c>OPAQUE</c> (default), <c>MASK</c> or <c>BLEND</c>.</summary>
+        public string? AlphaMode { get; set; }
+
+        /// <summary>Cut-off alpha for MASK (default 0.5).</summary>
+        public float AlphaCutoff { get; set; } = 0.5f;
+
         /// <summary>Draw back faces too.</summary>
         public bool DoubleSided { get; set; }
+    }
+
+    /// <summary>A normal map reference with its strength.</summary>
+    public sealed class NormalTextureRef
+    {
+        /// <summary>Index into <see cref="GltfFile.Textures"/>.</summary>
+        public int Index { get; set; }
+
+        /// <summary>Strength of the bending (default 1).</summary>
+        public float Scale { get; set; } = 1f;
     }
 
     /// <summary>Metallic-roughness parameters.</summary>
@@ -203,6 +290,9 @@ public sealed class GltfFile
 
         /// <summary>The colour texture.</summary>
         public TextureRef? BaseColorTexture { get; set; }
+
+        /// <summary>The roughness (green) and metallic (blue) map.</summary>
+        public TextureRef? MetallicRoughnessTexture { get; set; }
 
         /// <summary>0 = mirror-like metal... 1 = fully rough (default 1).</summary>
         public float RoughnessFactor { get; set; } = 1f;

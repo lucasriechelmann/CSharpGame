@@ -61,17 +61,6 @@ public class GltfImporterTests
         Assert.True(material.DoubleSided);
     }
 
-    [Fact]
-    public void Smoother_surfaces_get_a_tighter_brighter_highlight()
-    {
-        var rough = ModelMaterialData.FromRoughness(Color.White, null, 1f, 0f, false);
-        var smooth = ModelMaterialData.FromRoughness(Color.White, null, 0.2f, 0f, false);
-
-        Assert.True(smooth.Shininess > rough.Shininess);
-        Assert.True(smooth.Specular > rough.Specular);
-        Assert.InRange(smooth.Shininess, 4f, 256f);
-        Assert.InRange(smooth.Specular, 0f, 1f);
-    }
 
     [Fact]
     public void Node_translation_rotation_and_scale_compose_as_scale_rotate_translate()

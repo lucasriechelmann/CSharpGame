@@ -25,6 +25,7 @@ public static class EngineComponents
         .Register("Light2D", Light2D.Create(160f, Color.White))
         .Register<MeshRenderer>("MeshRenderer")
         .Register<ModelRenderer>("ModelRenderer")
+        .Register("ModelAnimator", ModelAnimator.Create())
         .Register("DirectionalLight", DirectionalLight.Create())
         .Register("PointLight3D", PointLight3D.Create(8f, Color.White))
         .Register<SpriteAnimator>("SpriteAnimator")

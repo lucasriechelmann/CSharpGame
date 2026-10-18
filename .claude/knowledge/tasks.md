@@ -64,14 +64,14 @@ Small, about one session. Fixes known gaps that affect game feel and that the ed
 - [x] Oriented static boxes (`BoxCollider3D.Oriented`, `Obb3`, `Sat`): ramps; exact for capsules and rays, discrete push-out for box bodies.
 - [ ] Follow-ups: rigid-body rotation and inertia (crates topple and roll), mesh/convex colliders, stepping up ledges and a slope limit for the character, a body riding a body or platform, swept tests against oriented solids, exact capsule-vs-capsule, sleeping, a spatial hash/BVH once static counts justify it, showing colliders as wireframes in the editor.
 
-## Phase 17: 3D rendering depth
+## Phase 17: 3D rendering depth (done)
 
-- [ ] Sun shadow maps.
-- [ ] Normal maps.
-- [ ] Transparency with sorted draws.
-- [ ] Instancing.
-- [ ] glTF animation and skins (uses `ModelData.Nodes` from phase 14).
-- [ ] PBR shading.
+- [x] PBR shading (metallic-roughness, GGX) replacing Blinn-Phong; materials with metallic-roughness and normal maps, emissive, alpha modes; tangents generated from UVs; sky/ground reflection stand-in for image-based lighting.
+- [x] Transparency with sorted draws (blend materials back to front, no depth write), cut-out (mask) materials.
+- [x] Instancing: per-instance matrices, runs of identical mesh and material in one call.
+- [x] Sun shadow map: fitted to the view, texel-snapped, PCF, cut-out aware, skinned meshes cast.
+- [x] glTF skins and animation: `ModelAnimator`, `ModelAnimationSystem`, `AnimatedPose`, GPU skinning (64 joints), linear/step/cubic-spline channels.
+- [ ] Follow-ups: cascaded shadow maps and point-light shadows, image-based lighting and a skybox, occlusion/emissive maps, blending between clips, animation events, morph targets, instancing of skinned meshes, reading a file's own TANGENT attribute, order-independent transparency.
 
 ## Phase 18: Level and content pipeline
 
