@@ -38,7 +38,7 @@ Status of the phased plan (update when a phase lands or the plan changes):
 2. Sparse-set ECS with tests. **Done**
 3. GL wrapper, shaders, textures, batched sprite renderer, 2D camera. **Done**
 4. Input mapping, asset cache, sprite demo. **Done**
-5. AABB/tile collision, own simple physics, platformer controller (coyote time, jump buffering). **Done** (spatial hash, one-way platforms, slopes, moving platforms deferred)
+5. AABB/tile collision, own simple physics, platformer controller (coyote time, jump buffering). **Done** (spatial hash, one-way platforms, slopes, moving platforms added in phase 11)
 6. Tilemaps (chunked, texture atlas) and sprite animation (clips, state machines). **Done** (tile flip flags, animated tiles, parallax, cached chunk meshes and Tiled import deferred)
 7. JSON scenes and prefabs (System.Text.Json, components as serializable data, assets saved by name). **Done** (entity references, scene-in-scene, instance-to-prefab links and binary scenes deferred)
 8. ImGui entity inspector/profiler, OpenAL audio. **Done** (click-to-select entities in the world, undo/redo, prefab-aware editing, GPU timing, audio streaming for music, positional audio, an audio component and mixer groups deferred)
