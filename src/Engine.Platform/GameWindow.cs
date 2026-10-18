@@ -42,6 +42,12 @@ public sealed class GameWindow : IDisposable
         _window.Closing += OnClosing;
     }
 
+    /// <summary>Called once while ImGui starts up (after its context exists, before its font atlas is built): add fonts and set the style here. Set it before <see cref="Run"/>.</summary>
+    public Action? ConfigureImGui { get; set; }
+
+    /// <summary>True asks Windows for a dark title bar (Windows 10 build 18985 and later; ignored elsewhere). Set it before <see cref="Run"/>.</summary>
+    public bool DarkTitleBar { get; set; }
+
     /// <summary>The OpenGL API. Only valid once <see cref="Load"/> has been raised.</summary>
     public GL Gl { get; private set; } = null!;
 
@@ -88,7 +94,9 @@ public sealed class GameWindow : IDisposable
     {
         Gl = _window.CreateOpenGL();
         _silkInput = _window.CreateInput();
-        _imgui = new ImGuiController(Gl, _window, _silkInput);
+        // The configure callback runs after the ImGui context exists and before the font atlas is built: the place to add fonts and set the style.
+        _imgui = new ImGuiController(Gl, _window, _silkInput, () => ConfigureImGui?.Invoke());
+        if (DarkTitleBar) WindowChrome.UseDarkTitleBar(_window);
         ImGui.GetIO().ConfigFlags |= ImGuiConfigFlags.DockingEnable; // lets any tool window be docked (the editor's layout)
         _ = new SilkInputAdapter(
             _silkInput,

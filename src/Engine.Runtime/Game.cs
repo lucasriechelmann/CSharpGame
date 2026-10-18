@@ -255,6 +255,20 @@ public abstract class Game : IDisposable
     /// <summary>Asks the window to close; the game loop ends after the current frame and <see cref="Unload"/> runs as usual.</summary>
     public void Quit() => _window.Close();
 
+    /// <summary>Lets a host (the editor) set up ImGui fonts and style as the window starts. Set it before <see cref="Run"/>.</summary>
+    internal Action? ImGuiSetup
+    {
+        get => _window.ConfigureImGui;
+        set => _window.ConfigureImGui = value;
+    }
+
+    /// <summary>Asks for a dark window title bar. Set it before <see cref="Run"/>.</summary>
+    internal bool DarkTitleBar
+    {
+        get => _window.DarkTitleBar;
+        set => _window.DarkTitleBar = value;
+    }
+
     private bool _viewportHosted;
 
     /// <summary>Width in pixels of the area the game draws into: the window, or the editor's scene panel. Use it instead of the window's width for cameras and on-screen layout.</summary>

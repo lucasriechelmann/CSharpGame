@@ -1,4 +1,5 @@
 using Engine.Editor;
+using Engine.Editor.Theme;
 using Engine.Runtime;
 
 // The editor program: opens a game library, shows its scene and lets you edit and play it.
@@ -22,6 +23,8 @@ try
 {
     var module = GameLibrary.Load(gamePath);
     using var game = module.CreateGame(GameLaunch.ForProject(projectPath));
+    game.ImGuiSetup = Win11Theme.Configure; // Windows 11 look: Segoe UI, Fluent colours, rounded controls
+    game.DarkTitleBar = true;
     game.AttachEditor(context =>
     {
         var editor = new SceneEditor(context.World, context.Assets, context.Inspector, context.Log, context.Hooks, context.Game) { Pinned = true };

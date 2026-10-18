@@ -1,4 +1,5 @@
 using System.Numerics;
+using Engine.Editor.Theme;
 using ImGuiNET;
 
 namespace Engine.Editor;
@@ -65,7 +66,7 @@ internal sealed partial class SceneEditor
     private void DrawSceneToolbar()
     {
         ImGui.SetCursorPos(new Vector2(6f, ImGui.GetCursorPosY() + 4f));
-        if (ImGui.Button(Playing ? "Stop" : "Play")) TogglePlay();
+        if (ImGui.Button(Playing ? Icons.Stop + "  Stop" : Icons.Play + "  Play")) TogglePlay();
 
         ImGui.SameLine();
         ImGui.BeginDisabled(!Playing);
