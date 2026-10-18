@@ -16,6 +16,7 @@ public sealed partial class PlatformerGame
     protected override void Hud()
     {
         DrawStatusLine();
+        DrawMinimap();
         if (_session.Phase != GamePhase.Playing) DrawEndMessage();
         if (IsPaused) DrawPauseMenu();
     }

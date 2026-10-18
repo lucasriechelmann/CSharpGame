@@ -39,6 +39,9 @@ public static class GameActions
     /// <summary>Cycles multisampling off, 2x, 4x, 8x (F8).</summary>
     public const string CycleMsaa = "CycleMsaa";
 
+    /// <summary>Shows or hides the radar view (M).</summary>
+    public const string Minimap = "Minimap";
+
     /// <summary>Opens or closes the pause menu (Escape or P).</summary>
     public const string Pause = "Pause";
 

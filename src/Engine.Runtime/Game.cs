@@ -8,6 +8,7 @@ using Engine.Core.Input;
 using Engine.Core.Logging;
 using Engine.Platform;
 using Engine.Runtime.Inspector;
+using Engine.Runtime.Views;
 using Engine.Rendering;
 using Engine.Rendering3D;
 using Engine.Scenes;
@@ -24,6 +25,8 @@ public abstract class Game : IDisposable
 {
     private readonly GameWindow _window;
     private readonly FixedTimestep _timestep;
+    private readonly Action _drawViewWorld; // created once: a view draws the world through it every frame
+    private double _viewFrameDt;
     private readonly FrameStats _stats = new();
     private readonly DebugOverlay _overlay;
     private readonly EntityInspector _inspector;
@@ -69,6 +72,7 @@ public abstract class Game : IDisposable
         _fixedUpdateSection = Profiler.GetSection("Game.FixedUpdate");
         _drawSection = Profiler.GetSection("Game.Draw");
         _debugGuiSection = Profiler.GetSection("Debug UI");
+        _drawViewWorld = () => RenderSystems.Run(World, _viewFrameDt);
         _window.Load += OnLoad;
         _window.Closing += OnClosing;
         _window.Update += OnUpdate;
@@ -153,6 +157,12 @@ public abstract class Game : IDisposable
     /// itself while this is true. It is false again between the editor's Play and Stop, when the game runs for real.
     /// </summary>
     public bool IsEditing => _editor?.Editing ?? false;
+
+    /// <summary>
+    /// Extra pictures of the world with their own cameras and effects (a minimap, a mirror). Add a <see cref="RenderView"/> in <see cref="Load"/>; the game
+    /// draws each enabled one every frame into its texture and disposes it on shutdown. Show the texture from <see cref="Hud"/>.
+    /// </summary>
+    public List<RenderView> Views { get; } = new();
 
     /// <summary>Raw keyboard and mouse state. Prefer <see cref="Actions"/> for game logic.</summary>
     public InputState Input => _window.Input;
@@ -387,6 +397,7 @@ public abstract class Game : IDisposable
         DisposeSystems(FixedSystems);
         DisposeSystems(FrameSystems);
         DisposeSystems(RenderSystems);
+        foreach (var view in Views) view.Dispose();
         _hotReloader?.Dispose();
         Audio.Dispose();
         PostProcess.Dispose();
@@ -484,6 +495,7 @@ public abstract class Game : IDisposable
         _stats.RecordFrame(dt);
         // While frozen nothing moves, so draw the simulated state itself: a stale fraction would leave moved or paused entities part-way back.
         RenderClock.Alpha = IsPaused || IsEditing ? 1f : (float)_timestep.Alpha;
+        RenderViews(dt);
         PostProcess.BeginScene();
         long start = Profiler.Begin();
         Draw(dt);
@@ -493,6 +505,20 @@ public abstract class Game : IDisposable
         PostProcess.EndScene();
         if (_viewportHosted) Gl.Viewport(0, 0, (uint)_window.Width, (uint)_window.Height); // the scene went to a texture; the editor's interface draws on the whole window next
         Profiler.End(_postProcessSection, start);
+    }
+
+    /// <summary>Draws every enabled <see cref="RenderView"/> into its own texture, before the main picture so the window is clean for it afterwards.</summary>
+    private void RenderViews(double dt)
+    {
+        if (Views.Count == 0) return;
+
+        _viewFrameDt = dt;
+        foreach (var view in Views)
+        {
+            if (view.Enabled) view.Render(_drawViewWorld); // a view runs the same render systems as the main picture
+        }
+
+        Gl.Viewport(0, 0, (uint)_window.Width, (uint)_window.Height); // a view left the viewport at its own size
     }
 
     private void OnGui(double dt)

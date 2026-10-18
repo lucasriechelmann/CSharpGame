@@ -47,6 +47,7 @@ public sealed partial class PlatformerGame : Game
             .Bind(GameActions.Jump, KeyCode.W)
             .Bind(GameActions.Jump, KeyCode.Up)
             .BindAxis(GameActions.Zoom, KeyCode.Q, KeyCode.E)
+            .Bind(GameActions.Minimap, KeyCode.M)
             .Bind(GameActions.Spawn, MouseButton.Left)
             .Bind(GameActions.ResetCamera, KeyCode.R)
             .Bind(GameActions.QuickSave, KeyCode.F5)
@@ -132,6 +133,7 @@ public sealed partial class PlatformerGame : Game
         RenderSystems.Add(new TileLayerRenderSystem(_batch, _camera, Assets, foreground: false));
         RenderSystems.Add(new SpriteRenderSystem(_batch, _camera, Assets, RenderClock));
         RenderSystems.Add(new TileLayerRenderSystem(_batch, _camera, Assets, foreground: true));
+        CreateMinimap();
     }
 
     /// <inheritdoc />
@@ -158,6 +160,7 @@ public sealed partial class PlatformerGame : Game
         UpdateFlow(dt);
         HandleDisplayKeys();
         if (Actions.WasPressed(GameActions.ToggleDemoMap)) ToggleDemoMap();
+        if (Actions.WasPressed(GameActions.Minimap)) _minimap.Enabled = !_minimap.Enabled;
 
         if (Actions.WasPressed(GameActions.QuickSave)) QuickSave();
         else if (Actions.WasPressed(GameActions.QuickLoad)) QuickLoad();
